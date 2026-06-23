@@ -33,17 +33,17 @@ public class GravitySystem : MonoBehaviour
     }
 
     /// <summary>Điểm vào gravity — đổi state và chạy pipeline cascade.</summary>
-    public void RunGravity()
+    public void RunGravity(Action onComplete = null)
     {
         if (BoardStateManager.Instance != null)
             BoardStateManager.Instance.ChangeState(BoardState.ApplyingGravity);
-        StartCoroutine(GravityPipelineRoutine());
+        StartCoroutine(GravityPipelineRoutine(onComplete));
     }
 
     /// <summary>
     /// Lặp: thu thập lệnh rơi → cập nhật lưới → đợi animation → lặp lại đến khi hết chỗ trống.
     /// </summary>
-    private IEnumerator GravityPipelineRoutine()
+    private IEnumerator GravityPipelineRoutine(Action onComplete)
     {
         while (true)
         {
@@ -66,7 +66,9 @@ public class GravitySystem : MonoBehaviour
             }
         }
 
-        if (BoardStateManager.Instance != null)
+        onComplete?.Invoke();
+
+        if (onComplete == null && BoardStateManager.Instance != null)
             BoardStateManager.Instance.ChangeState(BoardState.Idle);
     }
 

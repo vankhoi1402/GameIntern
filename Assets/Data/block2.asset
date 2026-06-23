@@ -12,7 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 30d8f3e01ba0cba4a83256b3d69475d9, type: 3}
   m_Name: block2
   m_EditorClassIdentifier: 
-  blockType: 2
+  blockId: 2
+  typeKey: 2
   visualSprite: {fileID: 21300000, guid: 26b304b08ceaae143b9c34a5e30c8ea5, type: 2}
   debugColor: {r: 1, g: 1, b: 1, a: 1}
   scoreValue: 10

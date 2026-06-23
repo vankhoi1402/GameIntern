@@ -1,6 +1,7 @@
 ﻿using System;
 using DG.Tweening;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 /// <summary>
 /// Hiển thị và animation của một block — sprite, nền stack, DOTween feedback.
@@ -14,6 +15,8 @@ public class BlockView : MonoBehaviour
     private const float c_ReleaseDuration = 0.18f;
     private const float c_AbsorbDuration = 0.18f;
     private const float c_AbsorbRotateZ = 20f;
+    public const int SortingOrderPerRow = 10;
+    public const int DragSortingOrder = 1000;
     #endregion
 
     [Header("Assign ngoài Inspector")]
@@ -22,6 +25,7 @@ public class BlockView : MonoBehaviour
 
     [SerializeField] private StackBackgroundConfig stackBackgroundConfig;
 
+    private SortingGroup m_SortingGroup;
     private Vector3 m_BaseScale;
     private float m_BaseRotationZ;
 
@@ -29,6 +33,7 @@ public class BlockView : MonoBehaviour
     private void Awake()
     {
         CacheTransformDefaults();
+        m_SortingGroup = GetComponent<SortingGroup>();
     }
 
     /// <summary>Ghi nhớ scale/rotation ban đầu của transform.</summary>
@@ -83,10 +88,47 @@ public class BlockView : MonoBehaviour
             _bgRenderer.sprite = bg;
     }
 
+    /// <summary>SortingGroup theo row — row cao hơn vẽ trên row thấp hơn.</summary>
+    public void ApplyGridSorting(int row)
+    {
+        if (m_SortingGroup == null) return;
+        m_SortingGroup.sortingOrder = row * SortingOrderPerRow;
+    }
+
+    /// <summary>Khi kéo: đẩy lên trên cùng; khi thả: trả order theo ô hiện tại.</summary>
+    public void SetDragSorting(bool isDragging)
+    {
+        if (m_SortingGroup == null) return;
+
+        if (isDragging)
+        {
+            m_SortingGroup.sortingOrder = DragSortingOrder;
+            transform.SetAsLastSibling();
+            return;
+        }
+
+        if (TryGetComponent<Block>(out var block) && block.CurrentSlot != null)
+            ApplyGridSorting(block.CurrentSlot.Row);
+    }
+
     /// <summary>Đặt block ngay lập tức tại vị trí world (spawn, không tween).</summary>
     public void MoveToPosition(Vector3 targetWorldPos)
     {
         transform.position = targetWorldPos;
+    }
+
+    /// <summary>Refill: tween từ dưới ô đích lên row 0.</summary>
+    public void PlayRiseFromBelow(Vector3 targetWorldPos, float cellHeight, float duration, Action onComplete = null)
+    {
+        transform.DOKill();
+        transform.position = targetWorldPos + Vector3.down * cellHeight * 1.2f;
+        transform.DOMove(targetWorldPos, duration)
+            .SetEase(Ease.OutCubic)
+            .OnComplete(() =>
+            {
+                ApplyGridSorting(0);
+                onComplete?.Invoke();
+            });
     }
 
     /// <summary>Block mới spawn từ trên cột — tween rơi xuống ô đích.</summary>
@@ -113,15 +155,18 @@ public class BlockView : MonoBehaviour
         float fallDuration,
         float fallWorldDistance,
         float startDelay,
-        Action onComplete)
+        Action onExplodeComplete,
+        Action onFallComplete)
     {
         transform.SetParent(null);
         transform.DOKill();
 
+        if (m_SortingGroup != null)
+            m_SortingGroup.sortingOrder = DragSortingOrder + 100;
+
         SpriteRenderer[] renderers = GetComponentsInChildren<SpriteRenderer>();
         foreach (SpriteRenderer renderer in renderers)
         {
-            renderer.sortingOrder += 100;
             Color c = renderer.color;
             c.a = 1f;
             renderer.color = c;
@@ -143,12 +188,13 @@ public class BlockView : MonoBehaviour
         seq.Append(transform.DOScale(m_BaseScale, explodeDuration).SetEase(Ease.OutBack));
         seq.Join(transform.DOMove(explodeTarget, explodeDuration).SetEase(Ease.OutCubic));
         seq.Join(transform.DORotate(new Vector3(0f, 0f, rotateZ), explodeDuration).SetEase(Ease.OutQuad));
+        seq.AppendCallback(() => onExplodeComplete?.Invoke());
 
         seq.Append(transform.DOMove(fallTarget, fallDuration).SetEase(Ease.InCubic));
         foreach (SpriteRenderer renderer in renderers)
             seq.Join(renderer.DOFade(0f, fallDuration * 0.9f));
 
-        seq.OnComplete(() => onComplete?.Invoke());
+        seq.OnComplete(() => onFallComplete?.Invoke());
     }
 
     /// <summary>Hiệu ứng khi nhấc block — phóng to nhẹ và xoay.</summary>
@@ -202,10 +248,12 @@ public class BlockView : MonoBehaviour
         transform.SetParent(null);
         transform.DOKill();
 
+        if (m_SortingGroup != null)
+            m_SortingGroup.sortingOrder = DragSortingOrder + 100;
+
         SpriteRenderer[] renderers = GetComponentsInChildren<SpriteRenderer>();
         foreach (SpriteRenderer renderer in renderers)
         {
-            renderer.sortingOrder += 100;
             Color c = renderer.color;
             c.a = 1f;
             renderer.color = c;

@@ -34,22 +34,45 @@ public class BlockFactory : MonoBehaviour
         return CreateBlock(randomData);
     }
 
-    /// <summary>Tạo block theo BlockType yêu cầu.</summary>
-    public Block CreateBlockByType(BlockType type)
+    /// <summary>Tạo block theo typeKey string — ví dụ "1", "6".</summary>
+    public Block CreateBlockByTypeKey(string typeKey, int stack = 1)
     {
-        BlockData data = GetDataByType(type);
-        return CreateBlock(data);
+        BlockData data = database != null ? database.GetBlockData(typeKey) : null;
+        if (data == null)
+        {
+            Debug.LogError($"Factory không tìm thấy typeKey: {typeKey}");
+            return null;
+        }
+
+        return CreateBlockWithStack(data, stack);
+    }
+
+    /// <summary>Tạo block theo blockId số.</summary>
+    public Block CreateBlockById(int blockId, int stack = 1)
+    {
+        BlockData data = database != null ? database.GetBlockData(blockId) : null;
+        if (data == null)
+        {
+            Debug.LogError($"Factory không tìm thấy blockId: {blockId}");
+            return null;
+        }
+
+        return CreateBlockWithStack(data, stack);
+    }
+
+    private Block CreateBlockWithStack(BlockData data, int stack)
+    {
+        GameObject obj = Instantiate(blockPrefab, Vector3.zero, Quaternion.identity);
+        Block block = obj.GetComponent<Block>();
+        if (block != null)
+            block.Init(data, stack);
+
+        return block;
     }
 
     /// <summary>Lấy BlockData ngẫu nhiên từ database.</summary>
     public BlockData GetRandomData()
     {
         return database != null ? database.GetRandomNormalBlock() : null;
-    }
-
-    /// <summary>Lấy BlockData theo BlockType.</summary>
-    public BlockData GetDataByType(BlockType type)
-    {
-        return database != null ? database.GetBlockData(type) : null;
     }
 }

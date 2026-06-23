@@ -2,27 +2,26 @@
 using UnityEngine;
 
 /// <summary>
-/// Xử lý logic merge: cộng stack, xóa block đạt max, kích hoạt gravity.
+/// Xử lý logic merge: cộng stack, xóa block đạt max, kích hoạt gravity + refill.
 /// </summary>
 public class MergeSystem : MonoBehaviour
 {
     [Header("References")]
     [SerializeField] private BoardManager boardManager;
-    [SerializeField] private BlockRemoveViewHandler removeViewHandler;
     [SerializeField] private SpawnSystem spawnSystem;
+    [SerializeField] private DesignRefillController designRefillController;
 
     /// <summary>Phát sau khi source đã cộng stack vào target (View xử lý animation nhập).</summary>
     public event Action<Block, Block> OnBlockStacked;
 
-    /// <summary>Phát khi target đạt stack >= 3 (View xử lý rơi ra ngoài màn hình).</summary>
-    public event Action<Block, int, int, Action> OnBlockMaxedOut;
-
     private void Awake()
     {
-        if (removeViewHandler == null)
-            removeViewHandler = GetComponent<BlockRemoveViewHandler>();
         if (spawnSystem == null)
-            spawnSystem = GetComponent<SpawnSystem>();
+            spawnSystem = FindObjectOfType<SpawnSystem>();
+        if (designRefillController == null)
+            designRefillController = GetComponent<DesignRefillController>();
+        if (designRefillController == null)
+            designRefillController = FindObjectOfType<DesignRefillController>();
     }
 
     /// <summary>Điểm vào merge — gọi khi kéo block cùng loại vào nhau. Trả false nếu merge không thực hiện được.</summary>
@@ -30,6 +29,7 @@ public class MergeSystem : MonoBehaviour
     {
         if (sourceBlock == null || targetBlock == null) return false;
         if (targetBlock.IsPendingDestroy || sourceBlock.IsPendingDestroy) return false;
+        if (!sourceBlock.CanMergeWith(targetBlock)) return false;
 
         if (BoardStateManager.Instance != null)
             BoardStateManager.Instance.ChangeState(BoardState.ResolvingMerges);
@@ -39,7 +39,7 @@ public class MergeSystem : MonoBehaviour
 
     /// <summary>
     /// Cộng stack source vào target, clear ô source, đổi nền/animation,
-    /// nếu stack >= 3 thì clear target, sinh 3 block cùng loại rơi khỏi màn hình rồi gravity.
+    /// nếu stack >= 3 thì nổ 3 block rơi khỏi màn → gravity → refill.
     /// </summary>
     private void ProcessMerge(Block sourceBlock, Block targetBlock)
     {
@@ -65,23 +65,21 @@ public class MergeSystem : MonoBehaviour
                 BlockData clearedData = targetBlock.Data;
 
                 boardManager.ClearSlot(row, col);
+                Destroy(targetBlock.gameObject);
 
-                if (spawnSystem != null)
+                void AfterExplode()
                 {
-                    Destroy(targetBlock.gameObject);
-                    spawnSystem.SpawnBurstFallOff(row, col, clearedData, RunGravityOrIdle);
-                    return;
+                    if (designRefillController != null)
+                        designRefillController.OnT3Cleared(null);
+                    else
+                        RunGravityOrIdle();
                 }
 
-                if (removeViewHandler != null)
-                    removeViewHandler.PlayFallOff(targetBlock, RunGravityOrIdle);
-                else if (OnBlockMaxedOut != null)
-                    OnBlockMaxedOut.Invoke(targetBlock, row, col, RunGravityOrIdle);
+                if (spawnSystem != null && clearedData != null)
+                    spawnSystem.SpawnBurstFallOff(row, col, clearedData, AfterExplode);
                 else
-                {
-                    Destroy(targetBlock.gameObject);
-                    RunGravityOrIdle();
-                }
+                    AfterExplode();
+
                 return;
             }
         }

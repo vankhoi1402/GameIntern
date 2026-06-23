@@ -14,12 +14,14 @@ public class BlockAnimationManager : MonoBehaviour
     private void OnEnable()
     {
         GravitySystem.OnGravityAnimationRequested += HandleGravityAnimation;
+        ColumnPushSystem.OnRefillWaveAnimationRequested += HandleRefillWaveAnimation;
     }
 
     /// <summary>Hủy đăng ký khi disable.</summary>
     private void OnDisable()
     {
         GravitySystem.OnGravityAnimationRequested -= HandleGravityAnimation;
+        ColumnPushSystem.OnRefillWaveAnimationRequested -= HandleRefillWaveAnimation;
     }
 
     /// <summary>
@@ -68,10 +70,65 @@ public class BlockAnimationManager : MonoBehaviour
                 .SetEase(Ease.OutCubic)
                 .OnComplete(() =>
                 {
+                    if (cmd.Block.TryGetComponent<BlockView>(out var view))
+                        view.ApplyGridSorting(cmd.ToRow);
+
                     runningTweens--;
                     if (runningTweens <= 0)
                         onCompleteCallback?.Invoke();
                 });
+        }
+    }
+
+    private void HandleRefillWaveAnimation(IReadOnlyList<ColumnRefillPacket> wave, System.Action onComplete)
+    {
+        if (boardManager == null || boardManager.Layout == null)
+        {
+            onComplete?.Invoke();
+            return;
+        }
+
+        int running = 0;
+        foreach (ColumnRefillPacket packet in wave)
+            running += packet.PushCommands?.Count ?? 0;
+
+        if (running <= 0)
+        {
+            onComplete?.Invoke();
+            return;
+        }
+
+        const float duration = 0.12f;
+        foreach (ColumnRefillPacket packet in wave)
+        {
+            if (packet.PushCommands == null)
+                continue;
+
+            foreach (ColumnPushCommand cmd in packet.PushCommands)
+            {
+                if (cmd.Block == null)
+                {
+                    running--;
+                    if (running <= 0)
+                        onComplete?.Invoke();
+                    continue;
+                }
+
+                Vector3 from = boardManager.Layout.GetWorldPosition(cmd.FromRow, cmd.Col);
+                Vector3 to = boardManager.Layout.GetWorldPosition(cmd.ToRow, cmd.Col);
+                cmd.Block.transform.position = from;
+
+                cmd.Block.transform.DOMove(to, duration)
+                    .SetEase(Ease.OutCubic)
+                    .OnComplete(() =>
+                    {
+                        if (cmd.Block.TryGetComponent<BlockView>(out var view))
+                            view.ApplyGridSorting(cmd.ToRow);
+                        running--;
+                        if (running <= 0)
+                            onComplete?.Invoke();
+                    });
+            }
         }
     }
 }

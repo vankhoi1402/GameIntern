@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.Rendering;
 using System;
 
 /// <summary>
@@ -70,7 +71,7 @@ public class InputManager : MonoBehaviour
         }
     }
 
-    /// <summary>Raycast tất cả block tại vị trí — ưu tiên sortingOrder cao hơn.</summary>
+    /// <summary>Raycast tất cả block tại vị trí — ưu tiên SortingGroup order cao hơn.</summary>
     private Block GetBlockAtPosition(Vector2 pos)
     {
         RaycastHit2D[] hits = Physics2D.RaycastAll(pos, Vector2.zero, 0f, blockLayer);
@@ -78,10 +79,9 @@ public class InputManager : MonoBehaviour
 
         Array.Sort(hits, (a, b) =>
         {
-            var sA = a.collider.GetComponent<SpriteRenderer>();
-            var sB = b.collider.GetComponent<SpriteRenderer>();
-            if (sA != null && sB != null) return sB.sortingOrder.CompareTo(sA.sortingOrder);
-            return b.transform.position.z.CompareTo(a.transform.position.z);
+            int orderA = GetBlockSortingOrder(a.collider);
+            int orderB = GetBlockSortingOrder(b.collider);
+            return orderB.CompareTo(orderA);
         });
 
         foreach (var hit in hits)
@@ -90,5 +90,16 @@ public class InputManager : MonoBehaviour
                 return block;
         }
         return null;
+    }
+
+    private static int GetBlockSortingOrder(Collider2D collider)
+    {
+        if (collider == null) return 0;
+
+        if (collider.TryGetComponent<SortingGroup>(out var group))
+            return group.sortingOrder;
+
+        SpriteRenderer sprite = collider.GetComponentInChildren<SpriteRenderer>();
+        return sprite != null ? sprite.sortingOrder : 0;
     }
 }

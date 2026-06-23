@@ -134,6 +134,36 @@ public class BoardManager : MonoBehaviour
         OnBlockRemoved?.Invoke(blockToRemove, row, col);
     }
 
+    /// <summary>Xóa toàn bộ block trên bàn (logic + Destroy view).</summary>
+    public void ClearAllBlocks()
+    {
+        for (int r = 0; r < rows; r++)
+        {
+            for (int c = 0; c < columns; c++)
+            {
+                Slot slot = GetSlot(r, c);
+                if (slot == null || slot.IsEmpty) continue;
+                RemoveBlock(r, c);
+            }
+        }
+    }
+
+    /// <summary>Gán block vào ô không phát OnBlockPlaced (dùng refill shift trước animation).</summary>
+    internal void SetBlockSilent(Block block, int row, int col)
+    {
+        Slot slot = GetSlot(row, col);
+        if (slot == null || block == null) return;
+        slot.SetBlock(block);
+    }
+
+    /// <summary>Xóa ô không phát OnBlockRemoved.</summary>
+    internal void ClearSlotSilent(int row, int col)
+    {
+        Slot slot = GetSlot(row, col);
+        if (slot == null || slot.IsEmpty) return;
+        slot.Clear();
+    }
+
     /// <summary>Di chuyển block giữa hai ô trống/đích hợp lệ.</summary>
     public bool MoveBlock(int fromRow, int fromCol, int toRow, int toCol)
     {

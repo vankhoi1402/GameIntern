@@ -1,6 +1,5 @@
 ﻿using UnityEngine;
 using DG.Tweening;
-using System.Collections.Generic;
 
 /// <summary>
 /// Tầng View của bàn cờ — đồng bộ vị trí/hiệu ứng block theo event từ BoardManager và DragController.
@@ -14,9 +13,6 @@ public class BoardView : MonoBehaviour
     [SerializeField] private StackBackgroundConfig stackBackgroundConfig;
 
     public StackBackgroundConfig StackBackgroundConfig => stackBackgroundConfig;
-
-    /// <summary>Lưu sortingOrder gốc khi kéo block lên trên cùng.</summary>
-    private readonly Dictionary<Block, int> _sortingCache = new Dictionary<Block, int>();
 
     public BoardLayout Layout => boardManager != null ? boardManager.Layout : null;
 
@@ -73,10 +69,12 @@ public class BoardView : MonoBehaviour
             Vector3 worldPos = Layout.GetWorldPosition(row, col);
             view.SetBackgroundConfig(stackBackgroundConfig);
             view.Initialize(block.Data, Layout.CellWidth, Layout.CellHeight);
+            view.UpdateStackVisual(block.StackCount);
             view.MoveToPosition(worldPos);
+            view.ApplyGridSorting(row);
         }
 
-        block.gameObject.name = $"Block_At_[{row},{col}] ({block.Type})";
+        block.gameObject.name = $"Block_At_[{row},{col}] (type:{block.TypeKey})";
     }
 
     /// <summary>
@@ -88,9 +86,12 @@ public class BoardView : MonoBehaviour
         if (block == null || Layout == null) return;
 
         if (BoardStateManager.Instance != null &&
-            BoardStateManager.Instance.CurrentState == BoardState.ApplyingGravity)
+            (BoardStateManager.Instance.CurrentState == BoardState.ApplyingGravity ||
+             BoardStateManager.Instance.CurrentState == BoardState.ApplyingRefill))
         {
-            block.gameObject.name = $"Block_At_[{toRow},{toCol}] ({block.Type})";
+            if (block.TryGetComponent<BlockView>(out var gravityView))
+                gravityView.ApplyGridSorting(toRow);
+            block.gameObject.name = $"Block_At_[{toRow},{toCol}] (type:{block.TypeKey})";
             return;
         }
 
@@ -98,44 +99,32 @@ public class BoardView : MonoBehaviour
         {
             Vector3 targetPos = Layout.GetWorldPosition(toRow, toCol);
             view.PlayMoveToSlot(targetPos);
+            view.ApplyGridSorting(toRow);
+            view.SetDragSorting(false);
         }
 
-        if (_sortingCache.TryGetValue(block, out int originalOrder))
-        {
-            if (block.TryGetComponent<SpriteRenderer>(out var sRenderer))
-                sRenderer.sortingOrder = originalOrder;
-            _sortingCache.Remove(block);
-        }
-
-        block.gameObject.name = $"Block_At_[{toRow},{toCol}] ({block.Type})";
+        block.gameObject.name = $"Block_At_[{toRow},{toCol}] (type:{block.TypeKey})";
     }
 
     /// <summary>Xóa GameObject block khi BoardManager.RemoveBlock được gọi.</summary>
     private void HandleBlockRemoved(Block block, int row, int col)
     {
         if (block != null)
-        {
-            if (_sortingCache.ContainsKey(block)) _sortingCache.Remove(block);
             Destroy(block.gameObject);
-        }
     }
 
     #region INPUT VISUAL HANDLERS
 
-    /// <summary>Khi bắt đầu kéo — nâng sortingOrder và phát hiệu ứng nhấc block.</summary>
+    /// <summary>Khi bắt đầu kéo — SortingGroup lên trên cùng + hiệu ứng nhấc block.</summary>
     private void HandleBlockSelected(Block block)
     {
         if (block == null) return;
 
-        if (block.TryGetComponent<SpriteRenderer>(out var sRenderer))
-        {
-            if (!_sortingCache.ContainsKey(block))
-                _sortingCache[block] = sRenderer.sortingOrder;
-            sRenderer.sortingOrder = 99;
-        }
-
         if (block.TryGetComponent<BlockView>(out var view))
+        {
+            view.SetDragSorting(true);
             view.PlayPickupFeedback();
+        }
     }
 
     /// <summary>Cập nhật vị trí world của block theo chuột khi đang kéo.</summary>
@@ -156,26 +145,26 @@ public class BoardView : MonoBehaviour
             view.PlayReleaseFeedback();
             block.transform.DOMove(originWorldPos, 0.2f)
                 .SetEase(Ease.OutQuad)
-                .OnComplete(() => RestoreSortingAfterReset(block));
+                .OnComplete(() => RestoreSortingAfterReset(block, sourceSlot));
         }
         else
         {
             block.transform.DOMove(originWorldPos, 0.2f)
                 .SetEase(Ease.OutQuad)
-                .OnComplete(() => RestoreSortingAfterReset(block));
+                .OnComplete(() => RestoreSortingAfterReset(block, sourceSlot));
         }
     }
 
-    /// <summary>Khôi phục sortingOrder sau khi block trở về ô gốc.</summary>
-    private void RestoreSortingAfterReset(Block block)
+    /// <summary>Khôi phục SortingGroup theo row sau khi block trở về ô gốc.</summary>
+    private void RestoreSortingAfterReset(Block block, Slot sourceSlot)
     {
         if (block == null) return;
 
-        if (_sortingCache.TryGetValue(block, out int originalOrder))
+        if (block.TryGetComponent<BlockView>(out var view))
         {
-            if (block.TryGetComponent<SpriteRenderer>(out var sRenderer))
-                sRenderer.sortingOrder = originalOrder;
-            _sortingCache.Remove(block);
+            view.SetDragSorting(false);
+            if (sourceSlot != null)
+                view.ApplyGridSorting(sourceSlot.Row);
         }
     }
 

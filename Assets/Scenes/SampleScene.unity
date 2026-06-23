@@ -137,6 +137,9 @@ GameObject:
   - component: {fileID: 64578945}
   - component: {fileID: 64578946}
   - component: {fileID: 64578947}
+  - component: {fileID: 64578949}
+  - component: {fileID: 64578950}
+  - component: {fileID: 64578951}
   m_Layer: 0
   m_Name: Gameplay_Layer
   m_TagString: Untagged
@@ -159,19 +162,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 885168895}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &64578948
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 64578941}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 73ca6eaa9528ddc458e58f2a5f1851e4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  currentState: 0
 --- !u!114 &64578943
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -184,7 +174,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4d27deb93a408ef42919bbe0275af9dd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  boardManager: {fileID: 852212524}
   mergeSystem: {fileID: 64578944}
 --- !u!114 &64578944
 MonoBehaviour:
@@ -199,8 +188,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   boardManager: {fileID: 852212524}
-  removeViewHandler: {fileID: 64578947}
   spawnSystem: {fileID: 64578945}
+  designRefillController: {fileID: 64578950}
 --- !u!114 &64578945
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -217,10 +206,33 @@ MonoBehaviour:
   boardView: {fileID: 852212525}
   blockPrefab: {fileID: 5471278117548067597, guid: fd3583425c7a79a44a3d68ade05e2d84, type: 3}
   stackBackgroundConfig: {fileID: 11400000, guid: c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3, type: 2}
+  targetCamera: {fileID: 0}
+  levelManager: {fileID: 0}
+  useTestLayout: 0
+  blockDatabase: {fileID: 11400000, guid: a19f7fa6da11bf24c9eeab25aa03c1df, type: 2}
+  testCells:
+  - row: 0
+    col: 0
+    blockType: 1
+    stack: 1
+  - row: 0
+    col: 1
+    blockType: 1
+    stack: 2
+  - row: 2
+    col: 2
+    blockType: 2
+    stack: 1
   possibleBlockData:
   - {fileID: 11400000, guid: 286007ce778af804589658e28be8b99d, type: 2}
   - {fileID: 11400000, guid: 0fd8a4ad44ef27843b1628f131e54fc4, type: 2}
   - {fileID: 11400000, guid: c76f7e4292258c14db769264597b33e3, type: 2}
+  burstExplodeDuration: 0.22
+  burstFallDuration: 0.8
+  burstFallWorldDistance: 6
+  burstStaggerDelay: 0.05
+  burstExplodeHorizontal: 0.45
+  burstExplodeUp: 0.4
 --- !u!114 &64578946
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -247,10 +259,67 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  mergeSystem: {fileID: 64578944}
   targetCamera: {fileID: 0}
   fallDuration: 0.55
   fallWorldDistance: 6
+--- !u!114 &64578948
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 64578941}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 73ca6eaa9528ddc458e58f2a5f1851e4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  currentState: 0
+--- !u!114 &64578949
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 64578941}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  catalog: {fileID: 11400000, guid: e2e3e4e5e6f7a8b9c0d1e2f3a4b5c6d7, type: 2}
+  spawnSystem: {fileID: 64578945}
+  startLevelId: 1
+--- !u!114 &64578950
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 64578941}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  boardManager: {fileID: 852212524}
+  spawnSystem: {fileID: 64578945}
+  columnPushSystem: {fileID: 64578951}
+  levelManager: {fileID: 64578949}
+  riseDuration: 0.15
+--- !u!114 &64578951
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 64578941}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  boardManager: {fileID: 852212524}
 --- !u!1 &143395081
 GameObject:
   m_ObjectHideFlags: 0

@@ -13,5 +13,4 @@ MonoBehaviour:
   m_Name: StackBackgroundConfig
   m_EditorClassIdentifier: 
   bgStack1: {fileID: 21300000, guid: d5ce6230f25ee4b4aa28fe130cdb20ff, type: 2}
-  bgStack2: {fileID: 21300000, guid: 7a5475e646dc74b4b8ad8200d63806fe, type: 2}
-  bgStack3: {fileID: 21300000, guid: 07b45afd4b5306c4786dae560f6bb136, type: 2}
+  bgStack2: {fileID: 21300000, guid: 07b45afd4b5306c4786dae560f6bb136, type: 2}
