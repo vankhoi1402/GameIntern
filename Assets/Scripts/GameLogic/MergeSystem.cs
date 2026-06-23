@@ -1,70 +1,100 @@
 ﻿using System;
-using System.Collections;
 using UnityEngine;
-using Game.Grid;
-using BlockSystem.Runtime;
 
-namespace Game.Logic
+/// <summary>
+/// Xử lý logic merge: cộng stack, xóa block đạt max, kích hoạt gravity.
+/// </summary>
+public class MergeSystem : MonoBehaviour
 {
-    public class MergeSystem : MonoBehaviour
+    [Header("References")]
+    [SerializeField] private BoardManager boardManager;
+    [SerializeField] private BlockRemoveViewHandler removeViewHandler;
+    [SerializeField] private SpawnSystem spawnSystem;
+
+    /// <summary>Phát sau khi source đã cộng stack vào target (View xử lý animation nhập).</summary>
+    public event Action<Block, Block> OnBlockStacked;
+
+    /// <summary>Phát khi target đạt stack >= 3 (View xử lý rơi ra ngoài màn hình).</summary>
+    public event Action<Block, int, int, Action> OnBlockMaxedOut;
+
+    private void Awake()
     {
-        [Header("References")]
-        [SerializeField] private BoardManager boardManager;
+        if (removeViewHandler == null)
+            removeViewHandler = GetComponent<BlockRemoveViewHandler>();
+        if (spawnSystem == null)
+            spawnSystem = GetComponent<SpawnSystem>();
+    }
 
-        public event Action<Block, Block> OnBlockStacked;
-        public event Action<Block, int, int> OnBlockMaxedOut;
+    /// <summary>Điểm vào merge — gọi khi kéo block cùng loại vào nhau. Trả false nếu merge không thực hiện được.</summary>
+    public bool PreceptMerge(Block sourceBlock, Block targetBlock)
+    {
+        if (sourceBlock == null || targetBlock == null) return false;
+        if (targetBlock.IsPendingDestroy || sourceBlock.IsPendingDestroy) return false;
 
-        public void PreceptMerge(Block sourceBlock, Block targetBlock)
-        {
-            if (sourceBlock == null || targetBlock == null) return;
-            if (targetBlock.IsPendingDestroy || sourceBlock.IsPendingDestroy) return;
-
+        if (BoardStateManager.Instance != null)
             BoardStateManager.Instance.ChangeState(BoardState.ResolvingMerges);
-            StartCoroutine(MergeRoutine(sourceBlock, targetBlock));
-        }
+        ProcessMerge(sourceBlock, targetBlock);
+        return true;
+    }
 
-        private IEnumerator MergeRoutine(Block sourceBlock, Block targetBlock)
+    /// <summary>
+    /// Cộng stack source vào target, clear ô source, đổi nền/animation,
+    /// nếu stack >= 3 thì clear target, sinh 3 block cùng loại rơi khỏi màn hình rồi gravity.
+    /// </summary>
+    private void ProcessMerge(Block sourceBlock, Block targetBlock)
+    {
+        sourceBlock.IsPendingDestroy = true;
+
+        int sourceWeight = sourceBlock.StackCount;
+        targetBlock.AddStack(sourceWeight);
+
+        Slot sourceSlot = sourceBlock.CurrentSlot;
+        if (sourceSlot != null)
+            boardManager.ClearSlot(sourceSlot.Row, sourceSlot.Col);
+
+        OnBlockStacked?.Invoke(sourceBlock, targetBlock);
+
+        if (targetBlock.StackCount >= 3)
         {
-            sourceBlock.IsPendingDestroy = true;
-
-            // FIX LỖI TOÁN HỌC: Cộng dồn lũy kế giá trị nội tại (Kéo 2 vào 1 thì lên thẳng 3)
-            int sourceWeight = sourceBlock.StackCount;
-            targetBlock.AddStack(sourceWeight);
-
-            Slot sourceSlot = sourceBlock.CurrentSlot;
-            if (sourceSlot != null)
+            Slot targetSlot = targetBlock.CurrentSlot;
+            if (targetSlot != null)
             {
-                boardManager.RemoveBlock(sourceSlot.Row, sourceSlot.Col);
-            }
+                targetBlock.IsPendingDestroy = true;
+                int row = targetSlot.Row;
+                int col = targetSlot.Col;
+                BlockData clearedData = targetBlock.Data;
 
-            OnBlockStacked?.Invoke(sourceBlock, targetBlock);
+                boardManager.ClearSlot(row, col);
 
-            // Chờ View chạy xong animation gộp cơ bản (có thể thay bằng callback nếu muốn tối ưu sâu hơn)
-            yield return new WaitForSeconds(0.25f);
-
-            if (targetBlock.StackCount >= 3)
-            {
-                Slot targetSlot = targetBlock.CurrentSlot;
-                if (targetSlot != null)
+                if (spawnSystem != null)
                 {
-                    targetBlock.IsPendingDestroy = true;
-
-                    OnBlockMaxedOut?.Invoke(targetBlock, targetSlot.Row, targetSlot.Col);
-                    boardManager.RemoveBlock(targetSlot.Row, targetSlot.Col);
-
-                    yield return new WaitForSeconds(0.2f);
+                    Destroy(targetBlock.gameObject);
+                    spawnSystem.SpawnBurstFallOff(row, col, clearedData, RunGravityOrIdle);
+                    return;
                 }
-            }
 
-            // BÀN GIAO CHO GRAVITY: Rơi dồn gạch ngay khi có khoảng trống nổ
-            if (GravitySystem.Instance != null)
-            {
-                GravitySystem.Instance.RunGravity();
-            }
-            else
-            {
-                BoardStateManager.Instance.ChangeState(BoardState.Idle);
+                if (removeViewHandler != null)
+                    removeViewHandler.PlayFallOff(targetBlock, RunGravityOrIdle);
+                else if (OnBlockMaxedOut != null)
+                    OnBlockMaxedOut.Invoke(targetBlock, row, col, RunGravityOrIdle);
+                else
+                {
+                    Destroy(targetBlock.gameObject);
+                    RunGravityOrIdle();
+                }
+                return;
             }
         }
+
+        RunGravityOrIdle();
+    }
+
+    /// <summary>Kích hoạt gravity hoặc trả state về Idle nếu không có GravitySystem.</summary>
+    private static void RunGravityOrIdle()
+    {
+        if (GravitySystem.Instance != null)
+            GravitySystem.Instance.RunGravity();
+        else if (BoardStateManager.Instance != null)
+            BoardStateManager.Instance.ChangeState(BoardState.Idle);
     }
 }

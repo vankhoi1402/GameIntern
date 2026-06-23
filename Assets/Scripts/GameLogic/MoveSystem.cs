@@ -1,65 +1,55 @@
 ﻿using System;
-using System.Collections;
 using UnityEngine;
-using Game.Grid;
-using BlockSystem.Runtime;
 
-namespace Game.Logic
+/// <summary>
+/// Xử lý di chuyển block: kéo vào ô trống hoặc chuyển sang merge nếu cùng loại.
+/// </summary>
+public class MoveSystem : MonoBehaviour
 {
-    public class MoveSystem : MonoBehaviour
+    [Header("References")]
+    [SerializeField] private BoardManager boardManager;
+    [SerializeField] private MergeSystem mergeSystem;
+
+    /// <summary>Phát khi thả vào ô không hợp lệ (khác loại, ô đã có block).</summary>
+    public event Action<Slot, Slot> OnMoveRejected;
+
+    /// <summary>
+    /// Xử lý thả block từ sourceSlot sang targetSlot.
+    /// Ô trống → di chuyển + gravity; cùng loại → merge; khác → reject.
+    /// Trả true nếu move/merge được chấp nhận.
+    /// </summary>
+    public bool ProcessMove(Slot sourceSlot, Slot targetSlot)
     {
-        [Header("References")]
-        [SerializeField] private BoardManager boardManager;
-        [SerializeField] private MergeSystem mergeSystem;
+        if (sourceSlot == null || targetSlot == null || sourceSlot.IsEmpty) return false;
 
-        public event Action<Slot, Slot> OnMoveRejected;
+        if (BoardStateManager.Instance != null && !BoardStateManager.Instance.CanAcceptInput()) return false;
 
-        public void ProcessMove(Slot sourceSlot, Slot targetSlot)
+        Block sourceBlock = sourceSlot.CurrentBlock;
+        Block targetBlock = targetSlot.CurrentBlock;
+
+        if (targetSlot.CanPlace(sourceBlock))
         {
-            if (sourceSlot == null || targetSlot == null || sourceSlot.IsEmpty) return;
-
-            // KIỂM TRA KHÓA: Đang rơi hoặc đang gộp thì cấm di chuyển tiếp
-            if (BoardStateManager.Instance != null && !BoardStateManager.Instance.CanAcceptInput()) return;
-
-            Block sourceBlock = sourceSlot.CurrentBlock;
-            Block targetBlock = targetSlot.CurrentBlock;
-
-            // 1. Kéo vào ô trống hợp lệ
-            if (targetSlot.CanPlace(sourceBlock))
-            {
-                StartCoroutine(MoveAndGravityRoutine(sourceSlot, targetSlot));
-                return;
-            }
-
-            // 2. Hai gạch đập vào nhau gộp cấp số
-            if (targetBlock != null && sourceBlock.Type == targetBlock.Type)
-            {
-                mergeSystem.PreceptMerge(sourceBlock, targetBlock);
-            }
-            else
-            {
-                OnMoveRejected?.Invoke(sourceSlot, targetSlot);
-            }
+            ApplyMoveAndGravity(sourceSlot, targetSlot);
+            return true;
         }
 
-        private IEnumerator MoveAndGravityRoutine(Slot sourceSlot, Slot targetSlot)
-        {
-            BoardStateManager.Instance.ChangeState(BoardState.ProcessingMove);
+        if (targetBlock != null && sourceBlock.Type == targetBlock.Type)
+            return mergeSystem.PreceptMerge(sourceBlock, targetBlock);
 
-            boardManager.MoveBlock(sourceSlot.Row, sourceSlot.Col, targetSlot.Row, targetSlot.Col);
+        OnMoveRejected?.Invoke(sourceSlot, targetSlot);
+        return false;
+    }
 
-            // Đợi hiệu ứng kéo thả hoàn tất trên View
-            yield return new WaitForSeconds(0.15f);
+    /// <summary>Di chuyển block sang ô trống và kích hoạt gravity ngay.</summary>
+    private void ApplyMoveAndGravity(Slot sourceSlot, Slot targetSlot)
+    {
+        BoardStateManager.Instance.ChangeState(BoardState.ProcessingMove);
 
-            // Kích hoạt trọng lực lấp khoảng trống ô cũ vừa bỏ lại
-            if (GravitySystem.Instance != null)
-            {
-                GravitySystem.Instance.RunGravity();
-            }
-            else
-            {
-                BoardStateManager.Instance.ChangeState(BoardState.Idle);
-            }
-        }
+        boardManager.MoveBlock(sourceSlot.Row, sourceSlot.Col, targetSlot.Row, targetSlot.Col);
+
+        if (GravitySystem.Instance != null)
+            GravitySystem.Instance.RunGravity();
+        else
+            BoardStateManager.Instance.ChangeState(BoardState.Idle);
     }
 }
