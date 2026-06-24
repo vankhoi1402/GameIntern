@@ -82,6 +82,9 @@ public class MergeSystem : MonoBehaviour
 
                 return;
             }
+
+            RunGravityOrIdle();
+            return;
         }
 
         RunGravityOrIdle();

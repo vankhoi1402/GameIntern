@@ -14,6 +14,10 @@ public class BoardStateManager : MonoBehaviour
     public static BoardStateManager Instance { get; private set; }
 
     [SerializeField] private BoardState currentState = BoardState.Idle;
+
+    [Header("Debug")]
+    [SerializeField] private bool logStateChanges;
+
     public BoardState CurrentState => currentState;
 
     public event Action<BoardState> OnStateChanged;
@@ -29,8 +33,18 @@ public class BoardStateManager : MonoBehaviour
     public void ChangeState(BoardState newState)
     {
         if (currentState == newState) return;
+        if (logStateChanges)
+            Debug.Log($"[BoardState] {currentState} → {newState}");
         currentState = newState;
         OnStateChanged?.Invoke(currentState);
+    }
+
+    /// <summary>Khôi phục Idle khi pipeline lỗi — dùng từ timeout fallback.</summary>
+    public void ForceIdle(string reason = null)
+    {
+        if (!string.IsNullOrEmpty(reason))
+            Debug.LogWarning($"[BoardState] Force Idle: {reason}");
+        ChangeState(BoardState.Idle);
     }
 
     /// <summary>True khi người chơi được phép kéo-thả block.</summary>

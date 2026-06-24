@@ -34,9 +34,6 @@ public class SpawnSystem : MonoBehaviour
     [SerializeField] private BlockDatabase blockDatabase;
     [SerializeField] private TestSpawnCell[] testCells;
 
-    [Header("Spawn Settings")]
-    [SerializeField] private BlockData[] possibleBlockData;
-
     [Header("Burst Fall Off (T3 Clear)")]
     [SerializeField] private float burstExplodeDuration = 0.22f;
     [SerializeField] private float burstFallDuration = 0.8f;
@@ -169,7 +166,7 @@ public class SpawnSystem : MonoBehaviour
         }
     }
 
-    /// <summary>Lấp toàn bộ lưới bằng block ngẫu nhiên từ possibleBlockData.</summary>
+    /// <summary>Lấp toàn bộ lưới bằng block ngẫu nhiên từ BlockDatabase.</summary>
     public void GenerateRandomFullBoard()
     {
         for (int r = 0; r < boardManager.Rows; r++)
@@ -321,18 +318,21 @@ public class SpawnSystem : MonoBehaviour
     /// <summary>Tạo một block ngẫu nhiên và đặt vào ô (row, col).</summary>
     private void SpawnRandomBlock(int row, int col)
     {
+        if (blockDatabase == null)
+        {
+            Debug.LogError("[SpawnSystem] Chưa gán BlockDatabase!");
+            return;
+        }
+
+        BlockData randomData = blockDatabase.GetRandomNormalBlock();
+        if (randomData == null)
+        {
+            Debug.LogError("[SpawnSystem] BlockDatabase không có block nào để spawn ngẫu nhiên!");
+            return;
+        }
+
         Block newBlock = Instantiate(blockPrefab);
-
-        if (possibleBlockData != null && possibleBlockData.Length > 0)
-        {
-            BlockData randomData = possibleBlockData[UnityEngine.Random.Range(0, possibleBlockData.Length)];
-            newBlock.Init(randomData);
-        }
-        else
-        {
-            Debug.LogError("[SpawnSystem] Chưa gán BlockData vào mảng Possible Block Data!");
-        }
-
+        newBlock.Init(randomData);
         boardManager.PlaceBlock(newBlock, row, col);
     }
 }

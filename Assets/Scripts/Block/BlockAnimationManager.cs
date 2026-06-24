@@ -1,86 +1,73 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 using DG.Tweening;
 
 /// <summary>
-/// Chạy animation DOTween khi block rơi do gravity — lắng nghe GravitySystem.
+/// Chạy animation DOTween khi block rơi do gravity / refill push.
 /// </summary>
 public class BlockAnimationManager : MonoBehaviour
 {
     [Header("References")]
     [SerializeField] private BoardManager boardManager;
 
-    /// <summary>Đăng ký nhận lệnh animation gravity.</summary>
+    [Header("Timing")]
+    [SerializeField] private float refillPushDuration = 0.12f;
+
     private void OnEnable()
     {
         GravitySystem.OnGravityAnimationRequested += HandleGravityAnimation;
         ColumnPushSystem.OnRefillWaveAnimationRequested += HandleRefillWaveAnimation;
     }
 
-    /// <summary>Hủy đăng ký khi disable.</summary>
     private void OnDisable()
     {
         GravitySystem.OnGravityAnimationRequested -= HandleGravityAnimation;
         ColumnPushSystem.OnRefillWaveAnimationRequested -= HandleRefillWaveAnimation;
     }
 
-    /// <summary>
-    /// Nhận danh sách lệnh rơi, tween từng block tới ô đích.
-    /// Gọi onCompleteCallback khi tất cả tween xong.
-    /// </summary>
-    private void HandleGravityAnimation(List<GravityMoveCommand> commands, System.Action onCompleteCallback)
+    private void HandleGravityAnimation(List<GravityMoveCommand> commands, Action onCompleteCallback)
     {
-        if (boardManager == null)
-        {
-            Debug.LogError("<color=red>[BUG CHÍ MẠNG]</color> Ông quên chưa kéo thả BoardManager vào BlockAnimationManager ngoài Inspector kìa! Kéo vào ngay ông ơi!");
-            onCompleteCallback?.Invoke();
-            return;
-        }
-
-        if (boardManager.Layout == null)
-        {
-            Debug.LogError("<color=yellow>[BUG KHỞI TẠO]</color> boardManager.Layout đang bị NULL! Ông chưa tạo 'new BoardLayout()' hoặc chưa gán nó vào 'boardManager.Layout' lúc game bắt đầu rồi.");
-            onCompleteCallback?.Invoke();
-            return;
-        }
-
-        int runningTweens = commands.Count;
-        if (runningTweens == 0)
+        if (boardManager == null || boardManager.Layout == null)
         {
             onCompleteCallback?.Invoke();
             return;
         }
 
-        foreach (var cmd in commands)
+        var batch = new TweenCompletionBatch(commands.Count, onCompleteCallback);
+
+        foreach (GravityMoveCommand cmd in commands)
         {
             if (cmd.Block == null)
             {
-                Debug.LogWarning($"[CẢNH BÁO] Ô cờ báo có gạch rơi từ [{cmd.FromRow},{cmd.FromCol}] nhưng biến Block lại bị NULL!");
-                runningTweens--;
-                if (runningTweens <= 0) onCompleteCallback?.Invoke();
+                batch.NotifyOneDone();
                 continue;
             }
 
             Vector3 targetWorldPos = boardManager.Layout.GetWorldPosition(cmd.ToRow, cmd.ToCol);
-
-            // Thời gian rơi tỷ lệ căn bậc hai số ô rơi — càng xa càng nhanh dứt khoát
             float duration = Mathf.Sqrt(cmd.DropDistance) * 0.12f;
+            int toRow = cmd.ToRow;
+            Block block = cmd.Block;
 
-            cmd.Block.transform.DOMove(targetWorldPos, duration)
-                .SetEase(Ease.OutCubic)
-                .OnComplete(() =>
+            var gate = new SingleTweenGate();
+            void FinishTween()
+            {
+                gate.TryRun(() =>
                 {
-                    if (cmd.Block.TryGetComponent<BlockView>(out var view))
-                        view.ApplyGridSorting(cmd.ToRow);
-
-                    runningTweens--;
-                    if (runningTweens <= 0)
-                        onCompleteCallback?.Invoke();
+                    if (block != null && block.TryGetComponent<BlockView>(out var view))
+                        view.ApplyGridSorting(toRow);
+                    batch.NotifyOneDone();
                 });
+            }
+
+            block.transform.DOMove(targetWorldPos, duration)
+                .SetEase(Ease.OutCubic)
+                .OnComplete(FinishTween)
+                .OnKill(FinishTween);
         }
     }
 
-    private void HandleRefillWaveAnimation(IReadOnlyList<ColumnRefillPacket> wave, System.Action onComplete)
+    private void HandleRefillWaveAnimation(IReadOnlyList<ColumnRefillPacket> wave, Action onComplete)
     {
         if (boardManager == null || boardManager.Layout == null)
         {
@@ -88,17 +75,12 @@ public class BlockAnimationManager : MonoBehaviour
             return;
         }
 
-        int running = 0;
+        int commandCount = 0;
         foreach (ColumnRefillPacket packet in wave)
-            running += packet.PushCommands?.Count ?? 0;
+            commandCount += packet.PushCommands?.Count ?? 0;
 
-        if (running <= 0)
-        {
-            onComplete?.Invoke();
-            return;
-        }
+        var batch = new TweenCompletionBatch(commandCount, onComplete);
 
-        const float duration = 0.12f;
         foreach (ColumnRefillPacket packet in wave)
         {
             if (packet.PushCommands == null)
@@ -108,9 +90,7 @@ public class BlockAnimationManager : MonoBehaviour
             {
                 if (cmd.Block == null)
                 {
-                    running--;
-                    if (running <= 0)
-                        onComplete?.Invoke();
+                    batch.NotifyOneDone();
                     continue;
                 }
 
@@ -118,17 +98,67 @@ public class BlockAnimationManager : MonoBehaviour
                 Vector3 to = boardManager.Layout.GetWorldPosition(cmd.ToRow, cmd.Col);
                 cmd.Block.transform.position = from;
 
-                cmd.Block.transform.DOMove(to, duration)
-                    .SetEase(Ease.OutCubic)
-                    .OnComplete(() =>
+                int toRow = cmd.ToRow;
+                Block block = cmd.Block;
+
+                var gate = new SingleTweenGate();
+                void FinishTween()
+                {
+                    gate.TryRun(() =>
                     {
-                        if (cmd.Block.TryGetComponent<BlockView>(out var view))
-                            view.ApplyGridSorting(cmd.ToRow);
-                        running--;
-                        if (running <= 0)
-                            onComplete?.Invoke();
+                        if (block != null && block.TryGetComponent<BlockView>(out var view))
+                            view.ApplyGridSorting(toRow);
+                        batch.NotifyOneDone();
                     });
+                }
+
+                block.transform.DOMove(to, refillPushDuration)
+                    .SetEase(Ease.OutCubic)
+                    .OnComplete(FinishTween)
+                    .OnKill(FinishTween);
             }
+        }
+    }
+
+    private sealed class SingleTweenGate
+    {
+        private bool m_Done;
+
+        public void TryRun(Action action)
+        {
+            if (m_Done) return;
+            m_Done = true;
+            action?.Invoke();
+        }
+    }
+
+    /// <summary>Đếm tween hoàn tất.</summary>
+    private sealed class TweenCompletionBatch
+    {
+        private int m_Remaining;
+        private bool m_Invoked;
+        private readonly Action m_OnComplete;
+
+        public TweenCompletionBatch(int count, Action onComplete)
+        {
+            m_Remaining = count;
+            m_OnComplete = onComplete;
+            if (m_Remaining <= 0)
+                InvokeOnce();
+        }
+
+        public void NotifyOneDone()
+        {
+            m_Remaining--;
+            if (m_Remaining <= 0)
+                InvokeOnce();
+        }
+
+        private void InvokeOnce()
+        {
+            if (m_Invoked) return;
+            m_Invoked = true;
+            m_OnComplete?.Invoke();
         }
     }
 }

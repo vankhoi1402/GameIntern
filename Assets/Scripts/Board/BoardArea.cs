@@ -7,8 +7,8 @@
 public class BoardArea : MonoBehaviour
 {
     [Header("Slot Size")]
-    [SerializeField] private float cellWidth = 1f;
-    [SerializeField] private float cellHeight = 1.21f;
+    [SerializeField] private float cellWidth = 0.93f;
+    [SerializeField] private float cellHeight = 1.15f;
 
     public float CellWidth => cellWidth;
     public float CellHeight => cellHeight;

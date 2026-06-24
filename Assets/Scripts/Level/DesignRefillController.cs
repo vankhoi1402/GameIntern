@@ -6,12 +6,16 @@ using UnityEngine;
 /// <summary>Sau T3: gravity → refill mọi cột thiếu hàng cho đến khi full hoặc hết bin.</summary>
 public class DesignRefillController : MonoBehaviour
 {
+    private const float c_PipelineTimeoutSeconds = 8f;
+
     [SerializeField] private BoardManager boardManager;
     [SerializeField] private SpawnSystem spawnSystem;
     [SerializeField] private ColumnPushSystem columnPushSystem;
     [SerializeField] private LevelManager levelManager;
 
-    [SerializeField] private float riseDuration = 1f;
+    [SerializeField] private float riseDuration = 0.15f;
+
+    private bool m_IsRefilling;
 
     private void Awake()
     {
@@ -27,36 +31,63 @@ public class DesignRefillController : MonoBehaviour
 
     public void OnT3Cleared(Action onComplete)
     {
+        if (m_IsRefilling)
+        {
+            Debug.LogWarning("[DesignRefill] Pipeline refill đang chạy — bỏ qua lệnh trùng.");
+            return;
+        }
+
         StartCoroutine(T3RefillRoutine(onComplete));
     }
 
     private IEnumerator T3RefillRoutine(Action onComplete)
     {
-        bool gravityDone = false;
-        if (GravitySystem.Instance != null)
-            GravitySystem.Instance.RunGravity(() => gravityDone = true);
-        else
-            gravityDone = true;
+        m_IsRefilling = true;
 
-        yield return new WaitUntil(() => gravityDone);
-
-        if (BoardStateManager.Instance != null)
-            BoardStateManager.Instance.ChangeState(BoardState.ApplyingRefill);
-
-        while (AnyColumnNeedsRefill())
+        try
         {
-            List<ColumnRefillPacket> wave = CollectRefillWave();
-            if (wave.Count == 0)
-                break;
+            bool gravityDone = false;
+            if (GravitySystem.Instance != null)
+                GravitySystem.Instance.RunGravity(() => gravityDone = true);
+            else
+                gravityDone = true;
 
-            bool animDone = false;
-            columnPushSystem.PlayRefillWaveAnimation(wave, () => animDone = true);
-            PlayRiseAnimations(wave);
+            yield return WaitUntilOrTimeout(() => gravityDone, c_PipelineTimeoutSeconds, "gravity sau T3");
 
-            yield return new WaitUntil(() => animDone);
+            if (BoardStateManager.Instance != null)
+                BoardStateManager.Instance.ChangeState(BoardState.ApplyingRefill);
+
+            while (AnyColumnNeedsRefill())
+            {
+                List<ColumnRefillPacket> wave = CollectRefillWave();
+                if (wave.Count == 0)
+                    break;
+
+                bool animDone = false;
+                columnPushSystem.PlayRefillWaveAnimation(wave, () => animDone = true);
+                PlayRiseAnimations(wave);
+
+                yield return WaitUntilOrTimeout(() => animDone, c_PipelineTimeoutSeconds, "refill wave animation");
+            }
+        }
+        finally
+        {
+            m_IsRefilling = false;
+            FinishPipeline(onComplete);
+        }
+    }
+
+    private static IEnumerator WaitUntilOrTimeout(Func<bool> condition, float timeoutSeconds, string label)
+    {
+        float elapsed = 0f;
+        while (!condition() && elapsed < timeoutSeconds)
+        {
+            elapsed += Time.deltaTime;
+            yield return null;
         }
 
-        FinishPipeline(onComplete);
+        if (!condition())
+            Debug.LogWarning($"[DesignRefill] Timeout chờ {label} ({timeoutSeconds}s) — ép Idle.");
     }
 
     private bool AnyColumnNeedsRefill()

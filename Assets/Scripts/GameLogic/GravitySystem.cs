@@ -17,41 +17,58 @@ public struct GravityMoveCommand
 /// </summary>
 public class GravitySystem : MonoBehaviour
 {
+    private const float c_AnimationTimeoutSeconds = 5f;
+
     public static GravitySystem Instance { get; private set; }
 
     [Header("References")]
     [SerializeField] private BoardManager boardManager;
 
+    private bool m_IsRunning;
+    private readonly List<Action> m_PendingCallbacks = new List<Action>();
+
     /// <summary>View (BlockAnimationManager) lắng nghe để chạy DOTween; phải gọi callback khi xong.</summary>
     public static event Action<List<GravityMoveCommand>, Action> OnGravityAnimationRequested;
 
-    /// <summary>Đăng ký singleton.</summary>
     private void Awake()
     {
         if (Instance == null) Instance = this;
         else Destroy(gameObject);
     }
 
-    /// <summary>Điểm vào gravity — đổi state và chạy pipeline cascade.</summary>
+    /// <summary>Điểm vào gravity — xếp hàng nếu đang chạy, tránh coroutine chồng nhau.</summary>
     public void RunGravity(Action onComplete = null)
     {
-        if (BoardStateManager.Instance != null)
-            BoardStateManager.Instance.ChangeState(BoardState.ApplyingGravity);
-        StartCoroutine(GravityPipelineRoutine(onComplete));
+        if (onComplete != null)
+            m_PendingCallbacks.Add(onComplete);
+
+        if (m_IsRunning)
+            return;
+
+        StartCoroutine(GravityPipelineRoutine());
     }
 
-    /// <summary>
-    /// Lặp: thu thập lệnh rơi → cập nhật lưới → đợi animation → lặp lại đến khi hết chỗ trống.
-    /// </summary>
-    private IEnumerator GravityPipelineRoutine(Action onComplete)
+    private IEnumerator GravityPipelineRoutine()
     {
+        m_IsRunning = true;
+
+        if (BoardStateManager.Instance != null)
+            BoardStateManager.Instance.ChangeState(BoardState.ApplyingGravity);
+
+        if (boardManager == null)
+        {
+            Debug.LogError("[GravitySystem] Chưa gán BoardManager!");
+            FinishGravityPipeline();
+            yield break;
+        }
+
         while (true)
         {
             List<GravityMoveCommand> commands = CollectGravityCommands();
+            if (commands.Count == 0)
+                break;
 
-            if (commands.Count == 0) break;
-
-            foreach (var cmd in commands)
+            foreach (GravityMoveCommand cmd in commands)
                 boardManager.MoveBlock(cmd.FromRow, cmd.FromCol, cmd.ToRow, cmd.ToCol);
 
             bool isAnimationComplete = false;
@@ -62,22 +79,47 @@ public class GravitySystem : MonoBehaviour
             else
             {
                 OnGravityAnimationRequested.Invoke(commands, () => isAnimationComplete = true);
-                yield return new WaitUntil(() => isAnimationComplete);
+                yield return WaitUntilOrTimeout(() => isAnimationComplete, c_AnimationTimeoutSeconds, "gravity animation");
             }
         }
 
-        onComplete?.Invoke();
-
-        if (onComplete == null && BoardStateManager.Instance != null)
-            BoardStateManager.Instance.ChangeState(BoardState.Idle);
+        FinishGravityPipeline();
     }
 
-    /// <summary>
-    /// Quét từng cột từ dưới lên — đếm ô trống và tạo lệnh dịch block xuống.
-    /// </summary>
+    private void FinishGravityPipeline()
+    {
+        m_IsRunning = false;
+
+        Action[] callbacks = m_PendingCallbacks.ToArray();
+        m_PendingCallbacks.Clear();
+
+        bool hasCallback = callbacks.Length > 0;
+        foreach (Action callback in callbacks)
+            callback?.Invoke();
+
+        if (!hasCallback && m_PendingCallbacks.Count == 0 && BoardStateManager.Instance != null)
+            BoardStateManager.Instance.ChangeState(BoardState.Idle);
+
+        if (m_PendingCallbacks.Count > 0)
+            RunGravity();
+    }
+
+    private static IEnumerator WaitUntilOrTimeout(Func<bool> condition, float timeoutSeconds, string label)
+    {
+        float elapsed = 0f;
+        while (!condition() && elapsed < timeoutSeconds)
+        {
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        if (!condition())
+            Debug.LogWarning($"[GravitySystem] Timeout chờ {label} ({timeoutSeconds}s) — ép tiếp pipeline.");
+    }
+
     private List<GravityMoveCommand> CollectGravityCommands()
     {
-        List<GravityMoveCommand> commands = new List<GravityMoveCommand>();
+        var commands = new List<GravityMoveCommand>();
 
         for (int col = 0; col < boardManager.Columns; col++)
         {
@@ -106,6 +148,7 @@ public class GravitySystem : MonoBehaviour
                 }
             }
         }
+
         return commands;
     }
 }

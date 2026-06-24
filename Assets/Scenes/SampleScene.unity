@@ -223,10 +223,6 @@ MonoBehaviour:
     col: 2
     blockType: 2
     stack: 1
-  possibleBlockData:
-  - {fileID: 11400000, guid: 286007ce778af804589658e28be8b99d, type: 2}
-  - {fileID: 11400000, guid: 0fd8a4ad44ef27843b1628f131e54fc4, type: 2}
-  - {fileID: 11400000, guid: c76f7e4292258c14db769264597b33e3, type: 2}
   burstExplodeDuration: 0.22
   burstFallDuration: 0.8
   burstFallWorldDistance: 6
@@ -275,6 +271,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   currentState: 0
+  logStateChanges: 0
 --- !u!114 &64578949
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -399,6 +396,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   boardManager: {fileID: 852212524}
+  refillPushDuration: 0.12
 --- !u!114 &301845209
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -488,7 +486,7 @@ Camera:
   far clip plane: 1000
   field of view: 60
   orthographic: 1
-  orthographic size: 5
+  orthographic size: 6
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -651,7 +649,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1b9d247e5c726054981d5ab6f716be9b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  cellWidth: 0.9
+  cellWidth: 0.93
   cellHeight: 1.15
 --- !u!61 &927987822
 BoxCollider2D:
@@ -804,6 +802,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   currentState: 0
+  logStateChanges: 0
 --- !u!4 &1968603254
 Transform:
   m_ObjectHideFlags: 0
