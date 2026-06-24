@@ -16,3 +16,6 @@ MonoBehaviour:
   - LevelId: 1
     LevelCsv: {fileID: 4900000, guid: a9b8c7d6e5f4a3b2c1d0e9f8a7b6c5d4, type: 3}
     LevelAsset: {fileID: 11400000, guid: e1e2e3e4e5e6f7a8b9c0d1e2f3a4b5c6, type: 2}
+  - LevelId: 3
+    LevelCsv: {fileID: 4900000, guid: 9c3d0c8ed2301f44e98cce092aa05141, type: 3}
+    LevelAsset: {fileID: 11400000, guid: c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2, type: 2}

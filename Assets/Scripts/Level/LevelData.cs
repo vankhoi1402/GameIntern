@@ -8,6 +8,9 @@ public class LevelData : ScriptableObject
     public int LevelId;
     public int VisibleRows = 7;
     public LevelGridRow[] Rows;
+
+    [Header("Skills")]
+    public SkillLoadoutEntry[] SkillLoadout;
 }
 
 [Serializable]

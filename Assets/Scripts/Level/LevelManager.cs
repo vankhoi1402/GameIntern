@@ -6,6 +6,7 @@ public class LevelManager : MonoBehaviour
     [Header("References")]
     [SerializeField] private LevelCatalog catalog;
     [SerializeField] private SpawnSystem spawnSystem;
+    [SerializeField] private SkillManager skillManager;
     [SerializeField] private int startLevelId = 1;
 
     private LevelData _currentLevel;
@@ -18,6 +19,8 @@ public class LevelManager : MonoBehaviour
     {
         if (spawnSystem == null)
             spawnSystem = FindObjectOfType<SpawnSystem>();
+        if (skillManager == null)
+            skillManager = FindObjectOfType<SkillManager>();
     }
 
     /// <summary>Gọi từ SpawnSystem sau khi board layout sẵn sàng.</summary>
@@ -47,6 +50,10 @@ public class LevelManager : MonoBehaviour
         _refillState.Reset(level);
         spawnSystem.ClearBoard();
         spawnSystem.SpawnFromLevel(level);
+
+        if (skillManager != null)
+            skillManager.ApplyLoadout(level.SkillLoadout);
+
         Debug.Log($"[LevelManager] Loaded level {level.LevelId}");
     }
 

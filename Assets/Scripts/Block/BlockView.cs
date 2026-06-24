@@ -117,18 +117,95 @@ public class BlockView : MonoBehaviour
         transform.position = targetWorldPos;
     }
 
-    /// <summary>Refill: tween từ dưới ô đích lên row 0.</summary>
+    /// <summary>Refill: tween từ dưới ô đích lên ô đích (row 0).</summary>
     public void PlayRiseFromBelow(Vector3 targetWorldPos, float cellHeight, float duration, Action onComplete = null)
+        => PlayRiseFromBelow(targetWorldPos, cellHeight, duration, 0, 0f, onComplete);
+
+    /// <summary>Tween từ dưới ô đích — hỗ trợ stagger và sorting theo row.</summary>
+    public void PlayRiseFromBelow(
+        Vector3 targetWorldPos,
+        float cellHeight,
+        float duration,
+        int row,
+        float delay,
+        Action onComplete = null)
+    {
+        Vector3 spawnPos = targetWorldPos + Vector3.down * cellHeight * 1.2f;
+        PlayRiseFromWorldPosition(spawnPos, targetWorldPos, duration, row, delay, onComplete);
+    }
+
+    /// <summary>Tween từ vị trí spawn tùy ý lên ô đích — dùng skill lấp cột từ đáy.</summary>
+    public void PlayRiseFromWorldPosition(
+        Vector3 spawnWorldPos,
+        Vector3 targetWorldPos,
+        float duration,
+        int row,
+        float delay,
+        Action onComplete = null)
     {
         transform.DOKill();
-        transform.position = targetWorldPos + Vector3.down * cellHeight * 1.2f;
-        transform.DOMove(targetWorldPos, duration)
-            .SetEase(Ease.OutCubic)
-            .OnComplete(() =>
-            {
-                ApplyGridSorting(0);
-                onComplete?.Invoke();
-            });
+        ResetTransformVisual();
+        ResetSpriteAlpha();
+        transform.position = spawnWorldPos;
+
+        Tween move = transform.DOMove(targetWorldPos, duration).SetEase(Ease.OutCubic);
+        if (delay > 0f)
+            move.SetDelay(delay);
+
+        move.OnComplete(() =>
+        {
+            ResetTransformVisual();
+            ApplyGridSorting(row);
+            onComplete?.Invoke();
+        });
+    }
+
+    /// <summary>Reset tween/scale/alpha — gọi sau skill, gravity, refill.</summary>
+    public void ResetVisualState()
+    {
+        transform.DOKill();
+        ResetTransformVisual();
+        ResetSpriteAlpha();
+    }
+
+    /// <summary>Snap về ô lưới sau illusion skill (không tween).</summary>
+    public void SnapToGridCell(Vector3 worldPos, int row)
+    {
+        ResetVisualState();
+        transform.position = worldPos;
+        ApplyGridSorting(row);
+    }
+
+    /// <summary>Skill cột: block trượt xuống (illusion sweep).</summary>
+    public void PlaySkillDuckDown(Vector3 duckWorldPos, float duration, float delay, Action onComplete = null)
+    {
+        transform.DOKill();
+        ResetVisualState();
+
+        Tween move = transform.DOMove(duckWorldPos, duration).SetEase(Ease.InQuad);
+        if (delay > 0f)
+            move.SetDelay(delay);
+        move.OnComplete(() => onComplete?.Invoke());
+    }
+
+    /// <summary>Skill cột: block bị xóa — tụt xuống + thu nhỏ + mờ.</summary>
+    public void PlaySkillVanish(Vector3 duckWorldPos, float duration, float delay, Action onComplete = null)
+    {
+        transform.DOKill();
+        ResetVisualState();
+
+        SpriteRenderer[] renderers = GetComponentsInChildren<SpriteRenderer>();
+        Sequence seq = DOTween.Sequence();
+        if (delay > 0f)
+            seq.AppendInterval(delay);
+
+        seq.Join(transform.DOMove(duckWorldPos, duration).SetEase(Ease.InQuad));
+        seq.Join(transform.DOScale(m_BaseScale * 0.15f, duration).SetEase(Ease.InBack));
+
+        foreach (SpriteRenderer renderer in renderers)
+            seq.Join(renderer.DOFade(0f, duration * 0.9f));
+
+        seq.OnComplete(() => onComplete?.Invoke());
     }
 
     /// <summary>Block mới spawn từ trên cột — tween rơi xuống ô đích.</summary>

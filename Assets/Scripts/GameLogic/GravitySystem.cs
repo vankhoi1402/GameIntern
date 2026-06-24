@@ -36,6 +36,17 @@ public class GravitySystem : MonoBehaviour
         else Destroy(gameObject);
     }
 
+    /// <summary>Compact block trong một cột — chỉ sửa logic, không animation (dùng trước skill recovery).</summary>
+    public void ApplyGravitySilentForColumn(int col)
+    {
+        if (boardManager == null || col < 0 || col >= boardManager.Columns)
+            return;
+
+        List<GravityMoveCommand> commands = CollectGravityCommandsForColumn(col);
+        foreach (GravityMoveCommand cmd in commands)
+            boardManager.MoveBlock(cmd.FromRow, cmd.FromCol, cmd.ToRow, cmd.ToCol);
+    }
+
     /// <summary>Điểm vào gravity — xếp hàng nếu đang chạy, tránh coroutine chồng nhau.</summary>
     public void RunGravity(Action onComplete = null)
     {
@@ -122,30 +133,37 @@ public class GravitySystem : MonoBehaviour
         var commands = new List<GravityMoveCommand>();
 
         for (int col = 0; col < boardManager.Columns; col++)
+            commands.AddRange(CollectGravityCommandsForColumn(col));
+
+        return commands;
+    }
+
+    private List<GravityMoveCommand> CollectGravityCommandsForColumn(int col)
+    {
+        var commands = new List<GravityMoveCommand>();
+        int emptyRowsCount = 0;
+
+        for (int row = 0; row < boardManager.Rows; row++)
         {
-            int emptyRowsCount = 0;
+            Slot currentSlot = boardManager.GetSlot(row, col);
+            if (currentSlot == null)
+                continue;
 
-            for (int row = 0; row < boardManager.Rows; row++)
+            if (currentSlot.IsEmpty)
             {
-                Slot currentSlot = boardManager.GetSlot(row, col);
-                if (currentSlot == null) continue;
-
-                if (currentSlot.IsEmpty)
+                emptyRowsCount++;
+            }
+            else if (emptyRowsCount > 0)
+            {
+                commands.Add(new GravityMoveCommand
                 {
-                    emptyRowsCount++;
-                }
-                else if (emptyRowsCount > 0)
-                {
-                    commands.Add(new GravityMoveCommand
-                    {
-                        Block = currentSlot.CurrentBlock,
-                        FromRow = row,
-                        FromCol = col,
-                        ToRow = row - emptyRowsCount,
-                        ToCol = col,
-                        DropDistance = emptyRowsCount
-                    });
-                }
+                    Block = currentSlot.CurrentBlock,
+                    FromRow = row,
+                    FromCol = col,
+                    ToRow = row - emptyRowsCount,
+                    ToCol = col,
+                    DropDistance = emptyRowsCount
+                });
             }
         }
 

@@ -4,7 +4,16 @@ using UnityEngine;
 /// <summary>
 /// Trạng thái bàn cờ — dùng để khóa input khi đang xử lý merge/gravity.
 /// </summary>
-public enum BoardState { Idle, ProcessingMove, ResolvingMerges, ApplyingGravity, ApplyingRefill }
+public enum BoardState
+{
+    Idle,
+    ProcessingMove,
+    ResolvingMerges,
+    ApplyingGravity,
+    ApplyingRefill,
+    SkillTargeting,
+    UsingSkill
+}
 
 /// <summary>
 /// Singleton quản lý state machine bàn cờ. Chỉ cho input khi Idle.

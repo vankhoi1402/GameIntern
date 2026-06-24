@@ -55,14 +55,28 @@ public class BlockAnimationManager : MonoBehaviour
                 gate.TryRun(() =>
                 {
                     if (block != null && block.TryGetComponent<BlockView>(out var view))
+                    {
+                        view.ResetVisualState();
                         view.ApplyGridSorting(toRow);
+                    }
                     batch.NotifyOneDone();
                 });
             }
 
             block.transform.DOMove(targetWorldPos, duration)
                 .SetEase(Ease.OutCubic)
-                .OnComplete(FinishTween)
+                .OnComplete(() =>
+                {
+                    gate.TryRun(() =>
+                    {
+                        if (block != null && block.TryGetComponent<BlockView>(out var view))
+                        {
+                            view.ResetVisualState();
+                            view.ApplyGridSorting(toRow);
+                        }
+                        batch.NotifyOneDone();
+                    });
+                })
                 .OnKill(FinishTween);
         }
     }
@@ -96,10 +110,19 @@ public class BlockAnimationManager : MonoBehaviour
 
                 Vector3 from = boardManager.Layout.GetWorldPosition(cmd.FromRow, cmd.Col);
                 Vector3 to = boardManager.Layout.GetWorldPosition(cmd.ToRow, cmd.Col);
-                cmd.Block.transform.position = from;
 
                 int toRow = cmd.ToRow;
                 Block block = cmd.Block;
+
+                if (block != null && block.TryGetComponent<BlockView>(out var pushView))
+                {
+                    pushView.ResetVisualState();
+                    block.transform.position = from;
+                }
+                else
+                {
+                    cmd.Block.transform.position = from;
+                }
 
                 var gate = new SingleTweenGate();
                 void FinishTween()

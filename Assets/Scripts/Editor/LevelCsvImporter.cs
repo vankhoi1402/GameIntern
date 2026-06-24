@@ -1,8 +1,9 @@
+using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
 using UnityEngine;
 
-/// <summary>Import level.csv (bin cột) → LevelData.asset và gán vào LevelCatalog.</summary>
+/// <summary>Import level.csv (bin cột) → LevelData.asset trong cùng folder level và gán catalog.</summary>
 public class LevelCsvImporter : EditorWindow
 {
     private LevelCatalog _catalog;
@@ -18,7 +19,7 @@ public class LevelCsvImporter : EditorWindow
 
     private void OnGUI()
     {
-        GUILayout.Label("Import level.csv — mỗi cột là bin block từ đáy lên", EditorStyles.boldLabel);
+        GUILayout.Label("Import level.csv — mỗi level một folder Level_XXX/", EditorStyles.boldLabel);
         _catalog = (LevelCatalog)EditorGUILayout.ObjectField("Level Catalog", _catalog, typeof(LevelCatalog), false);
         _database = (BlockDatabase)EditorGUILayout.ObjectField("Block Database", _database, typeof(BlockDatabase), false);
         _levelsFolder = EditorGUILayout.TextField("Levels Folder", _levelsFolder);
@@ -34,9 +35,31 @@ public class LevelCsvImporter : EditorWindow
             CreateCatalogAndImportLevel1();
     }
 
+    public static string GetLevelFolder(string levelsFolder, int levelId)
+        => $"{levelsFolder}/Level_{levelId:D3}";
+
+    public static string GetDefaultCsvPath(string levelsFolder, int levelId)
+        => $"{GetLevelFolder(levelsFolder, levelId)}/level.csv";
+
+    public static string GetLevelAssetPath(string levelsFolder, int levelId)
+        => $"{GetLevelFolder(levelsFolder, levelId)}/Level_{levelId:D3}.asset";
+
+    public static string GetLevelAssetPathFromCsv(TextAsset csv, int levelId)
+    {
+        if (csv == null)
+            return GetLevelAssetPath("Assets/Data/Levels", levelId);
+
+        string csvPath = AssetDatabase.GetAssetPath(csv);
+        if (string.IsNullOrEmpty(csvPath))
+            return GetLevelAssetPath("Assets/Data/Levels", levelId);
+
+        string dir = Path.GetDirectoryName(csvPath)?.Replace('\\', '/');
+        return $"{dir}/Level_{levelId:D3}.asset";
+    }
+
     private void CreateCatalogAndImportLevel1()
     {
-        string levelPath = $"{_levelsFolder}/Level_001/level.csv";
+        string levelPath = GetDefaultCsvPath(_levelsFolder, 1);
         if (!File.Exists(levelPath))
             CreateSampleLevel1();
 
@@ -50,11 +73,7 @@ public class LevelCsvImporter : EditorWindow
             AssetDatabase.CreateAsset(catalog, catalogPath);
         }
 
-        LevelData data = LevelCsvParser.ParseLevelFromCsv(1, levelCsv.text, _database, _visibleRows);
-        string levelAssetPath = $"{_levelsFolder}/Level_001.asset";
-        LevelCsvParser.SaveLevelAsset(data, levelAssetPath);
-
-        LevelData saved = AssetDatabase.LoadAssetAtPath<LevelData>(levelAssetPath);
+        LevelData saved = ImportEntry(1, levelCsv);
         catalog.Levels = new[]
         {
             new LevelCatalogEntry
@@ -79,32 +98,46 @@ public class LevelCsvImporter : EditorWindow
             return;
         }
 
-        foreach (var entry in _catalog.Levels)
+        var updated = new List<LevelCatalogEntry>(_catalog.Levels.Length);
+
+        foreach (LevelCatalogEntry entry in _catalog.Levels)
         {
             if (entry.LevelCsv == null)
             {
                 Debug.LogWarning($"[LevelCsvImporter] Level {entry.LevelId} thiếu level.csv.");
+                updated.Add(entry);
                 continue;
             }
 
-            LevelData data = LevelCsvParser.ParseLevelFromCsv(
-                entry.LevelId,
-                entry.LevelCsv.text,
-                _database,
-                _visibleRows);
-
-            string assetPath = $"{_levelsFolder}/Level_{entry.LevelId:D3}.asset";
-            LevelCsvParser.SaveLevelAsset(data, assetPath);
-            Debug.Log($"[LevelCsvImporter] Imported → {assetPath}");
+            LevelData saved = ImportEntry(entry.LevelId, entry.LevelCsv);
+            updated.Add(new LevelCatalogEntry
+            {
+                LevelId = entry.LevelId,
+                LevelCsv = entry.LevelCsv,
+                LevelAsset = saved
+            });
         }
 
+        _catalog.Levels = updated.ToArray();
+        EditorUtility.SetDirty(_catalog);
+        AssetDatabase.SaveAssets();
         AssetDatabase.Refresh();
-        Debug.Log("[LevelCsvImporter] Import xong.");
+        Debug.Log("[LevelCsvImporter] Import xong — đã cập nhật LevelAsset trong catalog.");
+    }
+
+    private LevelData ImportEntry(int levelId, TextAsset csv)
+    {
+        LevelData data = LevelCsvParser.ParseLevelFromCsv(levelId, csv.text, _database, _visibleRows);
+        string assetPath = GetLevelAssetPathFromCsv(csv, levelId);
+        LevelCsvParser.SaveLevelAsset(data, assetPath);
+        Debug.Log($"[LevelCsvImporter] Imported → {assetPath}");
+
+        return AssetDatabase.LoadAssetAtPath<LevelData>(assetPath);
     }
 
     private void CreateSampleLevel1()
     {
-        string dir = $"{_levelsFolder}/Level_001";
+        string dir = GetLevelFolder(_levelsFolder, 1);
         if (!Directory.Exists(dir))
             Directory.CreateDirectory(dir);
 
