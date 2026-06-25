@@ -19,7 +19,13 @@ public class InputManager : MonoBehaviour
     private bool _isInputLocked = false;
 
     /// <summary>Khóa/mở input thủ công (ngoài BoardState).</summary>
-    public void SetLockInput(bool isLocked) => _isInputLocked = isLocked;
+    public void SetLockInput(bool isLocked)
+    {
+        _isInputLocked = isLocked;
+        if (isLocked)
+            _currentDraggedBlock = null;
+    }
+
     public bool IsInputLocked => _isInputLocked;
 
     /// <summary>Đăng ký singleton và camera mặc định.</summary>

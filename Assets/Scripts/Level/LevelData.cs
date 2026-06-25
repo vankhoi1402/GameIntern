@@ -9,6 +9,9 @@ public class LevelData : ScriptableObject
     public int VisibleRows = 7;
     public LevelGridRow[] Rows;
 
+    [Header("Rules")]
+    public int TimeLimitSeconds;
+
     [Header("Skills")]
     public SkillLoadoutEntry[] SkillLoadout;
 }

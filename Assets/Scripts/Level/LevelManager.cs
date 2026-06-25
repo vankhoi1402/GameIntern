@@ -10,6 +10,7 @@ public class LevelManager : MonoBehaviour
     [SerializeField] private SkillManager skillManager;
     [SerializeField] private BlockDatabase blockDatabase;
     [SerializeField] private BoardIntroAnimator m_IntroAnimator;
+    [SerializeField] private LevelTimer m_LevelTimer;
     [SerializeField] private int startLevelId = 1;
 
     private LevelData _currentLevel;
@@ -33,6 +34,15 @@ public class LevelManager : MonoBehaviour
 
         if (m_IntroAnimator == null)
             m_IntroAnimator = FindObjectOfType<BoardIntroAnimator>();
+
+        if (m_LevelTimer == null)
+            m_LevelTimer = GetComponent<LevelTimer>();
+
+        if (m_LevelTimer == null)
+            m_LevelTimer = FindObjectOfType<LevelTimer>();
+
+        if (m_LevelTimer == null)
+            m_LevelTimer = gameObject.AddComponent<LevelTimer>();
     }
 
     /// <summary>Gọi từ SpawnSystem sau khi board layout sẵn sàng.</summary>
@@ -60,6 +70,7 @@ public class LevelManager : MonoBehaviour
 
         _currentLevel = level;
         _refillState.Reset(level);
+        m_LevelTimer?.StopTimer();
 
         if (blockDatabase != null)
             LevelCsvValidator.LogReport(level.LevelId, level.Rows, blockDatabase);
@@ -76,7 +87,10 @@ public class LevelManager : MonoBehaviour
             if (skillManager != null)
                 skillManager.ApplyLoadout(level.SkillLoadout);
 
-            Debug.Log($"[LevelManager] Loaded level {level.LevelId}");
+            m_LevelTimer?.StartTimer(level.TimeLimitSeconds);
+
+            Debug.Log($"[LevelManager] Loaded level {level.LevelId}" +
+                      (level.TimeLimitSeconds > 0 ? $" — time limit {level.TimeLimitSeconds}s" : string.Empty));
             OnLevelLoaded?.Invoke(level);
         }
 

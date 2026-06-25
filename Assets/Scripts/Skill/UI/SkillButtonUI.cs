@@ -65,6 +65,15 @@ public class SkillButtonUI : MonoBehaviour
 
     private void Update()
     {
+        if (button != null && skillManager != null && skill != null)
+        {
+            bool isThisTargeting = skillManager.IsTargeting && skillManager.PendingSkill == skill;
+            button.interactable = skillManager.CanUseSkill(skill) && !isThisTargeting;
+        }
+
+        if (InputManager.Instance != null && InputManager.Instance.IsInputLocked)
+            return;
+
         if (hotkey == KeyCode.None || skillManager == null || skill == null)
             return;
 

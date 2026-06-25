@@ -17,6 +17,9 @@ public class SkillHUD : MonoBehaviour
         if (skillManager == null)
             return;
 
+        if (InputManager.Instance != null && InputManager.Instance.IsInputLocked)
+            return;
+
         var skills = skillManager.GetEquippedSkills();
         if (skills.Count == 0)
             return;
@@ -53,6 +56,9 @@ public class SkillHUD : MonoBehaviour
     private void Update()
     {
         if (skillManager == null)
+            return;
+
+        if (InputManager.Instance != null && InputManager.Instance.IsInputLocked)
             return;
 
         var skills = skillManager.GetEquippedSkills();

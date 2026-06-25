@@ -17,12 +17,17 @@ public static class LevelCsvParser
         var level = ScriptableObject.CreateInstance<LevelData>();
         level.LevelId = levelId;
         level.VisibleRows = visibleRows;
-        level.Rows = ParseBinCsv(csvText);
+        level.Rows = ParseBinCsv(csvText, out int timeLimitSeconds);
+        level.TimeLimitSeconds = timeLimitSeconds;
         return level;
     }
 
     public static LevelGridRow[] ParseBinCsv(string csvText)
+        => ParseBinCsv(csvText, out _);
+
+    public static LevelGridRow[] ParseBinCsv(string csvText, out int timeLimitSeconds)
     {
+        timeLimitSeconds = 0;
         var rows = new List<LevelGridRow>();
         if (string.IsNullOrWhiteSpace(csvText))
             return rows.ToArray();
@@ -55,6 +60,12 @@ public static class LevelCsvParser
                 blockTypes[c] = string.IsNullOrEmpty(type) ? string.Empty : type;
             }
 
+            if (row == 0 && cols.Length > GridColumnCount + 1 &&
+                int.TryParse(cols[GridColumnCount + 1].Trim(), out int parsedTime))
+            {
+                timeLimitSeconds = Mathf.Max(0, parsedTime);
+            }
+
             rows.Add(new LevelGridRow { Row = row, ColBlockTypes = blockTypes });
         }
 
@@ -81,6 +92,7 @@ public static class LevelCsvParser
         {
             existing.LevelId = level.LevelId;
             existing.VisibleRows = level.VisibleRows;
+            existing.TimeLimitSeconds = level.TimeLimitSeconds;
             existing.Rows = level.Rows;
             UnityEditor.EditorUtility.SetDirty(existing);
             UnityEngine.Object.DestroyImmediate(level);

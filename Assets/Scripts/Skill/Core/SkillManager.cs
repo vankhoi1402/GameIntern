@@ -112,6 +112,8 @@ public class SkillManager : MonoBehaviour
     {
         if (skill == null || m_IsExecuting)
             return false;
+        if (IsGameplayInputBlocked())
+            return false;
         if (unlimitedChargesForTest)
             return true;
         return GetCharges(skill) > 0;
@@ -127,6 +129,9 @@ public class SkillManager : MonoBehaviour
 
     public bool TrySelectColumn(int col)
     {
+        if (IsGameplayInputBlocked())
+            return false;
+
         if (boardManager == null || col < 0 || col >= boardManager.Columns)
             return false;
 
@@ -150,6 +155,9 @@ public class SkillManager : MonoBehaviour
     public bool TryActivateSkill(SkillDefinition skill)
     {
         if (skill == null || skill.Effect == null)
+            return false;
+
+        if (IsGameplayInputBlocked())
             return false;
 
         if (m_IsExecuting || m_PendingSkill != null)
@@ -195,6 +203,9 @@ public class SkillManager : MonoBehaviour
 
     public bool TryConfirmTarget(SkillTarget target)
     {
+        if (IsGameplayInputBlocked())
+            return false;
+
         if (m_PendingSkill == null)
             return false;
 
@@ -289,4 +300,7 @@ public class SkillManager : MonoBehaviour
         m_Charges[skill] = Mathf.Max(0, m_Charges[skill] - 1);
         OnChargesChanged?.Invoke(skill, m_Charges[skill]);
     }
+
+    private static bool IsGameplayInputBlocked()
+        => InputManager.Instance != null && InputManager.Instance.IsInputLocked;
 }

@@ -22,6 +22,9 @@ public class MoveSystem : MonoBehaviour
 
         if (BoardStateManager.Instance != null && !BoardStateManager.Instance.CanAcceptInput()) return false;
 
+        if (InputManager.Instance != null && InputManager.Instance.IsInputLocked)
+            return false;
+
         Block sourceBlock = sourceSlot.CurrentBlock;
         Block targetBlock = targetSlot.CurrentBlock;
 

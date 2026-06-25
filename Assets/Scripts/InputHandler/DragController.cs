@@ -16,6 +16,7 @@ public class DragController : MonoBehaviour
     [SerializeField] private Camera targetCamera;
 
     private Slot _sourceSlot;
+    private Block _draggedBlock;
     private Block _hoverTargetBlock;
     private DragState _currentState = DragState.Idle;
     private Vector3 _dragOffset;
@@ -56,12 +57,16 @@ public class DragController : MonoBehaviour
     /// <summary>Bắt đầu kéo — lưu ô gốc, tính offset chuột và phát OnBlockSelected.</summary>
     private void HandleDragStart(Block block)
     {
+        if (InputManager.Instance != null && InputManager.Instance.IsInputLocked)
+            return;
+
         if (_currentState != DragState.Idle || block == null) return;
 
         _sourceSlot = block.CurrentSlot;
         if (_sourceSlot != null)
         {
             _currentState = DragState.Dragging;
+            _draggedBlock = block;
 
             Vector3 mousePos = targetCamera.ScreenToWorldPoint(Input.mousePosition);
             mousePos.z = 0;
@@ -74,6 +79,9 @@ public class DragController : MonoBehaviour
     /// <summary>Cập nhật vị trí visual block theo chuột + offset.</summary>
     private void HandleDragging(Block block, Vector3 mouseWorldPos)
     {
+        if (InputManager.Instance != null && InputManager.Instance.IsInputLocked)
+            return;
+
         if (_currentState != DragState.Dragging || block == null) return;
 
         Vector3 targetVisualPos = mouseWorldPos + _dragOffset;
@@ -115,10 +123,17 @@ public class DragController : MonoBehaviour
     /// </summary>
     private void HandleDragEnd(Block block)
     {
+        if (InputManager.Instance != null && InputManager.Instance.IsInputLocked)
+        {
+            CancelActiveDrag();
+            return;
+        }
+
         if (_currentState != DragState.Dragging || block == null) return;
 
         ClearHoverTarget();
         _currentState = DragState.Idle;
+        _draggedBlock = null;
 
         var layout = boardView.Layout;
         if (layout != null && targetCamera != null)
@@ -138,6 +153,23 @@ public class DragController : MonoBehaviour
         }
 
         ReturnBlockToSource(block);
+    }
+
+    /// <summary>Hủy kéo đang dở — trả block về ô gốc (gọi khi thua / khóa input).</summary>
+    public void CancelActiveDrag()
+    {
+        if (_currentState != DragState.Dragging)
+            return;
+
+        Block block = _draggedBlock != null ? _draggedBlock : _sourceSlot?.CurrentBlock;
+        ClearHoverTarget();
+        _currentState = DragState.Idle;
+
+        if (block != null && _sourceSlot != null)
+            OnBlockVisualReset?.Invoke(block, _sourceSlot);
+
+        _sourceSlot = null;
+        _draggedBlock = null;
     }
 
     /// <summary>Thả không hợp lệ — tween block về ô ban đầu.</summary>

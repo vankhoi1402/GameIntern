@@ -3,17 +3,25 @@ public class LevelOutcomeEvaluator
 {
     private readonly BoardManager m_BoardManager;
     private readonly LevelRefillState m_RefillState;
+    private readonly LevelTimer m_Timer;
 
-    public LevelOutcomeEvaluator(BoardManager boardManager, LevelRefillState refillState)
+    public LevelOutcomeEvaluator(
+        BoardManager boardManager,
+        LevelRefillState refillState,
+        LevelTimer timer = null)
     {
         m_BoardManager = boardManager;
         m_RefillState = refillState;
+        m_Timer = timer;
     }
 
     public LevelOutcome Evaluate()
     {
         if (IsLevelCleared())
             return LevelOutcome.Won;
+
+        if (IsTimeExpired())
+            return LevelOutcome.Lost;
 
         return LevelOutcome.Playing;
     }
@@ -25,4 +33,7 @@ public class LevelOutcomeEvaluator
 
         return m_BoardManager.IsBoardEmpty() && !m_RefillState.HasRemainingBlocks();
     }
+
+    public bool IsTimeExpired()
+        => m_Timer != null && m_Timer.IsExpired;
 }

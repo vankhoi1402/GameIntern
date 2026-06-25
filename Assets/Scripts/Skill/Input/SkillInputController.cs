@@ -20,6 +20,9 @@ public class SkillInputController : MonoBehaviour
 
     private void Update()
     {
+        if (InputManager.Instance != null && InputManager.Instance.IsInputLocked)
+            return;
+
         if (SkillManager.Instance == null)
             return;
 
