@@ -10,11 +10,42 @@ public class BoardView : MonoBehaviour
     [SerializeField] private BoardManager boardManager;
     [SerializeField] private BoardArea boardArea;
     [SerializeField] private DragController dragController;
+    [SerializeField] private MoveSystem moveSystem;
     [SerializeField] private StackBackgroundConfig stackBackgroundConfig;
+    [SerializeField] private BoardIntroAnimator m_IntroAnimator;
 
     public StackBackgroundConfig StackBackgroundConfig => stackBackgroundConfig;
+    public BoardIntroAnimator IntroAnimator => m_IntroAnimator;
 
     public BoardLayout Layout => boardManager != null ? boardManager.Layout : null;
+
+    private bool m_ShakeRejectOnReset;
+    private Block m_HoverTargetBlock;
+
+    private void Awake()
+    {
+        if (moveSystem == null)
+            moveSystem = FindObjectOfType<MoveSystem>();
+
+        if (m_IntroAnimator == null)
+            m_IntroAnimator = GetComponent<BoardIntroAnimator>();
+
+        if (m_IntroAnimator == null)
+            m_IntroAnimator = FindObjectOfType<BoardIntroAnimator>();
+
+        if (m_IntroAnimator == null)
+            m_IntroAnimator = gameObject.AddComponent<BoardIntroAnimator>();
+
+        if (boardManager == null)
+            boardManager = FindObjectOfType<BoardManager>();
+
+        if (boardManager != null)
+        {
+            boardManager.OnBlockPlaced += HandleBlockPlaced;
+            boardManager.OnBlockMoved += HandleBlockMoved;
+            boardManager.OnBlockRemoved += HandleBlockRemoved;
+        }
+    }
 
     /// <summary>Đăng ký lắng nghe sự kiện kéo thả từ DragController.</summary>
     private void OnEnable()
@@ -24,7 +55,11 @@ public class BoardView : MonoBehaviour
             dragController.OnBlockSelected += HandleBlockSelected;
             dragController.OnBlockVisualDragged += HandleBlockVisualDragging;
             dragController.OnBlockVisualReset += HandleBlockVisualReset;
+            dragController.OnHoverTargetChanged += HandleHoverTargetChanged;
         }
+
+        if (moveSystem != null)
+            moveSystem.OnMoveRejected += HandleMoveRejected;
     }
 
     /// <summary>Hủy đăng ký sự kiện kéo thả.</summary>
@@ -35,15 +70,13 @@ public class BoardView : MonoBehaviour
             dragController.OnBlockSelected -= HandleBlockSelected;
             dragController.OnBlockVisualDragged -= HandleBlockVisualDragging;
             dragController.OnBlockVisualReset -= HandleBlockVisualReset;
+            dragController.OnHoverTargetChanged -= HandleHoverTargetChanged;
         }
-    }
 
-    /// <summary>Đăng ký lắng nghe event đặt/di chuyển/xóa block từ BoardManager.</summary>
-    private void Start()
-    {
-        boardManager.OnBlockPlaced += HandleBlockPlaced;
-        boardManager.OnBlockMoved += HandleBlockMoved;
-        boardManager.OnBlockRemoved += HandleBlockRemoved;
+        if (moveSystem != null)
+            moveSystem.OnMoveRejected -= HandleMoveRejected;
+
+        ClearHoverTargetVisual();
     }
 
     /// <summary>Hủy đăng ký event BoardManager khi object bị destroy.</summary>
@@ -70,8 +103,17 @@ public class BoardView : MonoBehaviour
             view.SetBackgroundConfig(stackBackgroundConfig);
             view.Initialize(block.Data, Layout.CellWidth, Layout.CellHeight);
             view.UpdateStackVisual(block.StackCount);
-            view.MoveToPosition(worldPos);
             view.ApplyGridSorting(row);
+
+            if (m_IntroAnimator != null && m_IntroAnimator.IsIntroActive)
+            {
+                m_IntroAnimator.TrackBlock(block, row, col);
+                view.PrepareForIntroRise();
+            }
+            else
+            {
+                view.MoveToPosition(worldPos);
+            }
         }
 
         block.gameObject.name = $"Block_At_[{row},{col}] (type:{block.TypeKey})";
@@ -109,8 +151,12 @@ public class BoardView : MonoBehaviour
     /// <summary>Xóa GameObject block khi BoardManager.RemoveBlock được gọi.</summary>
     private void HandleBlockRemoved(Block block, int row, int col)
     {
-        if (block != null)
-            Destroy(block.gameObject);
+        if (block == null) return;
+
+        if (block == m_HoverTargetBlock)
+            m_HoverTargetBlock = null;
+
+        Destroy(block.gameObject);
     }
 
     #region INPUT VISUAL HANDLERS
@@ -119,6 +165,8 @@ public class BoardView : MonoBehaviour
     private void HandleBlockSelected(Block block)
     {
         if (block == null) return;
+
+        m_ShakeRejectOnReset = false;
 
         if (block.TryGetComponent<BlockView>(out var view))
         {
@@ -133,26 +181,67 @@ public class BoardView : MonoBehaviour
         if (block != null) block.transform.position = targetPos;
     }
 
-    /// <summary>Khi thả không hợp lệ — reset scale/rotation và tween về ô gốc.</summary>
+    private void HandleHoverTargetChanged(Block target)
+    {
+        if (m_HoverTargetBlock != null && m_HoverTargetBlock != target)
+            ClearHoverOnBlock(m_HoverTargetBlock);
+
+        m_HoverTargetBlock = target;
+
+        if (target != null && target.TryGetComponent<BlockView>(out var view))
+            view.PlayHoverTargetFeedback();
+    }
+
+    private void ClearHoverOnBlock(Block block)
+    {
+        if (block != null && block.TryGetComponent<BlockView>(out var view))
+            view.ClearHoverTargetFeedback();
+    }
+
+    private void ClearHoverTargetVisual()
+    {
+        ClearHoverOnBlock(m_HoverTargetBlock);
+        m_HoverTargetBlock = null;
+    }
+
+    /// <summary>Thả lên ô có block nhưng merge không được — chỉ block kéo sẽ lắc tại chỗ thả.</summary>
+    private void HandleMoveRejected(Slot sourceSlot, Slot targetSlot)
+    {
+        m_ShakeRejectOnReset = targetSlot != null && targetSlot.HasBlock;
+    }
+
+    /// <summary>Khi thả không hợp lệ — lắc tại chỗ thả (nếu cần) rồi tween về ô gốc.</summary>
     private void HandleBlockVisualReset(Block block, Slot sourceSlot)
     {
         if (block == null || sourceSlot == null || Layout == null) return;
 
         Vector3 originWorldPos = Layout.GetWorldPosition(sourceSlot.Row, sourceSlot.Col);
+        bool shakeFirst = m_ShakeRejectOnReset;
+        m_ShakeRejectOnReset = false;
 
-        if (block.TryGetComponent<BlockView>(out var view))
-        {
-            view.PlayReleaseFeedback();
-            block.transform.DOMove(originWorldPos, 0.2f)
-                .SetEase(Ease.OutQuad)
-                .OnComplete(() => RestoreSortingAfterReset(block, sourceSlot));
-        }
-        else
+        if (!block.TryGetComponent<BlockView>(out var view))
         {
             block.transform.DOMove(originWorldPos, 0.2f)
                 .SetEase(Ease.OutQuad)
                 .OnComplete(() => RestoreSortingAfterReset(block, sourceSlot));
+            return;
         }
+
+        if (shakeFirst)
+        {
+            view.PlayRejectShake(() => TweenBlockToSource(block, view, sourceSlot, originWorldPos));
+            return;
+        }
+
+        TweenBlockToSource(block, view, sourceSlot, originWorldPos);
+    }
+
+    private void TweenBlockToSource(Block block, BlockView view, Slot sourceSlot, Vector3 originWorldPos)
+    {
+        view.PlayReleaseFeedback();
+        block.transform.DOMove(originWorldPos, 0.2f)
+            .SetEase(Ease.OutQuad)
+            .OnComplete(() => RestoreSortingAfterReset(block, sourceSlot));
     }
 
     /// <summary>Khôi phục SortingGroup theo row sau khi block trở về ô gốc.</summary>
@@ -172,6 +261,8 @@ public class BoardView : MonoBehaviour
 
     #region DEBUG VISUALIZATION
 
+    // Tắt vẽ lưới debug Scene view — bỏ #if false để bật lại.
+#if false
     /// <summary>Vẽ lưới ô và tâm từng cell trong Scene view (debug).</summary>
     private void OnDrawGizmos()
     {
@@ -206,6 +297,7 @@ public class BoardView : MonoBehaviour
             }
         }
     }
+#endif
 
     #endregion
 }

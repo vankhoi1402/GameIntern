@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: BlockDatabase
   m_EditorClassIdentifier: 
   normalBlocks:
+  - {fileID: 11400000, guid: a0b1c2d3e4f5678901234567890abcd0, type: 2}
   - {fileID: 11400000, guid: 286007ce778af804589658e28be8b99d, type: 2}
   - {fileID: 11400000, guid: 0fd8a4ad44ef27843b1628f131e54fc4, type: 2}
   - {fileID: 11400000, guid: c76f7e4292258c14db769264597b33e3, type: 2}

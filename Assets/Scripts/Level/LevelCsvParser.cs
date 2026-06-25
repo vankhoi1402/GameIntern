@@ -17,11 +17,11 @@ public static class LevelCsvParser
         var level = ScriptableObject.CreateInstance<LevelData>();
         level.LevelId = levelId;
         level.VisibleRows = visibleRows;
-        level.Rows = ParseBinCsv(csvText, database);
+        level.Rows = ParseBinCsv(csvText);
         return level;
     }
 
-    public static LevelGridRow[] ParseBinCsv(string csvText, BlockDatabase database)
+    public static LevelGridRow[] ParseBinCsv(string csvText)
     {
         var rows = new List<LevelGridRow>();
         if (string.IsNullOrWhiteSpace(csvText))
@@ -52,19 +52,7 @@ public static class LevelCsvParser
             for (int c = 0; c < GridColumnCount; c++)
             {
                 string type = cols[c + 1].Trim();
-                if (type == "0" || string.IsNullOrEmpty(type))
-                {
-                    blockTypes[c] = "0";
-                    continue;
-                }
-
-                if (LevelCellParser.TryParseCell(type, out string typeKey, out _))
-                {
-                    if (database != null && database.GetBlockData(typeKey) == null)
-                        Debug.LogWarning($"[LevelCsv] block_type '{typeKey}' không có trong database (row {row}, col {c})");
-                }
-
-                blockTypes[c] = type;
+                blockTypes[c] = string.IsNullOrEmpty(type) ? string.Empty : type;
             }
 
             rows.Add(new LevelGridRow { Row = row, ColBlockTypes = blockTypes });

@@ -134,6 +134,22 @@ public class BoardManager : MonoBehaviour
         OnBlockRemoved?.Invoke(blockToRemove, row, col);
     }
 
+    /// <summary>True khi không còn block nào trên lưới.</summary>
+    public bool IsBoardEmpty()
+    {
+        for (int r = 0; r < rows; r++)
+        {
+            for (int c = 0; c < columns; c++)
+            {
+                Slot slot = GetSlot(r, c);
+                if (slot != null && slot.HasBlock)
+                    return false;
+            }
+        }
+
+        return true;
+    }
+
     /// <summary>Xóa toàn bộ block trên bàn (logic + Destroy view).</summary>
     public void ClearAllBlocks()
     {

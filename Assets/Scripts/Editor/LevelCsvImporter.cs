@@ -6,15 +6,33 @@ using UnityEngine;
 /// <summary>Import level.csv (bin cột) → LevelData.asset trong cùng folder level và gán catalog.</summary>
 public class LevelCsvImporter : EditorWindow
 {
+    private const string c_LevelsFolder = LevelCsvEditorPaths.LevelsFolder;
+
     private LevelCatalog _catalog;
     private BlockDatabase _database;
-    private string _levelsFolder = "Assets/Data/Levels";
+    private string _levelsFolder = c_LevelsFolder;
     private int _visibleRows = LevelCsvParser.DefaultVisibleRows;
 
     [MenuItem("Grid Game/Import Levels From CSV")]
     public static void ShowWindow()
     {
         GetWindow<LevelCsvImporter>("Level CSV Importer");
+    }
+
+    [MenuItem("Grid Game/Validate Level CSVs (log only)")]
+    public static void ValidateAllMenu()
+    {
+        LevelCsvEditorPaths.ValidateAllInCatalog(
+            LevelCsvEditorPaths.LoadDefaultCatalog(),
+            LevelCsvEditorPaths.LoadDefaultDatabase());
+    }
+
+    private void OnEnable()
+    {
+        if (_catalog == null)
+            _catalog = LevelCsvEditorPaths.LoadDefaultCatalog();
+        if (_database == null)
+            _database = LevelCsvEditorPaths.LoadDefaultDatabase();
     }
 
     private void OnGUI()
@@ -24,6 +42,9 @@ public class LevelCsvImporter : EditorWindow
         _database = (BlockDatabase)EditorGUILayout.ObjectField("Block Database", _database, typeof(BlockDatabase), false);
         _levelsFolder = EditorGUILayout.TextField("Levels Folder", _levelsFolder);
         _visibleRows = EditorGUILayout.IntField("Visible Rows (bàn ban đầu)", _visibleRows);
+
+        if (GUILayout.Button("Validate All (chỉ log Console)"))
+            ValidateAllFromCatalog();
 
         if (GUILayout.Button("Import All Entries In Catalog"))
             ImportAllFromCatalog();
@@ -125,9 +146,21 @@ public class LevelCsvImporter : EditorWindow
         Debug.Log("[LevelCsvImporter] Import xong — đã cập nhật LevelAsset trong catalog.");
     }
 
+    private void ValidateAllFromCatalog()
+    {
+        if (_catalog == null)
+            _catalog = LevelCsvEditorPaths.LoadDefaultCatalog();
+        if (_database == null)
+            _database = LevelCsvEditorPaths.LoadDefaultDatabase();
+
+        LevelCsvEditorPaths.ValidateAllInCatalog(_catalog, _database);
+    }
+
     private LevelData ImportEntry(int levelId, TextAsset csv)
     {
         LevelData data = LevelCsvParser.ParseLevelFromCsv(levelId, csv.text, _database, _visibleRows);
+        LevelCsvValidator.LogReport(levelId, data.Rows, _database);
+
         string assetPath = GetLevelAssetPathFromCsv(csv, levelId);
         LevelCsvParser.SaveLevelAsset(data, assetPath);
         Debug.Log($"[LevelCsvImporter] Imported → {assetPath}");

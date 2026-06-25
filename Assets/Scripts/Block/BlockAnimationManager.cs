@@ -17,13 +17,13 @@ public class BlockAnimationManager : MonoBehaviour
     private void OnEnable()
     {
         GravitySystem.OnGravityAnimationRequested += HandleGravityAnimation;
-        ColumnPushSystem.OnRefillWaveAnimationRequested += HandleRefillWaveAnimation;
+        BoardPresentationEvents.RefillWaveRequested += HandleRefillWaveAnimation;
     }
 
     private void OnDisable()
     {
         GravitySystem.OnGravityAnimationRequested -= HandleGravityAnimation;
-        ColumnPushSystem.OnRefillWaveAnimationRequested -= HandleRefillWaveAnimation;
+        BoardPresentationEvents.RefillWaveRequested -= HandleRefillWaveAnimation;
     }
 
     private void HandleGravityAnimation(List<GravityMoveCommand> commands, Action onCompleteCallback)

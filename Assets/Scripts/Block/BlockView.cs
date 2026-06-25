@@ -15,6 +15,17 @@ public class BlockView : MonoBehaviour
     private const float c_ReleaseDuration = 0.18f;
     private const float c_AbsorbDuration = 0.18f;
     private const float c_AbsorbRotateZ = 20f;
+    private const float c_RejectShakeDuration = 0.28f;
+    private const float c_RejectShakeRotation = 10f;
+    private const float c_RejectShakePosition = 0.06f;
+    private const float c_HoverTargetScale = 1.08f;
+    private const float c_HoverTargetDuration = 0.12f;
+    private const float c_HoverFlashDuration = 0.06f;
+    private const float c_HoverHoldDuration = 0.1f;
+    private const float c_HoverFlashBlend = 0.45f;
+    private const float c_HoverHoldBlend = 0.25f;
+    private const float c_HoverBgFlashBlend = 0.2f;
+    private const float c_HoverBgHoldBlend = 0.1f;
     public const int SortingOrderPerRow = 10;
     public const int DragSortingOrder = 1000;
     #endregion
@@ -28,12 +39,21 @@ public class BlockView : MonoBehaviour
     private SortingGroup m_SortingGroup;
     private Vector3 m_BaseScale;
     private float m_BaseRotationZ;
+    private Color m_BaseMainColor = Color.white;
+    private Color m_BaseBgColor = Color.white;
+    private Tween m_HoverTween;
+    private Tween m_HoverColorTween;
 
     /// <summary>Lưu scale và góc xoay mặc định để reset sau animation.</summary>
     private void Awake()
     {
         CacheTransformDefaults();
         m_SortingGroup = GetComponent<SortingGroup>();
+    }
+
+    private void OnDestroy()
+    {
+        KillHoverTweens();
     }
 
     /// <summary>Ghi nhớ scale/rotation ban đầu của transform.</summary>
@@ -57,11 +77,13 @@ public class BlockView : MonoBehaviour
         {
             _mainRenderer.sprite = data.VisualSprite;
             _mainRenderer.color = data.DebugColor;
+            m_BaseMainColor = data.DebugColor;
         }
 
         ResetSpriteAlpha();
         ResetTransformVisual();
         UpdateStackVisual(1);
+        CacheBaseBgColor();
     }
 
     /// <summary>Khởi tạo block burst khi T3 nổ — icon + nền merge (stack 2).</summary>
@@ -71,11 +93,13 @@ public class BlockView : MonoBehaviour
         {
             _mainRenderer.sprite = data.VisualSprite;
             _mainRenderer.color = data.DebugColor;
+            m_BaseMainColor = data.DebugColor;
         }
 
         ResetSpriteAlpha();
         ResetTransformVisual();
         UpdateStackVisual(StackBackgroundConfig.BurstFallVisualStack);
+        CacheBaseBgColor();
     }
 
     /// <summary>Đổi sprite nền theo stack (1 = mặc định, ≥ 2 = merge).</summary>
@@ -148,7 +172,9 @@ public class BlockView : MonoBehaviour
         ResetSpriteAlpha();
         transform.position = spawnWorldPos;
 
-        Tween move = transform.DOMove(targetWorldPos, duration).SetEase(Ease.OutCubic);
+        Tween move = transform.DOMove(targetWorldPos, duration)
+            .SetEase(Ease.OutCubic)
+            .SetLink(gameObject);
         if (delay > 0f)
             move.SetDelay(delay);
 
@@ -158,6 +184,51 @@ public class BlockView : MonoBehaviour
             ApplyGridSorting(row);
             onComplete?.Invoke();
         });
+    }
+
+    /// <summary>Intro load level — rise mượt với fade + scale nhẹ (column wave).</summary>
+    public void PlayIntroRise(
+        Vector3 spawnWorldPos,
+        Vector3 targetWorldPos,
+        float duration,
+        float delay,
+        int row,
+        float startScale,
+        float fadeInDuration,
+        Action onComplete = null)
+    {
+        transform.DOKill();
+        ResetTransformVisual();
+        SetSpritesAlpha(0f);
+        transform.localScale = m_BaseScale * startScale;
+        transform.position = spawnWorldPos;
+
+        Sequence seq = DOTween.Sequence().SetLink(gameObject);
+        if (delay > 0f)
+            seq.AppendInterval(delay);
+
+        seq.Append(transform.DOMove(targetWorldPos, duration).SetEase(Ease.OutSine));
+        seq.Join(transform.DOScale(m_BaseScale, duration).SetEase(Ease.OutSine));
+
+        float fadeDuration = Mathf.Min(fadeInDuration, duration);
+        foreach (SpriteRenderer renderer in GetComponentsInChildren<SpriteRenderer>())
+            seq.Join(renderer.DOFade(1f, fadeDuration).SetEase(Ease.OutSine));
+
+        seq.OnComplete(() =>
+        {
+            ResetTransformVisual();
+            ResetSpriteAlpha();
+            ApplyGridSorting(row);
+            onComplete?.Invoke();
+        });
+    }
+
+    /// <summary>Ẩn block trước khi intro rise (tránh flash tại ô đích).</summary>
+    public void PrepareForIntroRise()
+    {
+        transform.DOKill();
+        ResetTransformVisual();
+        SetSpritesAlpha(0f);
     }
 
     /// <summary>Reset tween/scale/alpha — gọi sau skill, gravity, refill.</summary>
@@ -319,6 +390,112 @@ public class BlockView : MonoBehaviour
         transform.DOPunchScale(Vector3.one * 0.15f, 0.22f, 8, 0.4f);
     }
 
+    /// <summary>Block đích phóng to nhẹ + lóe sáng khi block khác kéo qua.</summary>
+    public void PlayHoverTargetFeedback()
+    {
+        KillHoverTweens();
+        m_HoverTween = transform
+            .DOScale(m_BaseScale * c_HoverTargetScale, c_HoverTargetDuration)
+            .SetEase(Ease.OutBack)
+            .SetLink(gameObject);
+
+        PlayHoverFlash();
+    }
+
+    /// <summary>Trả scale và màu block đích về bình thường khi không còn hover.</summary>
+    public void ClearHoverTargetFeedback()
+    {
+        m_HoverTween?.Kill();
+        m_HoverTween = transform
+            .DOScale(m_BaseScale, c_HoverTargetDuration)
+            .SetEase(Ease.OutQuad)
+            .SetLink(gameObject);
+
+        ClearHoverFlash();
+    }
+
+    private void PlayHoverFlash()
+    {
+        KillHoverColorTween();
+        if (_mainRenderer == null)
+            return;
+
+        Color flashMain = Color.Lerp(m_BaseMainColor, Color.white, c_HoverFlashBlend);
+        Color holdMain = Color.Lerp(m_BaseMainColor, Color.white, c_HoverHoldBlend);
+        Color flashBg = Color.Lerp(m_BaseBgColor, Color.white, c_HoverBgFlashBlend);
+        Color holdBg = Color.Lerp(m_BaseBgColor, Color.white, c_HoverBgHoldBlend);
+
+        Sequence seq = DOTween.Sequence();
+        seq.Append(_mainRenderer.DOColor(flashMain, c_HoverFlashDuration).SetEase(Ease.OutQuad));
+        if (_bgRenderer != null)
+            seq.Join(_bgRenderer.DOColor(flashBg, c_HoverFlashDuration).SetEase(Ease.OutQuad));
+
+        seq.Append(_mainRenderer.DOColor(holdMain, c_HoverHoldDuration).SetEase(Ease.OutQuad));
+        if (_bgRenderer != null)
+            seq.Join(_bgRenderer.DOColor(holdBg, c_HoverHoldDuration).SetEase(Ease.OutQuad));
+
+        m_HoverColorTween = seq.SetLink(gameObject);
+    }
+
+    private void ClearHoverFlash()
+    {
+        KillHoverColorTween();
+
+        if (_mainRenderer == null)
+            return;
+
+        Sequence seq = DOTween.Sequence();
+        seq.Join(_mainRenderer.DOColor(m_BaseMainColor, c_HoverTargetDuration).SetEase(Ease.OutQuad));
+        if (_bgRenderer != null)
+            seq.Join(_bgRenderer.DOColor(m_BaseBgColor, c_HoverTargetDuration).SetEase(Ease.OutQuad));
+
+        m_HoverColorTween = seq.SetLink(gameObject);
+    }
+
+    private void KillHoverTweens()
+    {
+        m_HoverTween?.Kill();
+        m_HoverTween = null;
+        KillHoverColorTween();
+    }
+
+    private void KillHoverColorTween()
+    {
+        m_HoverColorTween?.Kill();
+        m_HoverColorTween = null;
+
+        if (_mainRenderer != null)
+            _mainRenderer.DOKill();
+
+        if (_bgRenderer != null)
+            _bgRenderer.DOKill();
+    }
+
+    private void CacheBaseBgColor()
+    {
+        if (_bgRenderer != null)
+            m_BaseBgColor = _bgRenderer.color;
+    }
+
+    /// <summary>Lắc nhẹ block đang kéo tại chỗ thả — xong gọi onComplete rồi mới về ô gốc.</summary>
+    public void PlayRejectShake(Action onComplete = null)
+    {
+        KillPickupTweens();
+
+        Sequence seq = DOTween.Sequence();
+        seq.Append(transform.DOPunchRotation(
+            new Vector3(0f, 0f, c_RejectShakeRotation),
+            c_RejectShakeDuration,
+            14,
+            0.55f));
+        seq.Join(transform.DOPunchPosition(
+            new Vector3(c_RejectShakePosition, 0f, 0f),
+            c_RejectShakeDuration,
+            12,
+            0.45f).SetRelative(true));
+        seq.OnComplete(() => onComplete?.Invoke());
+    }
+
     /// <summary>Block rơi xuống dưới màn hình và mờ dần khi stack đạt max (≥3).</summary>
     public void PlayFallOffScreen(Camera cam, float fallWorldDistance, float duration, Action onComplete)
     {
@@ -372,10 +549,15 @@ public class BlockView : MonoBehaviour
     /// <summary>Đảm bảo alpha sprite = 1 (sau fall-off có thể bị fade).</summary>
     private void ResetSpriteAlpha()
     {
+        SetSpritesAlpha(1f);
+    }
+
+    private void SetSpritesAlpha(float alpha)
+    {
         foreach (SpriteRenderer renderer in GetComponentsInChildren<SpriteRenderer>())
         {
             Color c = renderer.color;
-            c.a = 1f;
+            c.a = alpha;
             renderer.color = c;
         }
     }

@@ -24,6 +24,29 @@ public class LevelCatalog : ScriptableObject
             return default;
         return Levels[index];
     }
+
+    public bool TryGetNextAfter(int levelId, out LevelCatalogEntry next)
+    {
+        next = default;
+        if (Levels == null || Levels.Length == 0)
+            return false;
+
+        int index = -1;
+        for (int i = 0; i < Levels.Length; i++)
+        {
+            if (Levels[i].LevelId == levelId)
+            {
+                index = i;
+                break;
+            }
+        }
+
+        if (index < 0 || index + 1 >= Levels.Length)
+            return false;
+
+        next = Levels[index + 1];
+        return next.LevelAsset != null;
+    }
 }
 
 [Serializable]

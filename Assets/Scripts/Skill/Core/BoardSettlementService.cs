@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-/// <summary>Gravity + refill bin — dùng chung cho T3 và skill.</summary>
+/// <summary>Gravity + refill bin — cửa vào duy nhất sau T3 / skill.</summary>
 public class BoardSettlementService : MonoBehaviour
 {
     private const float c_PipelineTimeoutSeconds = 8f;
@@ -15,6 +15,11 @@ public class BoardSettlementService : MonoBehaviour
     [SerializeField] private float riseDuration = 0.15f;
 
     private bool m_IsRunning;
+
+    public bool IsRunning => m_IsRunning;
+
+    /// <summary>Phát khi pipeline kết thúc (Idle) — hook win/lose sau này.</summary>
+    public event Action<bool> OnSettlementCompleted;
 
     private void Awake()
     {
@@ -28,9 +33,19 @@ public class BoardSettlementService : MonoBehaviour
             levelManager = FindObjectOfType<LevelManager>();
     }
 
-    public bool IsRunning => m_IsRunning;
+    /// <summary>Gravity + refill bin (T3, skill).</summary>
+    public void RunSettlement(Action onComplete = null)
+    {
+        RunSettlement(includeRefill: true, onComplete);
+    }
 
-    public void RunGravityThenRefill(Action onComplete = null)
+    /// <summary>Chỉ gravity — merge nhỏ (stack &lt; 3).</summary>
+    public void RunGravityOnly(Action onComplete = null)
+    {
+        RunSettlement(includeRefill: false, onComplete);
+    }
+
+    public void RunSettlement(bool includeRefill, Action onComplete = null)
     {
         if (m_IsRunning)
         {
@@ -39,8 +54,11 @@ public class BoardSettlementService : MonoBehaviour
             return;
         }
 
-        StartCoroutine(SettlementRoutine(onComplete));
+        StartCoroutine(SettlementRoutine(includeRefill, onComplete));
     }
+
+    /// <summary>Alias cũ — skill / code legacy.</summary>
+    public void RunGravityThenRefill(Action onComplete = null) => RunSettlement(onComplete);
 
     public IEnumerator RunGravityThenRefillRoutine(Action onComplete = null)
     {
@@ -51,10 +69,10 @@ public class BoardSettlementService : MonoBehaviour
             yield break;
         }
 
-        yield return SettlementRoutine(onComplete);
+        yield return SettlementRoutine(includeRefill: true, onComplete);
     }
 
-    private IEnumerator SettlementRoutine(Action onComplete)
+    private IEnumerator SettlementRoutine(bool includeRefill, Action onComplete)
     {
         m_IsRunning = true;
 
@@ -68,20 +86,23 @@ public class BoardSettlementService : MonoBehaviour
 
             yield return WaitUntilOrTimeout(() => gravityDone, c_PipelineTimeoutSeconds, "gravity");
 
-            if (BoardStateManager.Instance != null)
-                BoardStateManager.Instance.ChangeState(BoardState.ApplyingRefill);
-
-            while (AnyColumnNeedsRefill())
+            if (includeRefill)
             {
-                List<ColumnRefillPacket> wave = CollectRefillWave();
-                if (wave.Count == 0)
-                    break;
+                if (BoardStateManager.Instance != null)
+                    BoardStateManager.Instance.ChangeState(BoardState.ApplyingRefill);
 
-                bool animDone = false;
-                columnPushSystem.PlayRefillWaveAnimation(wave, () => animDone = true);
-                PlayRiseAnimations(wave);
+                while (AnyColumnNeedsRefill())
+                {
+                    List<ColumnRefillPacket> wave = CollectRefillWave();
+                    if (wave.Count == 0)
+                        break;
 
-                yield return WaitUntilOrTimeout(() => animDone, c_PipelineTimeoutSeconds, "refill wave");
+                    bool animDone = false;
+                    BoardPresentationEvents.RequestRefillWaveAnimation(wave, () => animDone = true);
+                    PlayRiseAnimations(wave);
+
+                    yield return WaitUntilOrTimeout(() => animDone, c_PipelineTimeoutSeconds, "refill wave");
+                }
             }
         }
         finally
@@ -89,6 +110,8 @@ public class BoardSettlementService : MonoBehaviour
             m_IsRunning = false;
             if (BoardStateManager.Instance != null)
                 BoardStateManager.Instance.ChangeState(BoardState.Idle);
+
+            OnSettlementCompleted?.Invoke(includeRefill);
             onComplete?.Invoke();
         }
     }

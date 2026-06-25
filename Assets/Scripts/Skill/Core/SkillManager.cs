@@ -253,7 +253,7 @@ public class SkillManager : MonoBehaviour
         if (result.Success && result.NeedsSettlement && settlementService != null)
         {
             bool settlementDone = false;
-            settlementService.RunGravityThenRefill(() => settlementDone = true);
+            settlementService.RunSettlement(() => settlementDone = true);
 
             float timeout = 10f;
             float elapsed = 0f;

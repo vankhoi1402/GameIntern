@@ -30,7 +30,7 @@ public class BlockDatabase : ScriptableObject
             if (data == null) continue;
 
             int id = data.BlockId;
-            if (id <= 0)
+            if (id < 0)
             {
                 Debug.LogWarning($"[BlockDatabase] BlockData '{data.name}' có BlockId không hợp lệ.");
                 continue;
@@ -51,11 +51,27 @@ public class BlockDatabase : ScriptableObject
         }
     }
 
-    /// <summary>Lấy ngẫu nhiên một BlockData từ danh sách.</summary>
+    /// <summary>Lấy ngẫu nhiên một BlockData từ danh sách (bỏ qua blockId 0).</summary>
     public BlockData GetRandomNormalBlock()
     {
-        if (normalBlocks == null || normalBlocks.Count == 0) return null;
-        return normalBlocks[Random.Range(0, normalBlocks.Count)];
+        if (normalBlocks == null || normalBlocks.Count == 0)
+            return null;
+
+        int attempts = normalBlocks.Count * 2;
+        for (int i = 0; i < attempts; i++)
+        {
+            BlockData data = normalBlocks[Random.Range(0, normalBlocks.Count)];
+            if (data != null && data.BlockId > 0)
+                return data;
+        }
+
+        foreach (BlockData data in normalBlocks)
+        {
+            if (data != null && data.BlockId > 0)
+                return data;
+        }
+
+        return null;
     }
 
     /// <summary>Lấy BlockData theo typeKey string — ví dụ "1", "6".</summary>
@@ -79,7 +95,7 @@ public class BlockDatabase : ScriptableObject
     /// <summary>Lấy BlockData theo blockId số.</summary>
     public BlockData GetBlockData(int blockId)
     {
-        if (blockId <= 0) return null;
+        if (blockId < 0) return null;
 
         if (_byId == null) BuildLookupTable();
 
@@ -90,4 +106,4 @@ public class BlockDatabase : ScriptableObject
         return null;
     }
 }
-
+

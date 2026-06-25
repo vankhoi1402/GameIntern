@@ -42,6 +42,8 @@ public class SpawnSystem : MonoBehaviour
     [SerializeField, Range(0.2f, 0.8f)] private float burstExplodeHorizontal = 0.45f;
     [SerializeField, Range(0.2f, 0.8f)] private float burstExplodeUp = 0.4f;
 
+    public BlockDatabase BlockDatabase => blockDatabase;
+
     private void Awake()
     {
         if (boardManager == null)
@@ -159,10 +161,10 @@ public class SpawnSystem : MonoBehaviour
 
         foreach (var cell in testCells)
         {
-            if (string.IsNullOrWhiteSpace(cell.blockType) || cell.blockType.Trim() == "0")
+            if (string.IsNullOrWhiteSpace(cell.blockType))
                 continue;
 
-            SpawnBlockAt(cell.row, cell.col, cell.blockType, cell.stack);
+            SpawnBlockAt(cell.row, cell.col, cell.blockType.Trim(), cell.stack);
         }
     }
 

@@ -16,12 +16,14 @@ public class DragController : MonoBehaviour
     [SerializeField] private Camera targetCamera;
 
     private Slot _sourceSlot;
+    private Block _hoverTargetBlock;
     private DragState _currentState = DragState.Idle;
     private Vector3 _dragOffset;
 
     public event Action<Block, Vector3> OnBlockVisualDragged;
     public event Action<Block, Slot> OnBlockVisualReset;
     public event Action<Block> OnBlockSelected;
+    public event Action<Block> OnHoverTargetChanged;
 
     /// <summary>Lấy camera mặc định nếu chưa gán.</summary>
     private void Awake()
@@ -76,6 +78,36 @@ public class DragController : MonoBehaviour
 
         Vector3 targetVisualPos = mouseWorldPos + _dragOffset;
         OnBlockVisualDragged?.Invoke(block, targetVisualPos);
+        UpdateHoverTarget(mouseWorldPos);
+    }
+
+    private void UpdateHoverTarget(Vector3 mouseWorldPos)
+    {
+        Block next = null;
+        var layout = boardView != null ? boardView.Layout : null;
+
+        if (layout != null && boardManager != null)
+        {
+            Vector2Int grid = layout.GetGridPosition(mouseWorldPos);
+            Slot slot = boardManager.GetSlot(grid.x, grid.y);
+            if (slot != null && slot != _sourceSlot && slot.HasBlock)
+                next = slot.CurrentBlock;
+        }
+
+        if (next == _hoverTargetBlock)
+            return;
+
+        _hoverTargetBlock = next;
+        OnHoverTargetChanged?.Invoke(next);
+    }
+
+    private void ClearHoverTarget()
+    {
+        if (_hoverTargetBlock == null)
+            return;
+
+        _hoverTargetBlock = null;
+        OnHoverTargetChanged?.Invoke(null);
     }
 
     /// <summary>
@@ -84,6 +116,8 @@ public class DragController : MonoBehaviour
     private void HandleDragEnd(Block block)
     {
         if (_currentState != DragState.Dragging || block == null) return;
+
+        ClearHoverTarget();
         _currentState = DragState.Idle;
 
         var layout = boardView.Layout;

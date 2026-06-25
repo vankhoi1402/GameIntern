@@ -30,8 +30,6 @@ public class ColumnPushSystem : MonoBehaviour
             boardManager = FindObjectOfType<BoardManager>();
     }
 
-    public static event Action<IReadOnlyList<ColumnRefillPacket>, Action> OnRefillWaveAnimationRequested;
-
     /// <summary>Đếm block hiện có trong cột.</summary>
     public int CountBlocksInColumn(int col)
     {
@@ -98,13 +96,5 @@ public class ColumnPushSystem : MonoBehaviour
         }
 
         return true;
-    }
-
-    public void PlayRefillWaveAnimation(IReadOnlyList<ColumnRefillPacket> wave, Action onComplete)
-    {
-        if (OnRefillWaveAnimationRequested != null)
-            OnRefillWaveAnimationRequested.Invoke(wave, onComplete);
-        else
-            onComplete?.Invoke();
     }
 }

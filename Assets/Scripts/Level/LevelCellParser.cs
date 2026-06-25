@@ -1,6 +1,9 @@
 using UnityEngine;
 
-/// <summary>Parse ô CSV: "1" hoặc "1:2" (type:stack).</summary>
+/// <summary>
+/// Parse ô level: "0", "1", "1:2" (type:stack).
+/// Ô trống: rỗng hoặc whitespace.
+/// </summary>
 public static class LevelCellParser
 {
     public static bool TryParseCell(string cell, out string typeKey, out int stack)
@@ -12,8 +15,6 @@ public static class LevelCellParser
             return false;
 
         string trimmed = cell.Trim();
-        if (trimmed == "0")
-            return false;
 
         int colon = trimmed.IndexOf(':');
         if (colon < 0)
@@ -23,7 +24,7 @@ public static class LevelCellParser
         }
 
         typeKey = trimmed.Substring(0, colon).Trim();
-        if (string.IsNullOrEmpty(typeKey) || typeKey == "0")
+        if (string.IsNullOrEmpty(typeKey))
             return false;
 
         if (!int.TryParse(trimmed.Substring(colon + 1).Trim(), out stack))

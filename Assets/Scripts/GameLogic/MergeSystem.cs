@@ -2,14 +2,14 @@
 using UnityEngine;
 
 /// <summary>
-/// Xử lý logic merge: cộng stack, xóa block đạt max, kích hoạt gravity + refill.
+/// Xử lý logic merge: cộng stack, xóa block đạt max, kích hoạt settlement.
 /// </summary>
 public class MergeSystem : MonoBehaviour
 {
     [Header("References")]
     [SerializeField] private BoardManager boardManager;
     [SerializeField] private SpawnSystem spawnSystem;
-    [SerializeField] private DesignRefillController designRefillController;
+    [SerializeField] private BoardSettlementService settlementService;
 
     /// <summary>Phát sau khi source đã cộng stack vào target (View xử lý animation nhập).</summary>
     public event Action<Block, Block> OnBlockStacked;
@@ -18,10 +18,8 @@ public class MergeSystem : MonoBehaviour
     {
         if (spawnSystem == null)
             spawnSystem = FindObjectOfType<SpawnSystem>();
-        if (designRefillController == null)
-            designRefillController = GetComponent<DesignRefillController>();
-        if (designRefillController == null)
-            designRefillController = FindObjectOfType<DesignRefillController>();
+        if (settlementService == null)
+            settlementService = FindObjectOfType<BoardSettlementService>();
     }
 
     /// <summary>Điểm vào merge — gọi khi kéo block cùng loại vào nhau. Trả false nếu merge không thực hiện được.</summary>
@@ -39,7 +37,7 @@ public class MergeSystem : MonoBehaviour
 
     /// <summary>
     /// Cộng stack source vào target, clear ô source, đổi nền/animation,
-    /// nếu stack >= 3 thì nổ 3 block rơi khỏi màn → gravity → refill.
+    /// nếu stack >= 3 thì nổ 3 block rơi khỏi màn → settlement (gravity + refill).
     /// </summary>
     private void ProcessMerge(Block sourceBlock, Block targetBlock)
     {
@@ -69,10 +67,7 @@ public class MergeSystem : MonoBehaviour
 
                 void AfterExplode()
                 {
-                    if (designRefillController != null)
-                        designRefillController.OnT3Cleared(null);
-                    else
-                        RunGravityOrIdle();
+                    RequestFullSettlement();
                 }
 
                 if (spawnSystem != null && clearedData != null)
@@ -83,17 +78,26 @@ public class MergeSystem : MonoBehaviour
                 return;
             }
 
-            RunGravityOrIdle();
+            RequestGravityOnly();
             return;
         }
 
-        RunGravityOrIdle();
+        RequestGravityOnly();
     }
 
-    /// <summary>Kích hoạt gravity hoặc trả state về Idle nếu không có GravitySystem.</summary>
-    private static void RunGravityOrIdle()
+    private void RequestFullSettlement()
     {
-        if (GravitySystem.Instance != null)
+        if (settlementService != null)
+            settlementService.RunSettlement();
+        else
+            RequestGravityOnly();
+    }
+
+    private void RequestGravityOnly()
+    {
+        if (settlementService != null)
+            settlementService.RunGravityOnly();
+        else if (GravitySystem.Instance != null)
             GravitySystem.Instance.RunGravity();
         else if (BoardStateManager.Instance != null)
             BoardStateManager.Instance.ChangeState(BoardState.Idle);

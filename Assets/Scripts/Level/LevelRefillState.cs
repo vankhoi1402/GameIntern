@@ -58,4 +58,41 @@ public class LevelRefillState
 
         return null;
     }
+
+    /// <summary>Còn block chờ dequeue trong bin cột.</summary>
+    public bool HasRemainingBlocks()
+    {
+        for (int col = 0; col < c_ColumnCount; col++)
+        {
+            if (HasRemainingInColumn(col))
+                return true;
+        }
+
+        return false;
+    }
+
+    private bool HasRemainingInColumn(int col)
+    {
+        int savedDepth = _nextDepthByCol[col];
+
+        while (_nextDepthByCol[col] <= _maxDepth)
+        {
+            int depth = _nextDepthByCol[col]++;
+
+            if (!_rowsByDepth.TryGetValue(depth, out LevelGridRow row))
+                continue;
+
+            if (row.ColBlockTypes == null || col >= row.ColBlockTypes.Length)
+                continue;
+
+            if (LevelCellParser.TryParseCell(row.ColBlockTypes[col], out _, out _))
+            {
+                _nextDepthByCol[col] = savedDepth;
+                return true;
+            }
+        }
+
+        _nextDepthByCol[col] = savedDepth;
+        return false;
+    }
 }

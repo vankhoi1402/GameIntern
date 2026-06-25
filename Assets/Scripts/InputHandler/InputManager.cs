@@ -35,6 +35,7 @@ public class InputManager : MonoBehaviour
     private void Update()
     {
         if (BoardStateManager.Instance == null || !BoardStateManager.Instance.CanAcceptInput()) return;
+        if (_isInputLocked) return;
         if (targetCamera == null || InputEventBus.Instance == null) return;
 
         if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
