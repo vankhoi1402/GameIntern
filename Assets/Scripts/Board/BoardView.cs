@@ -102,7 +102,7 @@ public class BoardView : MonoBehaviour
             Vector3 worldPos = Layout.GetWorldPosition(row, col);
             view.SetBackgroundConfig(stackBackgroundConfig);
             view.Initialize(block.Data, Layout.CellWidth, Layout.CellHeight);
-            view.UpdateStackVisual(block.StackCount);
+            view.UpdateTier2StageVisual(block.StackCount, block.Tier2MergeStage);
             view.ApplyGridSorting(row);
 
             if (m_IntroAnimator != null && m_IntroAnimator.IsIntroActive)

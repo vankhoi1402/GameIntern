@@ -138,7 +138,7 @@ public class SpawnSystem : MonoBehaviour
             if (stackBackgroundConfig != null)
                 view.SetBackgroundConfig(stackBackgroundConfig);
             view.Initialize(data, boardManager.Layout.CellWidth, boardManager.Layout.CellHeight);
-            view.UpdateStackVisual(stack);
+            view.UpdateTier2StageVisual(block.StackCount, block.Tier2MergeStage);
         }
 
         return block;

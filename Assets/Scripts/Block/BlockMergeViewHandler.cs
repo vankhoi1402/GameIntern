@@ -38,7 +38,7 @@ public class BlockMergeViewHandler : MonoBehaviour
         if (targetView != null)
         {
             targetView.SetBackgroundConfig(stackBackgroundConfig);
-            targetView.UpdateStackVisual(target.StackCount);
+            targetView.UpdateTier2StageVisual(target.StackCount, target.Tier2MergeStage);
         }
 
         if (source == null)

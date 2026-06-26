@@ -36,15 +36,26 @@ public class MergeSystem : MonoBehaviour
     }
 
     /// <summary>
-    /// Cộng stack source vào target, clear ô source, đổi nền/animation,
-    /// nếu stack >= 3 thì nổ 3 block rơi khỏi màn → settlement (gravity + refill).
+    /// Nhánh 1+1 / 1+2: cộng stack; nhánh 2+2: tăng Tier2MergeStage (không cộng stack).
+    /// Nổ khi stack >= 3 (cũ) hoặc Tier2MergeStage >= 3 (2+2+2).
     /// </summary>
     private void ProcessMerge(Block sourceBlock, Block targetBlock)
     {
         sourceBlock.IsPendingDestroy = true;
 
-        int sourceWeight = sourceBlock.StackCount;
-        targetBlock.AddStack(sourceWeight);
+        bool tier2PairMerge = targetBlock.IsTier2PairMergeWith(sourceBlock);
+
+        if (tier2PairMerge)
+            targetBlock.IncrementTier2MergeStage();
+        else
+        {
+            int sourceWeight = sourceBlock.StackCount;
+            int targetWeightBefore = targetBlock.StackCount;
+            targetBlock.AddStack(sourceWeight);
+
+            if (targetBlock.StackCount == 2 && sourceWeight == 1 && targetWeightBefore == 1)
+                targetBlock.SetTier2MergeStage(1);
+        }
 
         Slot sourceSlot = sourceBlock.CurrentSlot;
         if (sourceSlot != null)
@@ -52,37 +63,44 @@ public class MergeSystem : MonoBehaviour
 
         OnBlockStacked?.Invoke(sourceBlock, targetBlock);
 
-        if (targetBlock.StackCount >= 3)
+        bool shouldClear = targetBlock.StackCount >= 3
+            || (tier2PairMerge && targetBlock.Tier2MergeStage >= 3);
+
+        if (shouldClear)
         {
-            Slot targetSlot = targetBlock.CurrentSlot;
-            if (targetSlot != null)
-            {
-                targetBlock.IsPendingDestroy = true;
-                int row = targetSlot.Row;
-                int col = targetSlot.Col;
-                BlockData clearedData = targetBlock.Data;
-
-                boardManager.ClearSlot(row, col);
-                Destroy(targetBlock.gameObject);
-
-                void AfterExplode()
-                {
-                    RequestFullSettlement();
-                }
-
-                if (spawnSystem != null && clearedData != null)
-                    spawnSystem.SpawnBurstFallOff(row, col, clearedData, AfterExplode);
-                else
-                    AfterExplode();
-
-                return;
-            }
-
-            RequestGravityOnly();
+            TryClearTargetBlock(targetBlock);
             return;
         }
 
         RequestGravityOnly();
+    }
+
+    private void TryClearTargetBlock(Block targetBlock)
+    {
+        Slot targetSlot = targetBlock.CurrentSlot;
+        if (targetSlot == null)
+        {
+            RequestGravityOnly();
+            return;
+        }
+
+        targetBlock.IsPendingDestroy = true;
+        int row = targetSlot.Row;
+        int col = targetSlot.Col;
+        BlockData clearedData = targetBlock.Data;
+
+        boardManager.ClearSlot(row, col);
+        Destroy(targetBlock.gameObject);
+
+        void AfterExplode()
+        {
+            RequestFullSettlement();
+        }
+
+        if (spawnSystem != null && clearedData != null)
+            spawnSystem.SpawnBurstFallOff(row, col, clearedData, AfterExplode);
+        else
+            AfterExplode();
     }
 
     private void RequestFullSettlement()

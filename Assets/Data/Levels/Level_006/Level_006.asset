@@ -11,6 +11,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6, type: 3}
   m_Name: Level_006
+  m_EditorClassIdentifier: 
   LevelId: 6
   VisibleRows: 7
   Rows:

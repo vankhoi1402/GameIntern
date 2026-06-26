@@ -28,11 +28,13 @@ public class BlockView : MonoBehaviour
     private const float c_HoverBgHoldBlend = 0.1f;
     public const int SortingOrderPerRow = 10;
     public const int DragSortingOrder = 1000;
+    private const int c_Tier2PairOverlayMinStage = 2;
     #endregion
 
     [Header("Assign ngoài Inspector")]
     public SpriteRenderer _mainRenderer;
     public SpriteRenderer _bgRenderer;
+    [SerializeField] private SpriteRenderer m_SelectedRenderer;
 
     [SerializeField] private StackBackgroundConfig stackBackgroundConfig;
 
@@ -49,6 +51,7 @@ public class BlockView : MonoBehaviour
     {
         CacheTransformDefaults();
         m_SortingGroup = GetComponent<SortingGroup>();
+        ResolveSelectedRenderer();
     }
 
     private void OnDestroy()
@@ -82,7 +85,7 @@ public class BlockView : MonoBehaviour
 
         ResetSpriteAlpha();
         ResetTransformVisual();
-        UpdateStackVisual(1);
+        UpdateTier2StageVisual(1, 0);
         CacheBaseBgColor();
     }
 
@@ -98,8 +101,16 @@ public class BlockView : MonoBehaviour
 
         ResetSpriteAlpha();
         ResetTransformVisual();
-        UpdateStackVisual(StackBackgroundConfig.BurstFallVisualStack);
+        UpdateTier2StageVisual(StackBackgroundConfig.BurstFallVisualStack, 0);
         CacheBaseBgColor();
+    }
+
+    /// <summary>Đổi nền stack + overlay Selected khi đã ghép 2+2 (stage ≥ 2).</summary>
+    public void UpdateTier2StageVisual(int stackCount, int tier2MergeStage)
+    {
+        bool tier2PairOverlay = stackCount == 2 && tier2MergeStage >= c_Tier2PairOverlayMinStage;
+        UpdateStackVisual(tier2PairOverlay ? 1 : stackCount);
+        ApplyTier2PairOverlay(stackCount, tier2MergeStage);
     }
 
     /// <summary>Đổi sprite nền theo stack (1 = mặc định, ≥ 2 = merge).</summary>
@@ -110,6 +121,26 @@ public class BlockView : MonoBehaviour
         Sprite bg = stackBackgroundConfig.GetBackground(stackCount);
         if (bg != null)
             _bgRenderer.sprite = bg;
+    }
+
+    private void ResolveSelectedRenderer()
+    {
+        if (m_SelectedRenderer != null)
+            return;
+
+        Transform selected = transform.Find("Selected");
+        if (selected != null)
+            m_SelectedRenderer = selected.GetComponent<SpriteRenderer>();
+    }
+
+    private void ApplyTier2PairOverlay(int stackCount, int tier2MergeStage)
+    {
+        ResolveSelectedRenderer();
+        if (m_SelectedRenderer == null)
+            return;
+
+        bool showOverlay = stackCount == 2 && tier2MergeStage >= c_Tier2PairOverlayMinStage;
+        m_SelectedRenderer.gameObject.SetActive(showOverlay);
     }
 
     /// <summary>SortingGroup theo row — row cao hơn vẽ trên row thấp hơn.</summary>
