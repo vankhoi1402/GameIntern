@@ -6,6 +6,8 @@ using UnityEngine.UI;
 /// <summary>UI thua — show/hide và nút chơi lại.</summary>
 public class DefeatUIController : MonoBehaviour
 {
+    private const string c_LayerLabButtonName = "Button_124_Blue";
+
     [SerializeField] private GameObject m_Root;
     [SerializeField] private Button m_BtnRetry;
     [SerializeField] private TMP_Text m_TitleText;
@@ -13,7 +15,7 @@ public class DefeatUIController : MonoBehaviour
 
     public event Action OnRetryClicked;
 
-    private bool m_Initialized;
+    private bool m_ClickListenerRegistered;
     private bool m_IsHiding;
 
     private void OnDestroy()
@@ -24,7 +26,11 @@ public class DefeatUIController : MonoBehaviour
 
     public void Show(int levelId)
     {
-        EnsureInitialized();
+        GameObject root = m_Root != null ? m_Root : gameObject;
+        m_IsHiding = false;
+        root.SetActive(true);
+
+        EnsureButtonBinding();
 
         if (m_TitleText != null)
             m_TitleText.text = "Bạn đã thua";
@@ -34,15 +40,11 @@ public class DefeatUIController : MonoBehaviour
 
         if (m_BtnRetry != null)
             m_BtnRetry.interactable = true;
-
-        GameObject root = m_Root != null ? m_Root : gameObject;
-        m_IsHiding = false;
-        root.SetActive(true);
     }
 
     public void Hide(Action onComplete = null, bool animated = false)
     {
-        if (!m_Initialized && m_Root == null)
+        if (m_Root == null)
             m_Root = gameObject;
 
         GameObject root = m_Root != null ? m_Root : gameObject;
@@ -61,16 +63,28 @@ public class DefeatUIController : MonoBehaviour
         onComplete?.Invoke();
     }
 
-    private void EnsureInitialized()
+    private void EnsureButtonBinding()
     {
-        if (m_Initialized)
+        if (m_Root == null)
+            m_Root = gameObject;
+
+        if (m_BtnRetry == null)
+            AutoBindReferences();
+
+        if (m_BtnRetry != null && PopupUIButtonUtility.UsesLayerLabButton(transform))
+            PopupUIButtonUtility.PrepareLayerLabPopup(transform, c_LayerLabButtonName);
+
+        if (m_BtnRetry == null)
+        {
+            Debug.LogWarning("[DefeatUI] Không tìm thấy Button_124_Blue — nút chơi lại sẽ không hoạt động.");
             return;
+        }
 
-        m_Initialized = true;
-        AutoBindReferences();
-
-        if (m_BtnRetry != null)
+        if (!m_ClickListenerRegistered)
+        {
             m_BtnRetry.onClick.AddListener(HandleRetryClicked);
+            m_ClickListenerRegistered = true;
+        }
     }
 
     private void HandleRetryClicked()
@@ -83,52 +97,33 @@ public class DefeatUIController : MonoBehaviour
 
     private void AutoBindReferences()
     {
-        if (m_Root == null)
-            m_Root = gameObject;
-
-        Transform panel = FindChildDeep(transform, "Panel_Center");
-        if (panel == null)
+        Transform panel = PopupUIButtonUtility.FindChildDeep(transform, "Panel_Center");
+        if (panel != null)
         {
-            Debug.LogWarning("[DefeatUI] Không tìm thấy Panel_Center.");
+            if (m_BtnRetry == null)
+            {
+                Transform btn = PopupUIButtonUtility.FindChildDeep(panel, "Btn_Retry");
+                if (btn != null)
+                    m_BtnRetry = btn.GetComponent<Button>();
+            }
+
+            if (m_TitleText == null)
+            {
+                Transform title = PopupUIButtonUtility.FindChildDeep(panel, "TitleText");
+                if (title != null)
+                    m_TitleText = title.GetComponent<TMP_Text>();
+            }
+
+            if (m_SubtitleText == null)
+            {
+                Transform subtitle = PopupUIButtonUtility.FindChildDeep(panel, "SubtitleText");
+                if (subtitle != null)
+                    m_SubtitleText = subtitle.GetComponent<TMP_Text>();
+            }
+
             return;
         }
 
-        if (m_BtnRetry == null)
-        {
-            Transform btn = FindChildDeep(panel, "Btn_Retry");
-            if (btn != null)
-                m_BtnRetry = btn.GetComponent<Button>();
-        }
-
-        if (m_TitleText == null)
-        {
-            Transform title = FindChildDeep(panel, "TitleText");
-            if (title != null)
-                m_TitleText = title.GetComponent<TMP_Text>();
-        }
-
-        if (m_SubtitleText == null)
-        {
-            Transform subtitle = FindChildDeep(panel, "SubtitleText");
-            if (subtitle != null)
-                m_SubtitleText = subtitle.GetComponent<TMP_Text>();
-        }
-
-        if (m_BtnRetry == null)
-            Debug.LogWarning("[DefeatUI] Không tìm thấy Btn_Retry — nút chơi lại sẽ không hoạt động.");
-    }
-
-    private static Transform FindChildDeep(Transform parent, string childName)
-    {
-        if (parent == null)
-            return null;
-
-        foreach (Transform child in parent.GetComponentsInChildren<Transform>(true))
-        {
-            if (child.name == childName)
-                return child;
-        }
-
-        return null;
+        m_BtnRetry = PopupUIButtonUtility.EnsureButton(transform, c_LayerLabButtonName, m_BtnRetry);
     }
 }

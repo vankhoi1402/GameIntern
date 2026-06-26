@@ -29,11 +29,7 @@ public class LevelFlowController : MonoBehaviour
 
         BindTimerExpired(true);
 
-        if (m_VictoryUI != null)
-            m_VictoryUI.OnNextClicked += HandleNextLevelClicked;
-
-        if (m_DefeatUI != null)
-            m_DefeatUI.OnRetryClicked += HandleRetryClicked;
+        BindPopupEvents();
     }
 
     private void OnDisable()
@@ -99,6 +95,8 @@ public class LevelFlowController : MonoBehaviour
         CancelGameplayInput();
         SetInputLocked(true);
         m_DefeatUI?.Hide(animated: false);
+
+        ResolveReferences();
 
         int levelId = m_LevelManager != null ? m_LevelManager.CurrentLevelId : 0;
         bool hasNext = m_LevelManager != null && m_LevelManager.HasNextLevel();
@@ -191,8 +189,36 @@ public class LevelFlowController : MonoBehaviour
 
         if (m_DefeatUI == null)
             m_DefeatUI = FindObjectOfType<DefeatUIController>(true);
+
+        EnsurePopupController(
+            ref m_VictoryUI,
+            "PopupDim_Play_Result_Victory",
+            root => root.GetComponent<VictoryUIController>() ?? root.gameObject.AddComponent<VictoryUIController>());
+
+        EnsurePopupController(
+            ref m_DefeatUI,
+            "PopupDim_Play_Result_Defeat",
+            root => root.GetComponent<DefeatUIController>() ?? root.gameObject.AddComponent<DefeatUIController>());
+
         if (m_DragController == null)
             m_DragController = FindObjectOfType<DragController>();
+
+        BindPopupEvents();
+    }
+
+    private void BindPopupEvents()
+    {
+        if (m_VictoryUI != null)
+        {
+            m_VictoryUI.OnNextClicked -= HandleNextLevelClicked;
+            m_VictoryUI.OnNextClicked += HandleNextLevelClicked;
+        }
+
+        if (m_DefeatUI != null)
+        {
+            m_DefeatUI.OnRetryClicked -= HandleRetryClicked;
+            m_DefeatUI.OnRetryClicked += HandleRetryClicked;
+        }
     }
 
     private void BindTimerExpired(bool subscribe)
@@ -234,5 +260,29 @@ public class LevelFlowController : MonoBehaviour
 
         SkillManager.Instance.CancelTargeting();
         SkillManager.Instance.ClearSelectedColumn();
+    }
+
+    private static void EnsurePopupController<T>(ref T controller, string popupName, System.Func<Transform, T> factory)
+        where T : Component
+    {
+        if (controller != null)
+            return;
+
+        Transform root = FindPopupRoot(popupName);
+        if (root == null)
+            return;
+
+        controller = factory(root);
+    }
+
+    private static Transform FindPopupRoot(string popupName)
+    {
+        foreach (Transform candidate in Object.FindObjectsOfType<Transform>(true))
+        {
+            if (candidate.name == popupName)
+                return candidate;
+        }
+
+        return null;
     }
 }

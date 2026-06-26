@@ -56,5 +56,6 @@
         "temp/": true,
         "Temp/": true
     },
-    "dotnet.defaultSolution": "GameIntern.sln"
+    "dotnet.defaultSolution": "GameIntern.sln",
+    "dotrush.roslyn.projectOrSolutionFiles": []
 }

@@ -6,6 +6,8 @@ using UnityEngine.UI;
 /// <summary>UI thắng — show/hide và nút Next.</summary>
 public class VictoryUIController : MonoBehaviour
 {
+    private const string c_LayerLabButtonName = "Button_124_Blue";
+
     [SerializeField] private GameObject m_Root;
     [SerializeField] private Button m_BtnNext;
     [SerializeField] private TMP_Text m_TitleText;
@@ -15,7 +17,7 @@ public class VictoryUIController : MonoBehaviour
 
     public event Action OnNextClicked;
 
-    private bool m_Initialized;
+    private bool m_ClickListenerRegistered;
     private bool m_IsHiding;
 
     private void OnDestroy()
@@ -26,7 +28,11 @@ public class VictoryUIController : MonoBehaviour
 
     public void Show(int levelId, bool hasNextLevel)
     {
-        EnsureInitialized();
+        GameObject root = m_Root != null ? m_Root : gameObject;
+        m_IsHiding = false;
+        root.SetActive(true);
+
+        EnsureButtonBinding();
 
         if (m_StarsRow != null)
             m_StarsRow.SetActive(false);
@@ -38,13 +44,9 @@ public class VictoryUIController : MonoBehaviour
 
         if (m_BtnNext != null)
         {
-            m_BtnNext.interactable = hasNextLevel;
+            m_BtnNext.interactable = true;
             m_BtnNext.gameObject.SetActive(true);
         }
-
-        GameObject root = m_Root != null ? m_Root : gameObject;
-        m_IsHiding = false;
-        root.SetActive(true);
 
         bool starsVisible = m_StarsRow != null && m_StarsRow.activeSelf;
         m_Animator?.PlayShow(starsVisible);
@@ -52,7 +54,7 @@ public class VictoryUIController : MonoBehaviour
 
     public void Hide(Action onComplete = null, bool animated = true)
     {
-        if (!m_Initialized && m_Root == null)
+        if (m_Root == null)
             m_Root = gameObject;
 
         GameObject root = m_Root != null ? m_Root : gameObject;
@@ -84,22 +86,31 @@ public class VictoryUIController : MonoBehaviour
         onComplete?.Invoke();
     }
 
-    private void EnsureInitialized()
+    private void EnsureButtonBinding()
     {
-        if (m_Initialized)
-            return;
-
-        m_Initialized = true;
-        AutoBindReferences();
+        if (m_Root == null)
+            m_Root = gameObject;
 
         if (m_Animator == null)
             m_Animator = GetComponent<VictoryUIAnimator>();
 
-        if (m_Animator == null)
-            m_Animator = gameObject.AddComponent<VictoryUIAnimator>();
+        if (m_BtnNext == null)
+            AutoBindReferences();
 
-        if (m_BtnNext != null)
+        if (m_BtnNext != null && PopupUIButtonUtility.UsesLayerLabButton(transform))
+            PopupUIButtonUtility.PrepareLayerLabPopup(transform, c_LayerLabButtonName);
+
+        if (m_BtnNext == null)
+        {
+            Debug.LogWarning("[VictoryUI] Không tìm thấy nút Continue/Next — popup sẽ không đóng được.");
+            return;
+        }
+
+        if (!m_ClickListenerRegistered)
+        {
             m_BtnNext.onClick.AddListener(HandleNextClicked);
+            m_ClickListenerRegistered = true;
+        }
     }
 
     private void HandleNextClicked()
@@ -112,39 +123,40 @@ public class VictoryUIController : MonoBehaviour
 
     private void AutoBindReferences()
     {
-        if (m_Root == null)
-            m_Root = gameObject;
-
         Transform panel = transform.Find("Panel_Center");
-        if (panel == null)
+        if (panel != null)
+        {
+            if (m_BtnNext == null)
+            {
+                Transform btn = panel.Find("Btn_Next");
+                if (btn != null)
+                    m_BtnNext = btn.GetComponent<Button>();
+            }
+
+            if (m_TitleText == null)
+            {
+                Transform title = panel.Find("TitleText");
+                if (title != null)
+                    m_TitleText = title.GetComponent<TMP_Text>();
+            }
+
+            if (m_SubtitleText == null)
+            {
+                Transform subtitle = panel.Find("SubtitleText");
+                if (subtitle != null)
+                    m_SubtitleText = subtitle.GetComponent<TMP_Text>();
+            }
+
+            if (m_StarsRow == null)
+            {
+                Transform stars = panel.Find("StarsRow");
+                if (stars != null)
+                    m_StarsRow = stars.gameObject;
+            }
+
             return;
-
-        if (m_BtnNext == null)
-        {
-            Transform btn = panel.Find("Btn_Next");
-            if (btn != null)
-                m_BtnNext = btn.GetComponent<Button>();
         }
 
-        if (m_TitleText == null)
-        {
-            Transform title = panel.Find("TitleText");
-            if (title != null)
-                m_TitleText = title.GetComponent<TMP_Text>();
-        }
-
-        if (m_SubtitleText == null)
-        {
-            Transform subtitle = panel.Find("SubtitleText");
-            if (subtitle != null)
-                m_SubtitleText = subtitle.GetComponent<TMP_Text>();
-        }
-
-        if (m_StarsRow == null)
-        {
-            Transform stars = panel.Find("StarsRow");
-            if (stars != null)
-                m_StarsRow = stars.gameObject;
-        }
+        m_BtnNext = PopupUIButtonUtility.EnsureButton(transform, c_LayerLabButtonName, m_BtnNext);
     }
 }

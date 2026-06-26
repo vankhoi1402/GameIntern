@@ -75,10 +75,12 @@ public static class LevelCsvParser
     private static bool IsHeader(string line)
     {
         string lower = line.ToLowerInvariant();
-        return lower.StartsWith("row,") || lower.Contains("col0") || lower.Contains("col1");
+        return lower.StartsWith("row,") || lower.StartsWith("row\t") ||
+               lower.Contains("col0") || lower.Contains("col1");
     }
 
-    private static string[] SplitCsvLine(string line) => line.Split(',');
+    private static string[] SplitCsvLine(string line)
+        => line.Contains('\t') ? line.Split('\t') : line.Split(',');
 
     public static void SaveLevelAsset(LevelData level, string assetPath)
     {

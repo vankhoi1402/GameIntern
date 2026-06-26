@@ -1,0 +1,102 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6, type: 3}
+  m_Name: Level_010
+  LevelId: 10
+  VisibleRows: 7
+  Rows:
+  - Row: 0
+    ColBlockTypes:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+  - Row: 1
+    ColBlockTypes:
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+  - Row: 2
+    ColBlockTypes:
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+  - Row: 3
+    ColBlockTypes:
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+  - Row: 4
+    ColBlockTypes:
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+  - Row: 5
+    ColBlockTypes:
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+  - Row: 6
+    ColBlockTypes:
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+  - Row: 7
+    ColBlockTypes:
+    - 8
+    - 11
+    - 12
+    - 13
+    - 14
+  - Row: 8
+    ColBlockTypes:
+    - 14
+    - 9
+    - 1
+    - 13
+    - 4
+  - Row: 9
+    ColBlockTypes:
+    - 9
+    - 4
+    - 8
+    - 10
+    - 12
+  - Row: 10
+    ColBlockTypes:
+    - 7
+    - 14
+    - 13
+    - 9
+    - 2
+  - Row: 11
+    ColBlockTypes:
+    - 12
+    - 1
+    - 5
+    - 6
+    - 11
+  TimeLimitSeconds: 30
+  SkillLoadout: []

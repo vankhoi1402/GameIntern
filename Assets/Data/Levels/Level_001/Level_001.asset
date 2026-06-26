@@ -11,182 +11,92 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6, type: 3}
   m_Name: Level_001
-  m_EditorClassIdentifier: 
   LevelId: 1
   VisibleRows: 7
   Rows:
   - Row: 0
     ColBlockTypes:
-    - 1
-    - 2
-    - 1
     - 3
     - 2
+    - 4
+    - 1
+    - 1
   - Row: 1
     ColBlockTypes:
     - 2
-    - 1
+    - 2
     - 3
     - 1
-    - 2
+    - 4
   - Row: 2
     ColBlockTypes:
-    - 1
     - 3
-    - 2
-    - 2
+    - 1
+    - 1
+    - 4
     - 1
   - Row: 3
     ColBlockTypes:
+    - 4
     - 3
+    - 1
     - 2
-    - 1
-    - 1
-    - 3
+    - 4
   - Row: 4
     ColBlockTypes:
-    - 2
     - 1
     - 2
+    - 4
     - 3
-    - 1
+    - 3
   - Row: 5
     ColBlockTypes:
+    - 4
     - 1
     - 2
     - 3
-    - 2
     - 2
   - Row: 6
     ColBlockTypes:
+    - 2
+    - 4
     - 3
-    - 1
     - 1
     - 2
-    - 3
   - Row: 7
     ColBlockTypes:
     - 1
-    - 2
-    - 3
     - 1
-    - 2
+    - 1
+    - 4
+    - 3
   - Row: 8
     ColBlockTypes:
     - 2
     - 3
     - 1
-    - 2
-    - 3
+    - 4
+    - 4
   - Row: 9
     ColBlockTypes:
     - 3
-    - 1
-    - 2
+    - 4
     - 3
+    - 1
     - 1
   - Row: 10
     ColBlockTypes:
-    - 1
+    - 3
     - 3
     - 2
     - 1
-    - 2
+    - 4
   - Row: 11
     ColBlockTypes:
-    - 2
+    - 4
     - 1
     - 3
     - 2
-    - 3
-  - Row: 12
-    ColBlockTypes:
-    - 3
-    - 2
-    - 1
-    - 3
-    - 1
-  - Row: 13
-    ColBlockTypes:
-    - 1
-    - 2
-    - 3
-    - 1
-    - 2
-  - Row: 14
-    ColBlockTypes:
-    - 2
-    - 3
-    - 1
-    - 2
-    - 3
-  - Row: 15
-    ColBlockTypes:
-    - 3
-    - 1
-    - 2
-    - 3
-    - 1
-  - Row: 16
-    ColBlockTypes:
-    - 1
-    - 3
-    - 2
-    - 1
-    - 2
-  - Row: 17
-    ColBlockTypes:
-    - 2
-    - 1
-    - 3
-    - 2
-    - 3
-  - Row: 18
-    ColBlockTypes:
-    - 3
-    - 2
-    - 1
-    - 3
-    - 1
-  - Row: 19
-    ColBlockTypes:
-    - 1
-    - 2
-    - 3
-    - 1
-    - 2
-  - Row: 20
-    ColBlockTypes:
-    - 2
-    - 3
-    - 1
-    - 2
-    - 3
-  - Row: 21
-    ColBlockTypes:
-    - 3
-    - 1
-    - 2
-    - 3
-    - 1
-  - Row: 22
-    ColBlockTypes:
-    - 1
-    - 3
-    - 2
-    - 1
-    - 2
-  - Row: 23
-    ColBlockTypes:
-    - 2
-    - 1
-    - 3
-    - 2
-    - 3
-  - Row: 24
-    ColBlockTypes:
-    - 3
-    - 2
-    - 1
-    - 3
-    - 1
+    - 4
+  TimeLimitSeconds: 200
+  SkillLoadout: []
