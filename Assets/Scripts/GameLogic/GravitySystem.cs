@@ -36,6 +36,23 @@ public class GravitySystem : MonoBehaviour
         else Destroy(gameObject);
     }
 
+    /// <summary>Dự đoán row sau gravity (sau khi ô trống đã clear) — dùng cho absorb bay đúng ô đích.</summary>
+    public int PredictFinalRowAfterGravity(int row, int col)
+    {
+        if (boardManager == null)
+            return row;
+
+        int emptyRowsCount = 0;
+        for (int r = 0; r < row; r++)
+        {
+            Slot slot = boardManager.GetSlot(r, col);
+            if (slot != null && slot.IsEmpty)
+                emptyRowsCount++;
+        }
+
+        return row - emptyRowsCount;
+    }
+
     /// <summary>Compact block trong một cột — chỉ sửa logic, không animation (dùng trước skill recovery).</summary>
     public void ApplyGravitySilentForColumn(int col)
     {
@@ -100,6 +117,7 @@ public class GravitySystem : MonoBehaviour
     private void FinishGravityPipeline()
     {
         m_IsRunning = false;
+        MergeVisualContext.Clear();
 
         Action[] callbacks = m_PendingCallbacks.ToArray();
         m_PendingCallbacks.Clear();

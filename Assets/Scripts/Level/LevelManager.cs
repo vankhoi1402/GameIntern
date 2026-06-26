@@ -148,4 +148,9 @@ public class LevelManager : MonoBehaviour
     }
 
     public LevelBinBlock? TryDequeueBin(int col) => _refillState.TryDequeue(col);
+
+    public void LoadNextLevel()
+    {
+        TryLoadNextLevel();
+    }
 }

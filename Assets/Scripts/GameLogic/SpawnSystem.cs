@@ -215,10 +215,120 @@ public class SpawnSystem : MonoBehaviour
     /// </summary>
     public void SpawnBurstFallOff(int row, int col, BlockData clearedData, Action onExplodeComplete)
     {
-        StartCoroutine(SpawnBurstFallOffRoutine(row, col, clearedData, onExplodeComplete));
+        StartCoroutine(SpawnBurstFallOffRoutine(row, col, clearedData, 1f, onExplodeComplete));
     }
 
-    private IEnumerator SpawnBurstFallOffRoutine(int row, int col, BlockData clearedData, Action onExplodeComplete)
+    /// <summary>Coroutine nổ tâm — dùng cho T3 thường và 2+2+2 (explodeScale &gt; 1 = mạnh hơn).</summary>
+    public IEnumerator PlayCenterBurstRoutine(int row, int col, BlockData clearedData, float explodeScale = 1f)
+    {
+        yield return SpawnBurstFallOffRoutine(row, col, clearedData, explodeScale, null);
+    }
+
+    /// <summary>2+2+2 — 8 mảnh bung theo 8 hướng rồi rơi khỏi màn.</summary>
+    public IEnumerator PlayRadialBurstRoutine(int row, int col, BlockData clearedData, float explodeScale = 1.6f)
+    {
+        yield return RadialBurstFallOffRoutine(row, col, clearedData, explodeScale, null);
+    }
+
+    private IEnumerator RadialBurstFallOffRoutine(
+        int row,
+        int col,
+        BlockData clearedData,
+        float explodeScale,
+        Action onExplodeComplete)
+    {
+        if (clearedData == null || boardManager == null || blockPrefab == null)
+        {
+            onExplodeComplete?.Invoke();
+            yield break;
+        }
+
+        if (boardManager.Layout == null)
+        {
+            onExplodeComplete?.Invoke();
+            yield break;
+        }
+
+        Vector3 centerPos = boardManager.Layout.GetWorldPosition(row, col);
+        float cellWidth = boardManager.Layout.CellWidth;
+        float cellHeight = boardManager.Layout.CellHeight;
+        float cellRadius = Mathf.Min(cellWidth, cellHeight);
+        Camera cam = targetCamera != null ? targetCamera : Camera.main;
+        float scale = Mathf.Max(0.5f, explodeScale);
+        float explodeDuration = burstExplodeDuration * scale;
+
+        Vector3[] radialDirs =
+        {
+            new Vector3(0f, 1f, 0f),
+            new Vector3(1f, 1f, 0f).normalized,
+            new Vector3(1f, 0f, 0f),
+            new Vector3(1f, -1f, 0f).normalized,
+            new Vector3(0f, -1f, 0f),
+            new Vector3(-1f, -1f, 0f).normalized,
+            new Vector3(-1f, 0f, 0f),
+            new Vector3(-1f, 1f, 0f).normalized
+        };
+
+        int explodeRemaining = radialDirs.Length;
+        bool pipelineFired = false;
+
+        for (int i = 0; i < radialDirs.Length; i++)
+        {
+            Vector3 dir = radialDirs[i];
+            Vector3 explodeOffset = new Vector3(
+                dir.x * cellRadius * burstExplodeHorizontal * scale,
+                dir.y * cellRadius * burstExplodeHorizontal * scale,
+                0f);
+
+            Block block = CreateBurstBlock(clearedData, centerPos);
+            if (block == null)
+            {
+                explodeRemaining--;
+                continue;
+            }
+
+            if (block.TryGetComponent<BlockView>(out var view))
+            {
+                view.PlayBurstExplodeThenFall(
+                    explodeOffset,
+                    cam,
+                    explodeDuration,
+                    burstFallDuration,
+                    burstFallWorldDistance,
+                    i * burstStaggerDelay * 0.5f,
+                    () =>
+                    {
+                        explodeRemaining--;
+                        if (explodeRemaining <= 0 && !pipelineFired)
+                        {
+                            pipelineFired = true;
+                            onExplodeComplete?.Invoke();
+                        }
+                    },
+                    () =>
+                    {
+                        if (block != null)
+                            Destroy(block.gameObject);
+                    });
+            }
+            else
+            {
+                Destroy(block.gameObject);
+                explodeRemaining--;
+            }
+        }
+
+        yield return new WaitUntil(() => pipelineFired || explodeRemaining <= 0);
+        if (!pipelineFired)
+            onExplodeComplete?.Invoke();
+    }
+
+    private IEnumerator SpawnBurstFallOffRoutine(
+        int row,
+        int col,
+        BlockData clearedData,
+        float explodeScale,
+        Action onExplodeComplete)
     {
         if (clearedData == null || boardManager == null || blockPrefab == null)
         {
@@ -238,12 +348,15 @@ public class SpawnSystem : MonoBehaviour
         float cellHeight = boardManager.Layout.CellHeight;
         Camera cam = targetCamera != null ? targetCamera : Camera.main;
 
+        float scale = Mathf.Max(0.5f, explodeScale);
         Vector3[] explodeOffsets =
         {
-            new Vector3(-cellWidth * burstExplodeHorizontal, cellHeight * burstExplodeUp, 0f),
-            new Vector3(0f, cellHeight * burstExplodeUp * 1.15f, 0f),
-            new Vector3(cellWidth * burstExplodeHorizontal, cellHeight * burstExplodeUp, 0f)
+            new Vector3(-cellWidth * burstExplodeHorizontal * scale, cellHeight * burstExplodeUp * scale, 0f),
+            new Vector3(0f, cellHeight * burstExplodeUp * 1.15f * scale, 0f),
+            new Vector3(cellWidth * burstExplodeHorizontal * scale, cellHeight * burstExplodeUp * scale, 0f)
         };
+
+        float explodeDuration = burstExplodeDuration * scale;
 
         int explodeRemaining = c_BurstSpawnCount;
         bool pipelineFired = false;
@@ -263,7 +376,7 @@ public class SpawnSystem : MonoBehaviour
                 view.PlayBurstExplodeThenFall(
                     explodeOffsets[index],
                     cam,
-                    burstExplodeDuration,
+                    explodeDuration,
                     burstFallDuration,
                     burstFallWorldDistance,
                     index * burstStaggerDelay,

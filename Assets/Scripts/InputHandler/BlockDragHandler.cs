@@ -19,6 +19,9 @@ public class BlockDragHandler : MonoBehaviour
     /// <summary>Unity gọi khi click — phát DragStarted qua bus.</summary>
     private void OnMouseDown()
     {
+        if (!CanAcceptBoardInput())
+            return;
+
         if (InputEventBus.Instance != null)
             InputEventBus.Instance.RaiseDragStarted(_block);
     }
@@ -26,6 +29,9 @@ public class BlockDragHandler : MonoBehaviour
     /// <summary>Unity gọi khi kéo — phát Dragging với vị trí chuột world.</summary>
     private void OnMouseDrag()
     {
+        if (!CanAcceptBoardInput())
+            return;
+
         if (_mainCamera == null || InputEventBus.Instance != null == false) return;
 
         Vector3 mouseWorldPos = _mainCamera.ScreenToWorldPoint(Input.mousePosition);
@@ -39,5 +45,10 @@ public class BlockDragHandler : MonoBehaviour
     {
         if (InputEventBus.Instance != null)
             InputEventBus.Instance.RaiseDragEnded(_block);
+    }
+
+    private static bool CanAcceptBoardInput()
+    {
+        return BoardStateManager.Instance == null || BoardStateManager.Instance.CanAcceptInput();
     }
 }

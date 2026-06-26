@@ -310,6 +310,148 @@ public class BlockView : MonoBehaviour
         seq.OnComplete(() => onComplete?.Invoke());
     }
 
+    /// <summary>2+2+2 — wind-up trên block đích trước khi nổ (sau absorb).</summary>
+    public void PlayTier2ExplosionWindUp(Action onComplete = null)
+    {
+        const float windUpDuration = 0.18f;
+        transform.DOKill();
+        KillPickupTweens();
+        ResolveSelectedRenderer();
+
+        Sequence seq = DOTween.Sequence().SetLink(gameObject);
+        seq.Append(transform.DOScale(m_BaseScale * 1.22f, windUpDuration * 0.55f).SetEase(Ease.OutBack));
+        seq.Join(transform.DOPunchScale(Vector3.one * 0.28f, windUpDuration, 10, 0.35f));
+
+        if (m_SelectedRenderer != null)
+        {
+            m_SelectedRenderer.gameObject.SetActive(true);
+            Color flash = m_SelectedRenderer.color;
+            flash.a = 1f;
+            m_SelectedRenderer.color = flash;
+            seq.Join(m_SelectedRenderer.DOFade(0.25f, windUpDuration).SetLoops(2, LoopType.Yoyo));
+        }
+
+        if (_mainRenderer != null)
+            seq.Join(_mainRenderer.DOColor(Color.white, windUpDuration * 0.35f).SetLoops(2, LoopType.Yoyo));
+
+        seq.OnComplete(() => onComplete?.Invoke());
+    }
+
+    /// <summary>2+2+2 — ô kề: bung ra khỏi tâm rồi dissolve tại chỗ (không ClearSlot).</summary>
+    public void PlayTier2NeighborBlast(
+        Vector3 homeWorldPos,
+        Vector3 blastWorldPos,
+        float blastDuration,
+        float dissolveDuration,
+        float delay,
+        Action onComplete = null)
+    {
+        transform.DOKill();
+        ResetVisualState();
+        transform.position = homeWorldPos;
+
+        Vector3 pushDir = blastWorldPos - homeWorldPos;
+        float rotateZ = m_BaseRotationZ;
+        if (pushDir.sqrMagnitude > 0.0001f)
+        {
+            float angle = Mathf.Atan2(pushDir.y, pushDir.x) * Mathf.Rad2Deg;
+            rotateZ = angle * 0.12f;
+        }
+
+        SpriteRenderer[] renderers = GetComponentsInChildren<SpriteRenderer>();
+        Sequence seq = DOTween.Sequence().SetLink(gameObject);
+        if (delay > 0f)
+            seq.AppendInterval(delay);
+
+        seq.Append(transform.DOMove(blastWorldPos, blastDuration).SetEase(Ease.OutExpo));
+        seq.Join(transform.DOScale(m_BaseScale * 1.12f, blastDuration * 0.65f).SetEase(Ease.OutBack));
+        seq.Join(transform.DORotate(new Vector3(0f, 0f, rotateZ), blastDuration).SetEase(Ease.OutQuad));
+
+        seq.Append(transform.DOScale(m_BaseScale * 0.08f, dissolveDuration).SetEase(Ease.InBack));
+        foreach (SpriteRenderer renderer in renderers)
+            seq.Join(renderer.DOFade(0f, dissolveDuration));
+
+        seq.OnComplete(() => onComplete?.Invoke());
+    }
+
+    /// <summary>2+2+2 — ô kề: pop sóng nổ rồi vanish ảo (logic slot không đổi).</summary>
+    public void PlayTier2NeighborIllusion(
+        Vector3 homeWorldPos,
+        Vector3 pushOffset,
+        Vector3 duckWorldPos,
+        float shockDuration,
+        float vanishDuration,
+        float delay,
+        Action onComplete = null)
+    {
+        transform.DOKill();
+        ResetVisualState();
+        transform.position = homeWorldPos;
+
+        float rotateZ = m_BaseRotationZ + Mathf.Sign(pushOffset.x) * 8f;
+        if (Mathf.Abs(pushOffset.x) < 0.001f)
+            rotateZ = m_BaseRotationZ + Mathf.Sign(pushOffset.y) * 6f;
+
+        SpriteRenderer[] renderers = GetComponentsInChildren<SpriteRenderer>();
+        Sequence seq = DOTween.Sequence().SetLink(gameObject);
+        if (delay > 0f)
+            seq.AppendInterval(delay);
+
+        seq.Append(transform.DOPunchScale(Vector3.one * 0.14f, shockDuration, 5, 0.45f));
+        seq.Join(transform.DOMove(homeWorldPos + pushOffset, shockDuration).SetEase(Ease.OutQuad));
+        seq.Join(transform.DORotate(new Vector3(0f, 0f, rotateZ), shockDuration).SetEase(Ease.OutQuad));
+
+        seq.Append(transform.DOMove(duckWorldPos, vanishDuration).SetEase(Ease.InQuad));
+        seq.Join(transform.DOScale(m_BaseScale * 0.12f, vanishDuration).SetEase(Ease.InBack));
+        foreach (SpriteRenderer renderer in renderers)
+            seq.Join(renderer.DOFade(0f, vanishDuration * 0.92f));
+
+        seq.OnComplete(() => onComplete?.Invoke());
+    }
+
+    /// <summary>2+2+2 — ô kề hiện lại đúng ô sau illusion vanish.</summary>
+    public void PlayTier2NeighborRecovery(
+        Vector3 homeWorldPos,
+        Vector3 spawnWorldPos,
+        float duration,
+        int row,
+        float delay,
+        Action onComplete = null)
+    {
+        transform.DOKill();
+        transform.position = spawnWorldPos;
+        transform.localScale = m_BaseScale * 0.2f;
+        SetSpritesAlpha(0f);
+
+        Sequence seq = DOTween.Sequence().SetLink(gameObject);
+        if (delay > 0f)
+            seq.AppendInterval(delay);
+
+        seq.Append(transform.DOMove(homeWorldPos, duration).SetEase(Ease.OutBack));
+        seq.Join(transform.DOScale(m_BaseScale, duration).SetEase(Ease.OutBack));
+        foreach (SpriteRenderer renderer in GetComponentsInChildren<SpriteRenderer>())
+            seq.Join(renderer.DOFade(1f, duration * 0.85f));
+
+        seq.OnComplete(() =>
+        {
+            ResetTransformVisual();
+            ResetSpriteAlpha();
+            transform.position = homeWorldPos;
+            ApplyGridSorting(row);
+            onComplete?.Invoke();
+        });
+    }
+
+    /// <summary>Anticipation trước gravity — nhích lên rồi để gravity kéo xuống.</summary>
+    public void PlayGravityLiftAnticipation(float liftWorldDistance, float duration, Action onComplete = null)
+    {
+        transform.DOKill();
+        Tween lift = transform.DOMove(transform.position + Vector3.up * liftWorldDistance, duration)
+            .SetEase(Ease.OutQuad)
+            .SetLink(gameObject);
+        lift.OnComplete(() => onComplete?.Invoke());
+    }
+
     /// <summary>Block mới spawn từ trên cột — tween rơi xuống ô đích.</summary>
     public void PlaySpawnFall(Vector3 targetWorldPos, float duration, Action onComplete = null)
     {
@@ -415,10 +557,12 @@ public class BlockView : MonoBehaviour
     }
 
     /// <summary>Hiệu ứng rung nhẹ trên target sau khi nhận stack merge.</summary>
-    public void PlayMergeImpact()
+    public void PlayMergeImpact(Action onComplete = null)
     {
-        KillPickupTweens();
-        transform.DOPunchScale(Vector3.one * 0.15f, 0.22f, 8, 0.4f);
+        transform.DOPunchScale(Vector3.one * 0.15f, 0.22f, 8, 0.4f)
+            .SetLink(gameObject)
+            .OnComplete(() => onComplete?.Invoke())
+            .OnKill(() => onComplete?.Invoke());
     }
 
     /// <summary>Block đích phóng to nhẹ + lóe sáng khi block khác kéo qua.</summary>

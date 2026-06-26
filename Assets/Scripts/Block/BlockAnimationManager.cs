@@ -11,8 +11,14 @@ public class BlockAnimationManager : MonoBehaviour
     [Header("References")]
     [SerializeField] private BoardManager boardManager;
 
-    [Header("Timing")]
-    [SerializeField] private float refillPushDuration = 0.12f;
+    [Header("Gravity")]
+    [SerializeField] private float gravityDurationPerSqrtCell = 0.17f;
+    [SerializeField] private float gravityRowStagger = 0.035f;
+    [SerializeField] private Ease gravityEase = Ease.OutSine;
+
+    [Header("Refill Push")]
+    [SerializeField] private float refillPushDuration = 0.15f;
+    [SerializeField] private Ease refillPushEase = Ease.OutSine;
 
     private void OnEnable()
     {
@@ -34,7 +40,11 @@ public class BlockAnimationManager : MonoBehaviour
             return;
         }
 
-        var batch = new TweenCompletionBatch(commands.Count, onCompleteCallback);
+        var batch = new TweenCompletionBatch(commands.Count, () =>
+        {
+            MergeVisualContext.Clear();
+            onCompleteCallback?.Invoke();
+        });
 
         foreach (GravityMoveCommand cmd in commands)
         {
@@ -44,40 +54,49 @@ public class BlockAnimationManager : MonoBehaviour
                 continue;
             }
 
+            Vector3 fromWorldPos = boardManager.Layout.GetWorldPosition(cmd.FromRow, cmd.FromCol);
             Vector3 targetWorldPos = boardManager.Layout.GetWorldPosition(cmd.ToRow, cmd.ToCol);
-            float duration = Mathf.Sqrt(cmd.DropDistance) * 0.12f;
+            float duration = Mathf.Sqrt(cmd.DropDistance) * gravityDurationPerSqrtCell;
+            float delay = cmd.FromRow * gravityRowStagger;
             int toRow = cmd.ToRow;
             Block block = cmd.Block;
+            block.TryGetComponent<BlockView>(out BlockView view);
+            bool isMergeTarget = MergeVisualContext.IsMergeTarget(block);
 
             var gate = new SingleTweenGate();
             void FinishTween()
             {
                 gate.TryRun(() =>
                 {
-                    if (block != null && block.TryGetComponent<BlockView>(out var view))
-                    {
-                        view.ResetVisualState();
-                        view.ApplyGridSorting(toRow);
-                    }
+                    if (block != null && block.TryGetComponent<BlockView>(out var finishView))
+                        finishView.SnapToGridCell(targetWorldPos, toRow);
+
                     batch.NotifyOneDone();
                 });
             }
 
-            block.transform.DOMove(targetWorldPos, duration)
-                .SetEase(Ease.OutCubic)
-                .OnComplete(() =>
-                {
-                    gate.TryRun(() =>
-                    {
-                        if (block != null && block.TryGetComponent<BlockView>(out var view))
-                        {
-                            view.ResetVisualState();
-                            view.ApplyGridSorting(toRow);
-                        }
-                        batch.NotifyOneDone();
-                    });
-                })
-                .OnKill(FinishTween);
+            if (view != null && !isMergeTarget)
+            {
+                view.ResetVisualState();
+                block.transform.position = fromWorldPos;
+            }
+            else if (isMergeTarget)
+            {
+                fromWorldPos = block.transform.position;
+            }
+            else
+            {
+                block.transform.position = fromWorldPos;
+            }
+
+            Tween move = block.transform
+                .DOMove(targetWorldPos, duration)
+                .SetEase(gravityEase)
+                .SetLink(block.gameObject);
+            if (delay > 0f)
+                move.SetDelay(delay);
+
+            move.OnComplete(FinishTween).OnKill(FinishTween);
         }
     }
 
@@ -130,13 +149,13 @@ public class BlockAnimationManager : MonoBehaviour
                     gate.TryRun(() =>
                     {
                         if (block != null && block.TryGetComponent<BlockView>(out var view))
-                            view.ApplyGridSorting(toRow);
+                            view.SnapToGridCell(to, toRow);
                         batch.NotifyOneDone();
                     });
                 }
 
                 block.transform.DOMove(to, refillPushDuration)
-                    .SetEase(Ease.OutCubic)
+                    .SetEase(refillPushEase)
                     .OnComplete(FinishTween)
                     .OnKill(FinishTween);
             }

@@ -60,6 +60,9 @@ public class DragController : MonoBehaviour
         if (InputManager.Instance != null && InputManager.Instance.IsInputLocked)
             return;
 
+        if (BoardStateManager.Instance != null && !BoardStateManager.Instance.CanAcceptInput())
+            return;
+
         if (_currentState != DragState.Idle || block == null) return;
 
         _sourceSlot = block.CurrentSlot;
@@ -80,6 +83,9 @@ public class DragController : MonoBehaviour
     private void HandleDragging(Block block, Vector3 mouseWorldPos)
     {
         if (InputManager.Instance != null && InputManager.Instance.IsInputLocked)
+            return;
+
+        if (BoardStateManager.Instance != null && !BoardStateManager.Instance.CanAcceptInput())
             return;
 
         if (_currentState != DragState.Dragging || block == null) return;
