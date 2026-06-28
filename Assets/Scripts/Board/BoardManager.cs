@@ -170,21 +170,6 @@ public class BoardManager : MonoBehaviour
         OnBlockRemoved?.Invoke(blockToRemove, row, col);
     }
 
-    public bool IsBoardEmpty()
-    {
-        for (int r = 0; r < rows; r++)
-        {
-            for (int c = 0; c < columns; c++)
-            {
-                Slot slot = GetSlot(r, c);
-                if (slot != null && slot.HasBlock)
-                    return false;
-            }
-        }
-
-        return true;
-    }
-
     public void ClearAllBlocks()
     {
         for (int r = 0; r < rows; r++)

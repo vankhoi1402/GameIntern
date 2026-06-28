@@ -30,29 +30,6 @@ public class ColumnPushSystem : MonoBehaviour
             boardManager = FindObjectOfType<BoardManager>();
     }
 
-    /// <summary>Đếm block hiện có trong cột.</summary>
-    public int CountBlocksInColumn(int col)
-    {
-        if (boardManager == null) return 0;
-
-        int count = 0;
-        for (int row = 0; row < boardManager.Rows; row++)
-        {
-            Slot slot = boardManager.GetSlot(row, col);
-            if (slot != null && slot.HasBlock)
-                count++;
-        }
-
-        return count;
-    }
-
-    /// <summary>Cột chưa đủ block để lấp đầy grid.</summary>
-    public bool ColumnNeedsRefill(int col)
-    {
-        if (boardManager == null) return false;
-        return CountBlocksInColumn(col) < boardManager.Rows;
-    }
-
     /// <summary>
     /// Dịch toàn bộ block trong cột lên 1 hàng. Trả false nếu cột đầy (không đủ chỗ).
     /// </summary>

@@ -3,6 +3,7 @@ public class LevelOutcomeEvaluator
 {
     private readonly BoardManager m_BoardManager;
     private readonly LevelRefillState m_RefillState;
+    private readonly BoardAnalyzer m_Analyzer;
     private readonly LevelTimer m_Timer;
 
     public LevelOutcomeEvaluator(
@@ -12,6 +13,7 @@ public class LevelOutcomeEvaluator
     {
         m_BoardManager = boardManager;
         m_RefillState = refillState;
+        m_Analyzer = new BoardAnalyzer(boardManager, refillState);
         m_Timer = timer;
     }
 
@@ -31,7 +33,10 @@ public class LevelOutcomeEvaluator
         if (m_BoardManager == null || m_RefillState == null)
             return false;
 
-        return m_BoardManager.IsBoardEmpty() && !m_RefillState.HasRemainingBlocks();
+        if (!m_BoardManager.IsGridReady)
+            return false;
+
+        return m_Analyzer.IsBoardEmpty() && !m_Analyzer.HasRemainingBinSupply();
     }
 
     public bool IsTimeExpired()

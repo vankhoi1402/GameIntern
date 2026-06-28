@@ -17,6 +17,7 @@ public class BoardSettlementService : MonoBehaviour
     [SerializeField] private float riseDuration = 0.16f;
 
     private bool m_IsRunning;
+    private BoardAnalyzer m_Analyzer;
 
     public bool IsRunning => m_IsRunning;
 
@@ -33,6 +34,9 @@ public class BoardSettlementService : MonoBehaviour
             columnPushSystem = FindObjectOfType<ColumnPushSystem>();
         if (levelManager == null)
             levelManager = FindObjectOfType<LevelManager>();
+
+        if (boardManager != null)
+            m_Analyzer = new BoardAnalyzer(boardManager, levelManager != null ? levelManager.RefillState : null);
     }
 
     /// <summary>Gravity + refill bin (T3, 2+2+2).</summary>
@@ -181,12 +185,12 @@ public class BoardSettlementService : MonoBehaviour
         Dictionary<int, Queue<Tier2NeighborRestore>> neighborQueues)
     {
         var wave = new List<ColumnRefillPacket>();
-        if (boardManager == null || columnPushSystem == null || spawnSystem == null)
+        if (boardManager == null || m_Analyzer == null || columnPushSystem == null || spawnSystem == null)
             return wave;
 
         for (int col = 0; col < boardManager.Columns; col++)
         {
-            if (!columnPushSystem.ColumnNeedsRefill(col))
+            if (!m_Analyzer.ColumnNeedsRefill(col))
                 continue;
 
             bool hasNeighbor = neighborQueues.TryGetValue(col, out Queue<Tier2NeighborRestore> queue)
