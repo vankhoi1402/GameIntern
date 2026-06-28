@@ -58,7 +58,7 @@ public class SpawnSystem : MonoBehaviour
             levelManager = FindObjectOfType<LevelManager>();
     }
 
-    /// <summary>Trì hoãn nhẹ để BoardManager kịp khởi tạo Layout.</summary>
+    /// <summary>Trì hoãn nhẹ để BoardManager kịp khởi tạo grid.</summary>
     private void Start()
     {
         Invoke(nameof(GenerateInitialBoard), 0.1f);
@@ -133,11 +133,11 @@ public class SpawnSystem : MonoBehaviour
         if (boardView != null)
             block.transform.SetParent(boardView.transform);
 
-        if (block.TryGetComponent<BlockView>(out var view) && boardManager != null && boardManager.Layout != null)
+        if (block.TryGetComponent<BlockView>(out var view) && boardManager != null && boardManager.IsGridReady)
         {
             if (stackBackgroundConfig != null)
                 view.SetBackgroundConfig(stackBackgroundConfig);
-            view.Initialize(data, boardManager.Layout.CellWidth, boardManager.Layout.CellHeight);
+            view.Initialize(data, boardManager.CellWidth, boardManager.CellHeight);
             view.UpdateTier2StageVisual(block.StackCount, block.Tier2MergeStage);
         }
 
@@ -243,15 +243,15 @@ public class SpawnSystem : MonoBehaviour
             yield break;
         }
 
-        if (boardManager.Layout == null)
+        if (boardManager == null || !boardManager.IsGridReady)
         {
             onExplodeComplete?.Invoke();
             yield break;
         }
 
-        Vector3 centerPos = boardManager.Layout.GetWorldPosition(row, col);
-        float cellWidth = boardManager.Layout.CellWidth;
-        float cellHeight = boardManager.Layout.CellHeight;
+        Vector3 centerPos = boardManager.GridToWorld(row, col);
+        float cellWidth = boardManager.CellWidth;
+        float cellHeight = boardManager.CellHeight;
         float cellRadius = Mathf.Min(cellWidth, cellHeight);
         Camera cam = targetCamera != null ? targetCamera : Camera.main;
         float scale = Mathf.Max(0.5f, explodeScale);
@@ -336,16 +336,16 @@ public class SpawnSystem : MonoBehaviour
             yield break;
         }
 
-        if (boardManager.Layout == null)
+        if (boardManager == null || !boardManager.IsGridReady)
         {
-            Debug.LogError("[SpawnSystem] BoardManager.Layout chưa sẵn sàng!");
+            Debug.LogError("[SpawnSystem] BoardManager chưa sẵn sàng!");
             onExplodeComplete?.Invoke();
             yield break;
         }
 
-        Vector3 centerPos = boardManager.Layout.GetWorldPosition(row, col);
-        float cellWidth = boardManager.Layout.CellWidth;
-        float cellHeight = boardManager.Layout.CellHeight;
+        Vector3 centerPos = boardManager.GridToWorld(row, col);
+        float cellWidth = boardManager.CellWidth;
+        float cellHeight = boardManager.CellHeight;
         Camera cam = targetCamera != null ? targetCamera : Camera.main;
 
         float scale = Mathf.Max(0.5f, explodeScale);
@@ -420,11 +420,11 @@ public class SpawnSystem : MonoBehaviour
         Transform parent = boardView != null ? boardView.transform : transform;
         block.transform.SetParent(parent);
 
-        if (block.TryGetComponent<BlockView>(out var view) && boardManager.Layout != null)
+        if (block.TryGetComponent<BlockView>(out var view) && boardManager != null && boardManager.IsGridReady)
         {
             if (stackBackgroundConfig != null)
                 view.SetBackgroundConfig(stackBackgroundConfig);
-            view.InitializeBurstFallOff(data, boardManager.Layout.CellWidth, boardManager.Layout.CellHeight);
+            view.InitializeBurstFallOff(data, boardManager.CellWidth, boardManager.CellHeight);
         }
 
         return block;

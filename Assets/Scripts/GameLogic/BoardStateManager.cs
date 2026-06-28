@@ -10,9 +10,7 @@ public enum BoardState
     ProcessingMove,
     ResolvingMerges,
     ApplyingGravity,
-    ApplyingRefill,
-    SkillTargeting,
-    UsingSkill
+    ApplyingRefill
 }
 
 /// <summary>

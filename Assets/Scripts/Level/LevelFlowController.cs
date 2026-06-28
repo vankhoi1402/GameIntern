@@ -254,12 +254,6 @@ public class LevelFlowController : MonoBehaviour
             m_DragController = FindObjectOfType<DragController>();
 
         m_DragController?.CancelActiveDrag();
-
-        if (SkillManager.Instance == null)
-            return;
-
-        SkillManager.Instance.CancelTargeting();
-        SkillManager.Instance.ClearSelectedColumn();
     }
 
     private static void EnsurePopupController<T>(ref T controller, string popupName, System.Func<Transform, T> factory)

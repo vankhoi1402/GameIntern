@@ -69,16 +69,15 @@ public class Tier2TripleClearVfxHandler : MonoBehaviour
         BlockData clearedData,
         Action<IReadOnlyList<Tier2NeighborRestore>> onComplete)
     {
-        if (boardManager == null || boardManager.Layout == null)
+        if (boardManager == null || !boardManager.IsGridReady)
         {
             onComplete?.Invoke(Array.Empty<Tier2NeighborRestore>());
             yield break;
         }
 
-        BoardLayout layout = boardManager.Layout;
-        Vector3 centerPos = layout.GetWorldPosition(centerRow, centerCol);
-        float cellWidth = layout.CellWidth;
-        float cellHeight = layout.CellHeight;
+        Vector3 centerPos = boardManager.GridToWorld(centerRow, centerCol);
+        float cellWidth = boardManager.CellWidth;
+        float cellHeight = boardManager.CellHeight;
         float cellRadius = Mathf.Min(cellWidth, cellHeight);
 
         List<NeighborCell> neighbors = CollectNeighbors(centerRow, centerCol, centerPos, cellRadius);
@@ -203,7 +202,7 @@ public class Tier2TripleClearVfxHandler : MonoBehaviour
             if (!block.TryGetComponent<BlockView>(out BlockView view))
                 continue;
 
-            Vector3 homePos = boardManager.Layout.GetWorldPosition(row, col);
+            Vector3 homePos = boardManager.GridToWorld(row, col);
             Vector3 pushDir = homePos - centerPos;
             if (pushDir.sqrMagnitude < 0.0001f)
                 pushDir = Vector3.up;

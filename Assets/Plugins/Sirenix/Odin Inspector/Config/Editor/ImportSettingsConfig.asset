@@ -9,12 +9,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 332fceb3b8e74b4dbdd067be0deb5497, type: 3}
-  m_Name: ColumnClearSkill
+  m_Script: {fileID: 188390376, guid: a4865f1ab4504ed8a368670db22f409c, type: 3}
+  m_Name: ImportSettingsConfig
   m_EditorClassIdentifier: 
-  skillId: column_clear
-  displayName: Xoa Cot
-  icon: {fileID: 0}
-  targetMode: 3
-  defaultChargesPerLevel: 3
-  effect: {fileID: 11400000, guid: 60f0452072964b98b4c4f484c4ce3001, type: 2}
+  automateBeforeBuild: 1

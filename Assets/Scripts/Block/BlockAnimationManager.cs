@@ -34,7 +34,7 @@ public class BlockAnimationManager : MonoBehaviour
 
     private void HandleGravityAnimation(List<GravityMoveCommand> commands, Action onCompleteCallback)
     {
-        if (boardManager == null || boardManager.Layout == null)
+        if (boardManager == null || !boardManager.IsGridReady)
         {
             onCompleteCallback?.Invoke();
             return;
@@ -54,8 +54,8 @@ public class BlockAnimationManager : MonoBehaviour
                 continue;
             }
 
-            Vector3 fromWorldPos = boardManager.Layout.GetWorldPosition(cmd.FromRow, cmd.FromCol);
-            Vector3 targetWorldPos = boardManager.Layout.GetWorldPosition(cmd.ToRow, cmd.ToCol);
+            Vector3 fromWorldPos = boardManager.GridToWorld(cmd.FromRow, cmd.FromCol);
+            Vector3 targetWorldPos = boardManager.GridToWorld(cmd.ToRow, cmd.ToCol);
             float duration = Mathf.Sqrt(cmd.DropDistance) * gravityDurationPerSqrtCell;
             float delay = cmd.FromRow * gravityRowStagger;
             int toRow = cmd.ToRow;
@@ -102,7 +102,7 @@ public class BlockAnimationManager : MonoBehaviour
 
     private void HandleRefillWaveAnimation(IReadOnlyList<ColumnRefillPacket> wave, Action onComplete)
     {
-        if (boardManager == null || boardManager.Layout == null)
+        if (boardManager == null || !boardManager.IsGridReady)
         {
             onComplete?.Invoke();
             return;
@@ -127,8 +127,8 @@ public class BlockAnimationManager : MonoBehaviour
                     continue;
                 }
 
-                Vector3 from = boardManager.Layout.GetWorldPosition(cmd.FromRow, cmd.Col);
-                Vector3 to = boardManager.Layout.GetWorldPosition(cmd.ToRow, cmd.Col);
+                Vector3 from = boardManager.GridToWorld(cmd.FromRow, cmd.Col);
+                Vector3 to = boardManager.GridToWorld(cmd.ToRow, cmd.Col);
 
                 int toRow = cmd.ToRow;
                 Block block = cmd.Block;

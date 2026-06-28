@@ -79,7 +79,7 @@ public class BlockMergeViewHandler : MonoBehaviour
     /// <summary>Ô đích sau gravity — tránh source bay vào chỗ cũ khi merge cùng cột.</summary>
     private Vector3 ResolveAbsorbTargetWorldPos(Block target)
     {
-        if (target?.CurrentSlot == null || boardManager?.Layout == null)
+        if (target?.CurrentSlot == null || boardManager == null || !boardManager.IsGridReady)
             return target != null ? target.transform.position : Vector3.zero;
 
         Slot slot = target.CurrentSlot;
@@ -88,7 +88,7 @@ public class BlockMergeViewHandler : MonoBehaviour
         if (GravitySystem.Instance != null)
             finalRow = GravitySystem.Instance.PredictFinalRowAfterGravity(slot.Row, slot.Col);
 
-        return boardManager.Layout.GetWorldPosition(finalRow, slot.Col);
+        return boardManager.GridToWorld(finalRow, slot.Col);
     }
 
     /// <summary>Impact cosmetic — gravity đã chạy song song từ MergeSystem.</summary>
@@ -133,11 +133,11 @@ public class BlockMergeViewHandler : MonoBehaviour
         if (target == null || targetView == null || target.CurrentSlot == null)
             return;
 
-        if (boardManager?.Layout == null)
+        if (boardManager == null || !boardManager.IsGridReady)
             return;
 
         Slot slot = target.CurrentSlot;
-        Vector3 gridPos = boardManager.Layout.GetWorldPosition(slot.Row, slot.Col);
+        Vector3 gridPos = boardManager.GridToWorld(slot.Row, slot.Col);
         targetView.SnapToGridCell(gridPos, slot.Row);
     }
 }

@@ -7,7 +7,6 @@ public class LevelManager : MonoBehaviour
     [Header("References")]
     [SerializeField] private LevelCatalog catalog;
     [SerializeField] private SpawnSystem spawnSystem;
-    [SerializeField] private SkillManager skillManager;
     [SerializeField] private BlockDatabase blockDatabase;
     [SerializeField] private BoardIntroAnimator m_IntroAnimator;
     [SerializeField] private LevelTimer m_LevelTimer;
@@ -27,8 +26,6 @@ public class LevelManager : MonoBehaviour
     {
         if (spawnSystem == null)
             spawnSystem = FindObjectOfType<SpawnSystem>();
-        if (skillManager == null)
-            skillManager = FindObjectOfType<SkillManager>();
         if (blockDatabase == null && spawnSystem != null)
             blockDatabase = spawnSystem.BlockDatabase;
 
@@ -83,9 +80,6 @@ public class LevelManager : MonoBehaviour
         void CompleteLoad()
         {
             SetInputLocked(false);
-
-            if (skillManager != null)
-                skillManager.ApplyLoadout(level.SkillLoadout);
 
             m_LevelTimer?.StartTimer(level.TimeLimitSeconds);
 

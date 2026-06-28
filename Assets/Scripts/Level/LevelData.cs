@@ -11,9 +11,6 @@ public class LevelData : ScriptableObject
 
     [Header("Rules")]
     public int TimeLimitSeconds;
-
-    [Header("Skills")]
-    public SkillLoadoutEntry[] SkillLoadout;
 }
 
 [Serializable]

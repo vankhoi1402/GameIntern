@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// Xử lý logic merge: cộng stack, xóa block đạt max, kích hoạt settlement.
+/// Apply kết quả merge lên board + kích hoạt settlement/VFX. Luật nằm ở MergeRules.
 /// </summary>
 public class MergeSystem : MonoBehaviour
 {
@@ -64,46 +64,27 @@ public class MergeSystem : MonoBehaviour
     {
         if (sourceBlock == null || targetBlock == null) return false;
         if (targetBlock.IsPendingDestroy || sourceBlock.IsPendingDestroy) return false;
-        if (!sourceBlock.CanMergeWith(targetBlock)) return false;
 
-        ProcessMerge(sourceBlock, targetBlock);
+        MergeResult result = MergeRules.Resolve(
+            MergeBlockState.From(sourceBlock),
+            MergeBlockState.From(targetBlock));
+
+        if (!result.IsValid) return false;
+
+        ApplyMergeResult(sourceBlock, targetBlock, result);
         return true;
     }
 
-    /// <summary>
-    /// Nhánh 1+1 / 1+2: cộng stack; nhánh 2+2: gộp Tier2MergeStage hai block lên ô đích.
-    /// Nổ khi stack >= 3 (cũ) hoặc Tier2MergeStage >= 3 (2+2+2).
-    /// </summary>
-    private void ProcessMerge(Block sourceBlock, Block targetBlock)
+    private void ApplyMergeResult(Block sourceBlock, Block targetBlock, MergeResult result)
     {
         sourceBlock.IsPendingDestroy = true;
-
-        bool tier2PairMerge = targetBlock.IsTier2PairMergeWith(sourceBlock);
-
-        if (tier2PairMerge)
-        {
-            int combinedStage = targetBlock.Tier2MergeStage + sourceBlock.Tier2MergeStage;
-            targetBlock.SetTier2MergeStage(combinedStage);
-        }
-        else
-        {
-            int sourceWeight = sourceBlock.StackCount;
-            int targetWeightBefore = targetBlock.StackCount;
-            targetBlock.AddStack(sourceWeight);
-
-            if (targetBlock.StackCount == 2 && sourceWeight == 1 && targetWeightBefore == 1)
-                targetBlock.SetTier2MergeStage(1);
-        }
+        targetBlock.ApplyMergeState(result.TargetStackCount, result.TargetTier2Stage);
 
         Slot sourceSlot = sourceBlock.CurrentSlot;
         if (sourceSlot != null)
             boardManager.ClearSlot(sourceSlot.Row, sourceSlot.Col);
 
-        bool shouldClear = targetBlock.StackCount >= 3
-            || (tier2PairMerge && targetBlock.Tier2MergeStage >= 3);
-        bool isTier2TripleClear = tier2PairMerge && targetBlock.Tier2MergeStage >= 3;
-
-        if (isTier2TripleClear)
+        if (result.NeedsWindUp)
         {
             m_PendingTier2TripleClearTarget = targetBlock;
             if (BoardStateManager.Instance != null)
@@ -113,19 +94,19 @@ public class MergeSystem : MonoBehaviour
         MergeVisualContext.Begin(sourceBlock, targetBlock);
         OnBlockStacked?.Invoke(sourceBlock, targetBlock);
 
-        if (shouldClear)
+        if (!result.ShouldClear)
         {
-            if (!isTier2TripleClear && BoardStateManager.Instance != null)
-                BoardStateManager.Instance.ChangeState(BoardState.ResolvingMerges);
-
-            if (isTier2TripleClear)
-                return;
-
-            TryClearTargetBlock(targetBlock, isTier2TripleClear: false);
+            RequestGravityOnly();
             return;
         }
 
-        RequestGravityOnly();
+        if (!result.NeedsWindUp && BoardStateManager.Instance != null)
+            BoardStateManager.Instance.ChangeState(BoardState.ResolvingMerges);
+
+        if (result.NeedsWindUp)
+            return;
+
+        TryClearTargetBlock(targetBlock, isTier2TripleClear: false);
     }
 
     private void TryClearTargetBlock(Block targetBlock, bool isTier2TripleClear)

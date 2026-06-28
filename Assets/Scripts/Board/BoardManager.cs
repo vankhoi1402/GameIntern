@@ -2,8 +2,7 @@
 using UnityEngine;
 
 /// <summary>
-/// Quản lý lưới logic (Slot[,]) — đặt/di chuyển/xóa block và phát event cho tầng View.
-/// Không xử lý animation hay input.
+/// Bàn cờ thống nhất — lưới logic, tọa độ grid/world, đặt/di chuyển/xóa block.
 /// </summary>
 public class BoardManager : MonoBehaviour
 {
@@ -11,8 +10,13 @@ public class BoardManager : MonoBehaviour
     [SerializeField] private int rows = 7;
     [SerializeField] private int columns = 5;
 
-    [Header("Area References")]
-    [SerializeField] private BoardArea boardArea;
+    [Header("Slot Size")]
+    [SerializeField] private float cellWidth = 0.93f;
+    [SerializeField] private float cellHeight = 1.15f;
+
+    [Header("Grid Origin")]
+    [Tooltip("Góc dưới-trái ô [0,0]. Để trống = dùng transform của object này.")]
+    [SerializeField] private Transform originTransform;
 
     [Header("Screen Layout")]
     [SerializeField] private bool centerOnScreen = true;
@@ -20,9 +24,10 @@ public class BoardManager : MonoBehaviour
     [SerializeField] private Vector2 screenCenterOffset;
 
     private Slot[,] slots;
+    private float m_GridStartX;
+    private float m_GridStartY;
 
-    /// <summary>Bộ tính tọa độ ô — View và animation dùng chung.</summary>
-    public BoardLayout Layout { get; set; }
+    public bool IsGridReady { get; private set; }
 
     public event Action<Block, int, int> OnBlockPlaced;
     public event Action<Block, int, int, int, int> OnBlockMoved;
@@ -30,49 +35,87 @@ public class BoardManager : MonoBehaviour
 
     public int Rows => rows;
     public int Columns => columns;
-    public float CellWidth => Layout?.CellWidth ?? 0f;
-    public float CellHeight => Layout?.CellHeight ?? 0f;
+    public float CellWidth => cellWidth;
+    public float CellHeight => cellHeight;
 
-    /// <summary>Khởi tạo lưới, căn giữa bàn và tạo BoardLayout.</summary>
+    /// <summary>Góc dưới-trái ô [0,0] trong world space.</summary>
+    public Vector2 Origin
+    {
+        get
+        {
+            Transform t = originTransform != null ? originTransform : transform;
+            return t.position;
+        }
+    }
+
     private void Awake()
     {
         InitBoard();
 
-        if (boardArea == null)
-        {
-            Debug.LogError("[BoardManager] Chưa gán BoardArea trong Inspector.");
-            return;
-        }
-
         if (centerOnScreen)
             CenterBoardOnScreen();
 
-        InitLayout();
+        RefreshGridMetrics();
+        IsGridReady = true;
     }
 
-    /// <summary>Đặt BoardArea sao cho tâm bàn trùng giữa màn hình.</summary>
+    private Transform OriginTransform => originTransform != null ? originTransform : transform;
+
     private void CenterBoardOnScreen()
     {
         Camera cam = targetCamera != null ? targetCamera : Camera.main;
         if (cam == null) return;
 
-        float planeDistance = Mathf.Abs(cam.transform.position.z - boardArea.transform.position.z);
+        Transform origin = OriginTransform;
+        float planeDistance = Mathf.Abs(cam.transform.position.z - origin.position.z);
         Vector3 viewportCenter = cam.ViewportToWorldPoint(new Vector3(0.5f, 0.5f, planeDistance));
         Vector2 worldCenter = new Vector2(viewportCenter.x, viewportCenter.y) + screenCenterOffset;
-        boardArea.CenterAt(worldCenter, columns, rows);
+
+        Vector2 size = new Vector2(cellWidth * columns, cellHeight * rows);
+        Vector2 originPos = worldCenter - size * 0.5f;
+        origin.position = new Vector3(originPos.x, originPos.y, origin.position.z);
     }
 
-    /// <summary>Tạo BoardLayout từ BoardArea hiện tại.</summary>
-    private void InitLayout()
+    private void RefreshGridMetrics()
     {
-        Layout = new BoardLayout(boardArea, rows, columns);
+        Vector2 o = Origin;
+        m_GridStartX = o.x + cellWidth * 0.5f;
+        m_GridStartY = o.y + cellHeight * 0.5f;
     }
 
-    /// <summary>Lấy vị trí world tại tâm ô (row, col).</summary>
-    public Vector3 GetSlotWorldPosition(int row, int col)
-        => Layout?.GetWorldPosition(row, col) ?? Vector3.zero;
+    /// <summary>(row, col) → tâm ô trong world.</summary>
+    public Vector3 GridToWorld(int row, int col)
+    {
+        return new Vector3(
+            m_GridStartX + col * cellWidth,
+            m_GridStartY + row * cellHeight,
+            0f);
+    }
 
-    /// <summary>Tạo mảng Slot[,] rỗng theo rows x columns.</summary>
+    /// <summary>World → (row, col), clamp trong biên bàn.</summary>
+    public Vector2Int WorldToGrid(Vector3 worldPosition)
+    {
+        Vector2 o = Origin;
+        float localX = worldPosition.x - o.x;
+        float localY = worldPosition.y - o.y;
+
+        int col = Mathf.FloorToInt(localX / cellWidth);
+        int row = Mathf.FloorToInt(localY / cellHeight);
+
+        row = Mathf.Clamp(row, 0, rows - 1);
+        col = Mathf.Clamp(col, 0, columns - 1);
+
+        return new Vector2Int(row, col);
+    }
+
+    public bool IsInside(int row, int col) => row >= 0 && row < rows && col >= 0 && col < columns;
+
+    /// <summary>Alias — giữ tương thích call site cũ.</summary>
+    public bool IsValidPosition(int row, int col) => IsInside(row, col);
+
+    /// <summary>Alias của GridToWorld.</summary>
+    public Vector3 GetSlotWorldPosition(int row, int col) => GridToWorld(row, col);
+
     private void InitBoard()
     {
         slots = new Slot[rows, columns];
@@ -83,13 +126,8 @@ public class BoardManager : MonoBehaviour
         }
     }
 
-    /// <summary>Kiểm tra (row, col) có nằm trong biên bàn cờ.</summary>
-    public bool IsValidPosition(int row, int col) => row >= 0 && row < rows && col >= 0 && col < columns;
+    public Slot GetSlot(int row, int col) => !IsInside(row, col) ? null : slots[row, col];
 
-    /// <summary>Lấy Slot tại (row, col); null nếu ngoài biên.</summary>
-    public Slot GetSlot(int row, int col) => !IsValidPosition(row, col) ? null : slots[row, col];
-
-    /// <summary>Tìm vị trí lưới của block (quét toàn bàn).</summary>
     public Vector2Int GetBlockPosition(Block block)
     {
         if (block == null) return new Vector2Int(-1, -1);
@@ -102,10 +140,10 @@ public class BoardManager : MonoBehaviour
                     return new Vector2Int(r, c);
             }
         }
+
         return new Vector2Int(-1, -1);
     }
 
-    /// <summary>Đặt block vào ô và phát OnBlockPlaced cho View.</summary>
     public void PlaceBlock(Block block, int row, int col)
     {
         Slot slot = GetSlot(row, col);
@@ -115,7 +153,6 @@ public class BoardManager : MonoBehaviour
         OnBlockPlaced?.Invoke(block, row, col);
     }
 
-    /// <summary>Xóa block khỏi ô trên lưới (không Destroy GameObject).</summary>
     public void ClearSlot(int row, int col)
     {
         Slot slot = GetSlot(row, col);
@@ -123,7 +160,6 @@ public class BoardManager : MonoBehaviour
         slot.Clear();
     }
 
-    /// <summary>Xóa block khỏi ô và phát OnBlockRemoved (View sẽ Destroy).</summary>
     public void RemoveBlock(int row, int col)
     {
         Slot slot = GetSlot(row, col);
@@ -134,7 +170,6 @@ public class BoardManager : MonoBehaviour
         OnBlockRemoved?.Invoke(blockToRemove, row, col);
     }
 
-    /// <summary>True khi không còn block nào trên lưới.</summary>
     public bool IsBoardEmpty()
     {
         for (int r = 0; r < rows; r++)
@@ -150,7 +185,6 @@ public class BoardManager : MonoBehaviour
         return true;
     }
 
-    /// <summary>Xóa toàn bộ block trên bàn (logic + Destroy view).</summary>
     public void ClearAllBlocks()
     {
         for (int r = 0; r < rows; r++)
@@ -164,7 +198,6 @@ public class BoardManager : MonoBehaviour
         }
     }
 
-    /// <summary>Gán block vào ô không phát OnBlockPlaced (dùng refill shift trước animation).</summary>
     internal void SetBlockSilent(Block block, int row, int col)
     {
         Slot slot = GetSlot(row, col);
@@ -172,7 +205,6 @@ public class BoardManager : MonoBehaviour
         slot.SetBlock(block);
     }
 
-    /// <summary>Xóa ô không phát OnBlockRemoved.</summary>
     internal void ClearSlotSilent(int row, int col)
     {
         Slot slot = GetSlot(row, col);
@@ -180,7 +212,6 @@ public class BoardManager : MonoBehaviour
         slot.Clear();
     }
 
-    /// <summary>Di chuyển block giữa hai ô trống/đích hợp lệ.</summary>
     public bool MoveBlock(int fromRow, int fromCol, int toRow, int toCol)
     {
         Slot fromSlot = GetSlot(fromRow, fromCol);
@@ -197,7 +228,6 @@ public class BoardManager : MonoBehaviour
         return true;
     }
 
-    /// <summary>Hoán đổi hai block giữa hai ô (chưa dùng trong gameplay hiện tại).</summary>
     public void SwapBlock(int rowA, int colA, int rowB, int colB)
     {
         Slot slotA = GetSlot(rowA, colA);
@@ -214,4 +244,39 @@ public class BoardManager : MonoBehaviour
         OnBlockMoved?.Invoke(blockA, rowA, colA, rowB, colB);
         OnBlockMoved?.Invoke(blockB, rowB, colB, rowA, colA);
     }
+
+#if UNITY_EDITOR
+    private void OnDrawGizmosSelected()
+    {
+        if (rows <= 0 || columns <= 0) return;
+
+        Vector2 o = originTransform != null ? (Vector2)originTransform.position : (Vector2)transform.position;
+        float startX = o.x + cellWidth * 0.5f;
+        float startY = o.y + cellHeight * 0.5f;
+
+        Gizmos.color = Color.green;
+        for (int c = 0; c <= columns; c++)
+        {
+            float x = o.x + c * cellWidth;
+            Gizmos.DrawLine(new Vector3(x, o.y, 0f), new Vector3(x, o.y + rows * cellHeight, 0f));
+        }
+
+        for (int r = 0; r <= rows; r++)
+        {
+            float y = o.y + r * cellHeight;
+            Gizmos.DrawLine(new Vector3(o.x, y, 0f), new Vector3(o.x + columns * cellWidth, y, 0f));
+        }
+
+        Gizmos.color = Color.red;
+        for (int r = 0; r < rows; r++)
+        {
+            for (int c = 0; c < columns; c++)
+            {
+                float cx = startX + c * cellWidth;
+                float cy = startY + r * cellHeight;
+                Gizmos.DrawSphere(new Vector3(cx, cy, 0f), 0.05f);
+            }
+        }
+    }
+#endif
 }

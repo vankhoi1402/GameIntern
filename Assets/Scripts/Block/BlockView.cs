@@ -15,6 +15,7 @@ public class BlockView : MonoBehaviour
     private const float c_ReleaseDuration = 0.18f;
     private const float c_AbsorbDuration = 0.18f;
     private const float c_AbsorbRotateZ = 20f;
+    private const float c_DragReturnDuration = 0.2f;
     private const float c_RejectShakeDuration = 0.28f;
     private const float c_RejectShakeRotation = 10f;
     private const float c_RejectShakePosition = 0.06f;
@@ -516,6 +517,44 @@ public class BlockView : MonoBehaviour
             seq.Join(renderer.DOFade(0f, fallDuration * 0.9f));
 
         seq.OnComplete(() => onFallComplete?.Invoke());
+    }
+
+    /// <summary>Bắt đầu kéo — sorting lên trên + pickup feedback.</summary>
+    public void BeginDrag()
+    {
+        SetDragSorting(true);
+        PlayPickupFeedback();
+    }
+
+    /// <summary>Cập nhật vị trí world khi đang kéo (không tween).</summary>
+    public void FollowDragPosition(Vector3 worldPos)
+    {
+        transform.position = worldPos;
+    }
+
+    /// <summary>Thả không hợp lệ — lắc (nếu cần) rồi tween về ô gốc.</summary>
+    public void EndDragReturnTo(Vector3 worldPos, int row, bool shakeReject, Action onComplete = null)
+    {
+        if (shakeReject)
+        {
+            PlayRejectShake(() => PlayReturnToGridTween(worldPos, row, onComplete));
+            return;
+        }
+
+        PlayReturnToGridTween(worldPos, row, onComplete);
+    }
+
+    private void PlayReturnToGridTween(Vector3 worldPos, int row, Action onComplete)
+    {
+        PlayReleaseFeedback();
+        transform.DOMove(worldPos, c_DragReturnDuration)
+            .SetEase(Ease.OutQuad)
+            .OnComplete(() =>
+            {
+                SetDragSorting(false);
+                ApplyGridSorting(row);
+                onComplete?.Invoke();
+            });
     }
 
     /// <summary>Hiệu ứng khi nhấc block — phóng to nhẹ và xoay.</summary>

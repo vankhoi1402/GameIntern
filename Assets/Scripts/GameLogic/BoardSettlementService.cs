@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-/// <summary>Gravity + refill bin — cửa vào duy nhất sau T3 / skill.</summary>
+/// <summary>Gravity + refill bin — cửa vào duy nhất sau merge / T3 clear.</summary>
 public class BoardSettlementService : MonoBehaviour
 {
     private const float c_PipelineTimeoutSeconds = 8f;
@@ -20,7 +20,7 @@ public class BoardSettlementService : MonoBehaviour
 
     public bool IsRunning => m_IsRunning;
 
-    /// <summary>Phát khi pipeline kết thúc (Idle) — hook win/lose sau này.</summary>
+    /// <summary>Phát khi pipeline kết thúc (Idle).</summary>
     public event Action<bool> OnSettlementCompleted;
 
     private void Awake()
@@ -35,7 +35,7 @@ public class BoardSettlementService : MonoBehaviour
             levelManager = FindObjectOfType<LevelManager>();
     }
 
-    /// <summary>Gravity + refill bin (T3, skill).</summary>
+    /// <summary>Gravity + refill bin (T3, 2+2+2).</summary>
     public void RunSettlement(Action onComplete = null)
     {
         RunSettlement(includeRefill: true, neighborRestores: null, onComplete);
@@ -72,9 +72,6 @@ public class BoardSettlementService : MonoBehaviour
 
         StartCoroutine(SettlementRoutine(includeRefill, neighborRestores, onComplete));
     }
-
-    /// <summary>Alias cũ — skill / code legacy.</summary>
-    public void RunGravityThenRefill(Action onComplete = null) => RunSettlement(onComplete);
 
     public IEnumerator RunGravityThenRefillRoutine(Action onComplete = null)
     {
@@ -122,7 +119,6 @@ public class BoardSettlementService : MonoBehaviour
         }
     }
 
-    /// <summary>Refill bin + neighbor restore — cùng pipeline push + rise từ row 0.</summary>
     private IEnumerator RefillPhaseRoutine(
         bool includeBin,
         Dictionary<int, Queue<Tier2NeighborRestore>> neighborQueues)
@@ -251,10 +247,10 @@ public class BoardSettlementService : MonoBehaviour
 
     private void PlayRefillRiseAnimations(IReadOnlyList<ColumnRefillPacket> wave, AnimationCompletionBatch batch)
     {
-        if (boardManager?.Layout == null)
+        if (boardManager == null || !boardManager.IsGridReady)
             return;
 
-        float cellHeight = boardManager.Layout.CellHeight;
+        float cellHeight = boardManager.CellHeight;
         foreach (ColumnRefillPacket packet in wave)
         {
             if (packet.NewBlock == null)
@@ -264,7 +260,7 @@ public class BoardSettlementService : MonoBehaviour
                 continue;
 
             batch.AddOutstanding(1);
-            Vector3 target = boardManager.Layout.GetWorldPosition(0, packet.Col);
+            Vector3 target = boardManager.GridToWorld(0, packet.Col);
             riseView.PlayRiseFromBelow(target, cellHeight, riseDuration, 0, 0f, batch.NotifyOneDone);
         }
     }

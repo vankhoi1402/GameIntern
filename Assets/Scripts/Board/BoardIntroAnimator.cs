@@ -74,7 +74,7 @@ public class BoardIntroAnimator : MonoBehaviour
         if (!m_EnableIntro || !m_IsIntroActive)
             return;
 
-        if (m_BoardManager == null || m_BoardManager.Layout == null)
+        if (m_BoardManager == null || !m_BoardManager.IsGridReady)
         {
             FinishIntro();
             return;
@@ -86,7 +86,7 @@ public class BoardIntroAnimator : MonoBehaviour
             return;
         }
 
-        float cellHeight = m_BoardManager.Layout.CellHeight;
+        float cellHeight = m_BoardManager.CellHeight;
         var batch = new TweenCompletionBatch(m_Entries.Count, FinishIntro);
 
         foreach (IntroEntry entry in m_Entries)
@@ -97,7 +97,7 @@ public class BoardIntroAnimator : MonoBehaviour
                 continue;
             }
 
-            Vector3 target = m_BoardManager.Layout.GetWorldPosition(entry.Row, entry.Col);
+            Vector3 target = m_BoardManager.GridToWorld(entry.Row, entry.Col);
             PlayRise(view, target, cellHeight, entry.Row, entry.Col, batch.NotifyOneDone);
         }
     }

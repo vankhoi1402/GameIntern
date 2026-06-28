@@ -4,7 +4,7 @@ using UnityEngine.Rendering;
 using System;
 
 /// <summary>
-/// Đọc input chuột — raycast block, phát sự kiện kéo qua InputEventBus.
+/// Đọc input chuột — raycast block, chuyển sự kiện kéo tới DragController.
 /// Chỉ hoạt động khi BoardState = Idle.
 /// </summary>
 public class InputManager : MonoBehaviour
@@ -14,6 +14,7 @@ public class InputManager : MonoBehaviour
     [Header("Settings")]
     [SerializeField] private LayerMask blockLayer;
     [SerializeField] private Camera targetCamera;
+    [SerializeField] private DragController dragController;
 
     private Block _currentDraggedBlock;
     private bool _isInputLocked = false;
@@ -35,6 +36,7 @@ public class InputManager : MonoBehaviour
         else Destroy(gameObject);
 
         if (targetCamera == null) targetCamera = Camera.main;
+        if (dragController == null) dragController = FindObjectOfType<DragController>();
     }
 
     /// <summary>Mỗi frame — xử lý click/kéo/thả nếu được phép nhận input.</summary>
@@ -42,7 +44,7 @@ public class InputManager : MonoBehaviour
     {
         if (BoardStateManager.Instance == null || !BoardStateManager.Instance.CanAcceptInput()) return;
         if (_isInputLocked) return;
-        if (targetCamera == null || InputEventBus.Instance == null) return;
+        if (targetCamera == null || dragController == null) return;
 
         if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
         {
@@ -52,7 +54,7 @@ public class InputManager : MonoBehaviour
         HandlePointerInput();
     }
 
-    /// <summary>Phát DragStarted / Dragging / DragEnded theo trạng thái nút chuột.</summary>
+    /// <summary>Phát drag started / dragging / ended theo trạng thái nút chuột.</summary>
     private void HandlePointerInput()
     {
         Vector3 mouseWorldPos = targetCamera.ScreenToWorldPoint(Input.mousePosition);
@@ -64,16 +66,16 @@ public class InputManager : MonoBehaviour
             if (hitBlock != null)
             {
                 _currentDraggedBlock = hitBlock;
-                InputEventBus.Instance.RaiseDragStarted(_currentDraggedBlock);
+                dragController.NotifyDragStarted(_currentDraggedBlock);
             }
         }
 
         if (Input.GetMouseButton(0) && _currentDraggedBlock != null)
-            InputEventBus.Instance.RaiseDragging(_currentDraggedBlock, mouseWorldPos);
+            dragController.NotifyDragging(_currentDraggedBlock, mouseWorldPos);
 
         if (Input.GetMouseButtonUp(0) && _currentDraggedBlock != null)
         {
-            InputEventBus.Instance.RaiseDragEnded(_currentDraggedBlock);
+            dragController.NotifyDragEnded(_currentDraggedBlock);
             _currentDraggedBlock = null;
         }
     }

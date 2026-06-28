@@ -2,7 +2,7 @@
 
 /// <summary>
 /// Thực thể block trên bàn cờ — lưu dữ liệu logic (loại tile, stack, ô hiện tại).
-/// Không xử lý hiển thị; phần visual do BlockView đảm nhiệm.
+/// Luật merge nằm ở MergeRules; không xử lý hiển thị.
 /// </summary>
 public class Block : MonoBehaviour
 {
@@ -22,30 +22,9 @@ public class Block : MonoBehaviour
     /// </summary>
     public int Tier2MergeStage { get; private set; }
 
-    /// <summary>
-    /// Merge hợp lệ: nhánh stack 1 (≤3, 1+2 khi stage==1) hoặc nhánh 2+2 (chỉ stack 2 với stack 2).
-    /// </summary>
+    /// <summary>Delegate sang MergeRules — giữ API cũ cho call site.</summary>
     public bool CanMergeWith(Block other)
-    {
-        if (!IsSameTypeAs(other)) return false;
-
-        int totalStack = StackCount + other.StackCount;
-
-        if (StackCount == 1 && other.StackCount == 1)
-            return totalStack <= 3;
-
-        if (StackCount == 2 && other.StackCount == 2)
-            return true;
-
-        if (totalStack != 3)
-            return false;
-
-        Block tier2Block = StackCount == 2 ? this : other;
-        return tier2Block.Tier2MergeStage == 1;
-    }
-
-    public bool IsTier2PairMergeWith(Block other)
-        => IsSameTypeAs(other) && StackCount == 2 && other.StackCount == 2;
+        => MergeRules.CanMerge(MergeBlockState.From(this), MergeBlockState.From(other));
 
     public Slot CurrentSlot { get; private set; }
     public int StackCount { get; private set; } = 1;
@@ -65,11 +44,12 @@ public class Block : MonoBehaviour
         IsPendingDestroy = false;
     }
 
-    /// <summary>Cộng thêm stack khi merge nhánh 1+1 / 1+2 (không dùng cho 2+2).</summary>
-    public void AddStack(int amount = 1)
+    /// <summary>Áp state sau MergeRules.Resolve — gọi từ MergeSystem.</summary>
+    public void ApplyMergeState(int stackCount, int tier2MergeStage)
     {
         if (IsPendingDestroy) return;
-        StackCount += amount;
+        StackCount = stackCount;
+        Tier2MergeStage = Mathf.Max(0, tier2MergeStage);
     }
 
     /// <summary>Đánh dấu block "2" sau 1+1 hoặc khi spawn stack 2.</summary>
@@ -77,13 +57,6 @@ public class Block : MonoBehaviour
     {
         if (IsPendingDestroy) return;
         Tier2MergeStage = Mathf.Max(0, stage);
-    }
-
-    /// <summary>Mỗi lần ghép thêm một block stack 2 vào ô đích (nhánh 2+2).</summary>
-    public void IncrementTier2MergeStage()
-    {
-        if (IsPendingDestroy) return;
-        Tier2MergeStage++;
     }
 
     /// <summary>Gán ô lưới đang chứa block này (gọi từ Slot.SetBlock/Clear).</summary>

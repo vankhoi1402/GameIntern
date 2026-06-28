@@ -28,7 +28,9 @@ public class MoveSystem : MonoBehaviour
         Block sourceBlock = sourceSlot.CurrentBlock;
         Block targetBlock = targetSlot.CurrentBlock;
 
-        if (targetBlock != null && sourceBlock.CanMergeWith(targetBlock))
+        if (targetBlock != null && MergeRules.CanMerge(
+                MergeBlockState.From(sourceBlock),
+                MergeBlockState.From(targetBlock)))
             return mergeSystem.PreceptMerge(sourceBlock, targetBlock);
 
         OnMoveRejected?.Invoke(sourceSlot, targetSlot);
