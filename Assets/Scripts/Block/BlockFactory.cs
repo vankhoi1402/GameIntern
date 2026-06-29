@@ -1,78 +1,107 @@
 ﻿using UnityEngine;
 
 /// <summary>
-/// Nhà máy tạo block từ prefab + BlockData. Chỉ sinh entity, không đặt lên bàn.
+/// Tạo block gameplay từ prefab + BlockData. Không đặt lên bàn, không chạy VFX burst.
 /// </summary>
 public class BlockFactory : MonoBehaviour
 {
-    [Header("Assets Configuration")]
-    [SerializeField] private BlockDatabase database;
-    [SerializeField] private GameObject blockPrefab;
+    [SerializeField] private BlockDatabase m_Database;
+    [SerializeField] private Block m_BlockPrefab;
 
-    /// <summary>Tạo block từ BlockData cụ thể tại vị trí (0,0,0).</summary>
-    public Block CreateBlock(BlockData data)
+    public BlockDatabase Database => m_Database;
+
+    public void EnsureConfigured(BlockDatabase database, Block blockPrefab)
     {
-        if (data == null || blockPrefab == null)
-        {
-            Debug.LogError("Factory chưa được cấu hình Database hoặc Prefab!");
+        if (m_Database == null)
+            m_Database = database;
+        if (m_BlockPrefab == null)
+            m_BlockPrefab = blockPrefab;
+    }
+
+    public BlockData GetBlockData(string typeKey)
+    {
+        if (m_Database == null || string.IsNullOrEmpty(typeKey))
             return null;
-        }
 
-        GameObject obj = Instantiate(blockPrefab, Vector3.zero, Quaternion.identity);
-        Block block = obj.GetComponent<Block>();
-
-        if (block != null)
-            block.Init(data);
-
-        return block;
+        return m_Database.GetBlockData(typeKey);
     }
 
-    /// <summary>Tạo block với BlockData ngẫu nhiên từ database.</summary>
-    public Block CreateRandomBlock()
-    {
-        BlockData randomData = GetRandomData();
-        return CreateBlock(randomData);
-    }
-
-    /// <summary>Tạo block theo typeKey string — ví dụ "1", "6".</summary>
-    public Block CreateBlockByTypeKey(string typeKey, int stack = 1)
-    {
-        BlockData data = database != null ? database.GetBlockData(typeKey) : null;
-        if (data == null)
-        {
-            Debug.LogError($"Factory không tìm thấy typeKey: {typeKey}");
-            return null;
-        }
-
-        return CreateBlockWithStack(data, stack);
-    }
-
-    /// <summary>Tạo block theo blockId số.</summary>
-    public Block CreateBlockById(int blockId, int stack = 1)
-    {
-        BlockData data = database != null ? database.GetBlockData(blockId) : null;
-        if (data == null)
-        {
-            Debug.LogError($"Factory không tìm thấy blockId: {blockId}");
-            return null;
-        }
-
-        return CreateBlockWithStack(data, stack);
-    }
-
-    private Block CreateBlockWithStack(BlockData data, int stack)
-    {
-        GameObject obj = Instantiate(blockPrefab, Vector3.zero, Quaternion.identity);
-        Block block = obj.GetComponent<Block>();
-        if (block != null)
-            block.Init(data, stack);
-
-        return block;
-    }
-
-    /// <summary>Lấy BlockData ngẫu nhiên từ database.</summary>
     public BlockData GetRandomData()
     {
-        return database != null ? database.GetRandomNormalBlock() : null;
+        return m_Database != null ? m_Database.GetRandomNormalBlock() : null;
+    }
+
+    public Block Create(BlockData data, int stack = 1)
+    {
+        if (data == null || m_BlockPrefab == null)
+            return null;
+
+        Block block = Instantiate(m_BlockPrefab);
+        block.Init(data, stack);
+        return block;
+    }
+
+    public Block CreateAt(BlockData data, Vector3 worldPos)
+    {
+        if (data == null || m_BlockPrefab == null)
+            return null;
+
+        Block block = Instantiate(m_BlockPrefab, worldPos, Quaternion.identity);
+        block.Init(data);
+        return block;
+    }
+
+    public Block TryCreateByTypeKey(string typeKey, int stack, out BlockData data)
+    {
+        data = GetBlockData(typeKey);
+        if (data == null)
+            return null;
+
+        return Create(data, stack);
+    }
+
+    public void AttachToBoardView(Block block, Transform boardViewParent)
+    {
+        if (block == null || boardViewParent == null)
+            return;
+
+        block.transform.SetParent(boardViewParent);
+    }
+
+    public void SetupGameplayView(
+        Block block,
+        BlockData data,
+        BoardManager boardManager,
+        StackBackgroundConfig stackBackgroundConfig)
+    {
+        if (block == null || data == null || boardManager == null || !boardManager.IsGridReady)
+            return;
+
+        if (!block.TryGetComponent<BlockView>(out var view))
+            return;
+
+        if (stackBackgroundConfig != null)
+            view.SetBackgroundConfig(stackBackgroundConfig);
+
+        view.Initialize(data, boardManager.CellWidth, boardManager.CellHeight);
+        view.UpdateTier2StageVisual(block.StackCount, block.Tier2MergeStage);
+    }
+
+    public void SetupBurstView(
+        Block block,
+        BlockData data,
+        BoardManager boardManager,
+        StackBackgroundConfig stackBackgroundConfig)
+    {
+        if (block == null || data == null || boardManager == null || !boardManager.IsGridReady)
+            return;
+
+        if (!block.TryGetComponent<BlockView>(out var view))
+            return;
+
+        if (stackBackgroundConfig != null)
+            view.SetBackgroundConfig(stackBackgroundConfig);
+
+        view.InitializeBurstFallOff(data, boardManager.CellWidth, boardManager.CellHeight);
     }
 }
