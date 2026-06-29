@@ -57,7 +57,8 @@ public static class LevelCsvEditorPaths
                 continue;
             }
 
-            LevelCsvValidator.LogReportFromCsv(entry.LevelId, entry.LevelCsv.text, database);
+            var loader = new LevelLoader();
+            loader.ValidateCsvAndLog(entry.LevelId, entry.LevelCsv.text, database);
         }
     }
 }

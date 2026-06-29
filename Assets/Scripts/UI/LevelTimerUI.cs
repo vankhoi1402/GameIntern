@@ -6,8 +6,7 @@ public class LevelTimerUI : MonoBehaviour
 {
     [SerializeField] private GameObject m_Root;
     [SerializeField] private TMP_Text m_TimeText;
-    [SerializeField] private LevelTimer m_Timer;
-    [SerializeField] private LevelManager m_LevelManager;
+    [SerializeField] private LevelManager2 m_LevelManager;
     [SerializeField] private Color m_WarningColor = new Color(1f, 0.35f, 0.35f);
     [SerializeField] private float m_WarningThresholdSeconds = 10f;
 
@@ -27,14 +26,15 @@ public class LevelTimerUI : MonoBehaviour
 
     private void Update()
     {
-        if (!m_Initialized || m_Timer == null || !m_Timer.IsRunning)
+        if (!m_Initialized || m_LevelManager == null || !m_LevelManager.IsTimerRunning)
             return;
 
         if (m_TimeText == null)
             return;
 
-        m_TimeText.text = FormatTime(m_Timer.RemainingSeconds);
-        m_TimeText.color = m_Timer.RemainingSeconds <= m_WarningThresholdSeconds
+        float remaining = m_LevelManager.RemainingSeconds;
+        m_TimeText.text = FormatTime(remaining);
+        m_TimeText.color = remaining <= m_WarningThresholdSeconds
             ? m_WarningColor
             : m_DefaultColor;
     }
@@ -72,11 +72,8 @@ public class LevelTimerUI : MonoBehaviour
         if (m_TimeText != null)
             m_DefaultColor = m_TimeText.color;
 
-        if (m_Timer == null)
-            m_Timer = FindObjectOfType<LevelTimer>();
-
         if (m_LevelManager == null)
-            m_LevelManager = FindObjectOfType<LevelManager>();
+            m_LevelManager = FindObjectOfType<LevelManager2>();
 
         if (m_LevelManager != null)
         {

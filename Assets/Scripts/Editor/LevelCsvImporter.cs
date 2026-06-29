@@ -11,7 +11,7 @@ public class LevelCsvImporter : EditorWindow
     private LevelCatalog _catalog;
     private BlockDatabase _database;
     private string _levelsFolder = c_LevelsFolder;
-    private int _visibleRows = LevelCsvParser.DefaultVisibleRows;
+    private int _visibleRows = LevelLoader.DefaultVisibleRows;
 
     [MenuItem("Grid Game/Import Levels From CSV")]
     public static void ShowWindow()
@@ -158,11 +158,12 @@ public class LevelCsvImporter : EditorWindow
 
     private LevelData ImportEntry(int levelId, TextAsset csv)
     {
-        LevelData data = LevelCsvParser.ParseLevelFromCsv(levelId, csv.text, _database, _visibleRows);
-        LevelCsvValidator.LogReport(levelId, data.Rows, _database);
+        var loader = new LevelLoader();
+        LevelData data = loader.ParseLevelFromCsv(levelId, csv.text, _visibleRows);
+        loader.ValidateAndLog(data, _database);
 
         string assetPath = GetLevelAssetPathFromCsv(csv, levelId);
-        LevelCsvParser.SaveLevelAsset(data, assetPath);
+        LevelLoader.SaveLevelAsset(data, assetPath);
         Debug.Log($"[LevelCsvImporter] Imported → {assetPath}");
 
         return AssetDatabase.LoadAssetAtPath<LevelData>(assetPath);

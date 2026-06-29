@@ -77,16 +77,16 @@ public static class LevelCatalogRebuilder
 
     private static LevelData ImportLevel(int levelId, TextAsset csv, BlockDatabase database)
     {
-        LevelData data = LevelCsvParser.ParseLevelFromCsv(
+        var loader = new LevelLoader();
+        LevelData data = loader.ParseLevelFromCsv(
             levelId,
             csv.text,
-            database,
-            LevelCsvParser.DefaultVisibleRows);
+            LevelLoader.DefaultVisibleRows);
 
-        LevelCsvValidator.LogReport(levelId, data.Rows, database);
+        loader.ValidateAndLog(data, database);
 
         string assetPath = LevelCsvImporter.GetLevelAssetPathFromCsv(csv, levelId);
-        LevelCsvParser.SaveLevelAsset(data, assetPath);
+        LevelLoader.SaveLevelAsset(data, assetPath);
         return AssetDatabase.LoadAssetAtPath<LevelData>(assetPath);
     }
 }

@@ -31,7 +31,8 @@ public class LevelCsvAssetPostprocessor : AssetPostprocessor
             if (csv == null)
                 continue;
 
-            LevelCsvValidator.LogReportFromCsv(levelId, csv.text, database);
+            var loader = new LevelLoader();
+            loader.ValidateCsvAndLog(levelId, csv.text, database);
         }
     }
 }
