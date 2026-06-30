@@ -34,7 +34,12 @@ public class PlayManager : MonoBehaviour
     [SerializeField] private Transform m_BlockParent;
 
     [Header("Level")]
-    [SerializeField] private LevelManager2 m_LevelManager;
+    [SerializeField] private LevelCatalog m_Catalog;
+    [SerializeField] private int m_StartLevelId = 1;
+
+    [Header("UI")]
+    [SerializeField] private VictoryUIController m_VictoryUI;
+    [SerializeField] private DefeatUIController m_DefeatUI;
 
     [Header("Input")]
     [SerializeField] private Camera m_MainCamera;
@@ -50,6 +55,14 @@ public class PlayManager : MonoBehaviour
     #region Runtime State
 
     private readonly LevelLoader m_LevelLoader = new LevelLoader();
+    private readonly LevelRefillState m_RefillState = new LevelRefillState();
+
+    private LevelData m_CurrentLevel;
+    private bool m_OutcomeResolved;
+
+    private float m_RemainingSeconds;
+    private int m_TimeLimitSeconds;
+    private bool m_IsTimerRunning;
 
     private BlockManager m_DraggedBlock;
     private BlockManager m_HoverTargetBlock;
@@ -69,9 +82,31 @@ public class PlayManager : MonoBehaviour
 
     #endregion
 
+    #region Timer State
+
+    public float RemainingSeconds => m_RemainingSeconds;
+    public int TimeLimitSeconds => m_TimeLimitSeconds;
+    public bool IsTimerRunning => m_IsTimerRunning;
+    public bool HasTimeLimit => m_TimeLimitSeconds > 0;
+    public bool IsTimerExpired => HasTimeLimit && m_RemainingSeconds <= 0f;
+
+    public event Action OnTimerExpired;
+
+    #endregion
+
+    #region Properties
+
+    public LevelData CurrentLevel => m_CurrentLevel;
+    public bool HasLevel => m_CurrentLevel != null;
+    public int CurrentLevelId => m_CurrentLevel != null ? m_CurrentLevel.LevelId : m_StartLevelId;
+    public bool IsOutcomeResolved => m_OutcomeResolved;
+
+    #endregion
+
     #region Events
 
     public event Action<bool> OnSettlementCompleted;
+    public event Action<LevelData> OnLevelLoaded;
 
     public bool IsSettlementRunning => m_IsSettlementRunning;
 
@@ -81,19 +116,290 @@ public class PlayManager : MonoBehaviour
 
     private void OnEnable()
     {
-        if (m_LevelManager != null)
-            m_LevelManager.OnLevelLoaded += HandleLevelLoaded;
+        BindPopupEvents(true);
+        OnSettlementCompleted += HandleSettlementCompleted;
     }
 
     private void OnDisable()
     {
-        if (m_LevelManager != null)
-            m_LevelManager.OnLevelLoaded -= HandleLevelLoaded;
+        BindPopupEvents(false);
+        OnSettlementCompleted -= HandleSettlementCompleted;
     }
 
     private void Update()
     {
         HandleInput();
+        TickTimer();
+    }
+
+    #endregion
+
+    #region Level Management
+
+    private void Start()
+    {
+        LoadStartLevel();
+    }
+
+    public void LoadStartLevel()
+    {
+        if (m_Catalog == null || m_Catalog.Levels == null || m_Catalog.Levels.Length == 0)
+        {
+            Debug.LogWarning("[PlayManager] Chưa có LevelCatalog.");
+            return;
+        }
+
+        LevelCatalogEntry entry = m_Catalog.FindById(m_StartLevelId);
+        LevelData level = m_LevelLoader.LoadFromEntry(entry, m_BlockDatabase);
+
+        if (level == null)
+        {
+            Debug.LogError($"[PlayManager] Level {m_StartLevelId} chưa có dữ liệu. Chạy Import CSV trước.");
+            return;
+        }
+
+        LoadLevel(level);
+    }
+
+    public void LoadLevel(LevelData level)
+    {
+        if (level == null || m_BoardManager == null)
+            return;
+
+        m_CurrentLevel = level;
+        m_RefillState.Reset(level, m_BoardManager.Rows, m_BoardManager.Columns);
+        WarnIfLevelCsvNarrowerThanBoard(level);
+
+        StopTimer();
+
+        if (m_BlockDatabase != null)
+            m_LevelLoader.ValidateAndLog(level, m_BlockDatabase);
+
+        ResetOutcomeSession();
+        SetLockInput(true);
+        PrepareForLevelLoad();
+        SpawnBoardLayout(level, OnBoardLayoutReady);
+    }
+
+    public void ReloadCurrentLevel()
+    {
+        if (m_CurrentLevel != null)
+            LoadLevel(m_CurrentLevel);
+    }
+
+    public bool TryLoadNextLevel()
+    {
+        if (m_Catalog == null || !m_Catalog.TryGetNextAfter(CurrentLevelId, out LevelCatalogEntry next))
+            return false;
+
+        LevelData level = m_LevelLoader.LoadFromEntry(next, m_BlockDatabase);
+        if (level == null)
+            return false;
+
+        LoadLevel(level);
+        return true;
+    }
+
+    public void LoadNextLevel()
+    {
+        TryLoadNextLevel();
+    }
+
+    public bool HasNextLevel()
+    {
+        return m_Catalog != null && m_Catalog.TryGetNextAfter(CurrentLevelId, out _);
+    }
+
+    private void SpawnBoardLayout(LevelData level, Action onComplete)
+    {
+        SpawnLevelBoard(level);
+        onComplete?.Invoke();
+    }
+
+    private void OnBoardLayoutReady()
+    {
+        if (m_CurrentLevel == null)
+            return;
+
+        SetLockInput(false);
+        StartTimer(m_CurrentLevel.TimeLimitSeconds);
+
+        Debug.Log($"[PlayManager] Loaded level {m_CurrentLevel.LevelId}" +
+                  $" — board {m_BoardManager.Rows}x{m_BoardManager.Columns}" +
+                  (m_CurrentLevel.TimeLimitSeconds > 0
+                      ? $" — time limit {m_CurrentLevel.TimeLimitSeconds}s"
+                      : string.Empty));
+
+        OnLevelLoaded?.Invoke(m_CurrentLevel);
+    }
+
+    #endregion
+
+    #region Timer
+
+    public void StartTimer(int timeLimitSeconds)
+    {
+        m_TimeLimitSeconds = Mathf.Max(0, timeLimitSeconds);
+        m_RemainingSeconds = m_TimeLimitSeconds;
+        m_IsTimerRunning = m_TimeLimitSeconds > 0;
+    }
+
+    public void StopTimer()
+    {
+        m_IsTimerRunning = false;
+        m_RemainingSeconds = 0f;
+        m_TimeLimitSeconds = 0;
+    }
+
+    private void TickTimer()
+    {
+        if (!m_IsTimerRunning || IsTimerPaused())
+            return;
+
+        m_RemainingSeconds -= Time.deltaTime;
+        if (m_RemainingSeconds > 0f)
+            return;
+
+        m_RemainingSeconds = 0f;
+        m_IsTimerRunning = false;
+        OnTimerExpired?.Invoke();
+        TryResolveOutcome();
+    }
+
+    private bool IsTimerPaused()
+    {
+        return m_IsInputLocked || m_IsSettlementRunning;
+    }
+
+    #endregion
+
+    #region Win / Lose
+
+    public void TryResolveOutcome()
+    {
+        if (m_OutcomeResolved)
+            return;
+
+        if (IsLevelCleared())
+        {
+            EnterWin();
+            return;
+        }
+
+        if (IsTimerExpired)
+            EnterLose();
+    }
+
+    private bool IsLevelCleared()
+    {
+        if (m_BoardManager == null || !m_BoardManager.IsGridReady)
+            return false;
+
+        return m_BoardManager.IsBoardEmpty() && !m_RefillState.HasRemainingBlocks();
+    }
+
+    private void EnterWin()
+    {
+        m_OutcomeResolved = true;
+        StopTimer();
+        CancelActiveDrag();
+        SetLockInput(true);
+        m_DefeatUI?.Hide(animated: false);
+
+        int levelId = CurrentLevelId;
+        bool hasNext = HasNextLevel();
+        m_VictoryUI?.Show(levelId, hasNext);
+    }
+
+    private void EnterLose()
+    {
+        m_OutcomeResolved = true;
+        StopTimer();
+        CancelActiveDrag();
+        SetLockInput(true);
+        m_VictoryUI?.Hide(animated: false);
+        m_DefeatUI?.Show(CurrentLevelId);
+    }
+
+    #endregion
+
+    #region Refill
+
+    public LevelBinBlock? TryDequeueBin(int col) => m_RefillState.TryDequeue(col);
+
+    #endregion
+
+    #region Session
+
+    private void ResetOutcomeSession()
+    {
+        m_OutcomeResolved = false;
+        m_VictoryUI?.Hide(animated: false);
+        m_DefeatUI?.Hide(animated: false);
+        SetLockInput(false);
+    }
+
+    private void HandleSettlementCompleted(bool _)
+    {
+        TryResolveOutcome();
+    }
+
+    private void HandleNextLevelClicked()
+    {
+        m_VictoryUI?.Hide(() =>
+        {
+            if (!TryLoadNextLevel())
+                ResetOutcomeSession();
+        });
+    }
+
+    private void HandleRetryClicked()
+    {
+        m_DefeatUI?.Hide(ReloadCurrentLevel);
+    }
+
+    private void BindPopupEvents(bool subscribe)
+    {
+        if (m_VictoryUI != null)
+        {
+            m_VictoryUI.OnNextClicked -= HandleNextLevelClicked;
+            if (subscribe)
+                m_VictoryUI.OnNextClicked += HandleNextLevelClicked;
+        }
+
+        if (m_DefeatUI != null)
+        {
+            m_DefeatUI.OnRetryClicked -= HandleRetryClicked;
+            if (subscribe)
+                m_DefeatUI.OnRetryClicked += HandleRetryClicked;
+        }
+    }
+
+    private void WarnIfLevelCsvNarrowerThanBoard(LevelData level)
+    {
+        if (level?.Rows == null || m_BoardManager == null)
+            return;
+
+        if (level.VisibleRows > 0 && level.VisibleRows != m_BoardManager.Rows)
+        {
+            Debug.LogWarning(
+                $"[PlayManager] Level {level.LevelId}: VisibleRows asset ({level.VisibleRows}) " +
+                $"khác BoardManager.rows ({m_BoardManager.Rows}) — runtime dùng BoardManager.");
+        }
+
+        int csvCols = 0;
+        foreach (LevelGridRow row in level.Rows)
+        {
+            if (row.ColBlockTypes != null && row.ColBlockTypes.Length > csvCols)
+                csvCols = row.ColBlockTypes.Length;
+        }
+
+        if (csvCols > 0 && m_BoardManager.Columns > csvCols)
+        {
+            Debug.LogWarning(
+                $"[PlayManager] Level {level.LevelId}: BoardManager.columns ({m_BoardManager.Columns}) " +
+                $"lớn hơn số cột CSV ({csvCols}).");
+        }
     }
 
     #endregion
@@ -421,13 +727,32 @@ public class PlayManager : MonoBehaviour
 
     #region Spawn Level Layout
 
+    /// <summary>Reset gameplay session trước khi load layout level mới.</summary>
+    public void PrepareForLevelLoad()
+    {
+        CancelActiveDrag();
+
+        if (m_SettlementCoroutine != null)
+        {
+            StopCoroutine(m_SettlementCoroutine);
+            m_SettlementCoroutine = null;
+        }
+
+        m_IsSettlementRunning = false;
+        m_IsTurnProcessing = false;
+        m_PendingTier2TripleClearTarget = null;
+        m_PendingGravityAfterSettlement = false;
+    }
+
     /// <summary>Xóa bàn và spawn layout ban đầu từ level data.</summary>
     public void SpawnLevelBoard(LevelData level)
     {
         if (level == null || m_BoardManager == null)
             return;
 
+        PrepareForLevelLoad();
         m_BoardManager.ClearAllBlocks();
+        DestroyOrphanBlocks();
 
         if (level.Rows == null)
             return;
@@ -540,8 +865,8 @@ public class PlayManager : MonoBehaviour
                 restore = queue.Dequeue();
 
             LevelBinBlock? binBlock = null;
-            if (!restore.HasValue && includeBin && m_LevelManager != null)
-                binBlock = m_LevelManager.TryDequeueBin(col);
+            if (!restore.HasValue && includeBin)
+                binBlock = TryDequeueBin(col);
 
             if (!restore.HasValue && !binBlock.HasValue)
                 continue;
@@ -633,6 +958,7 @@ public class PlayManager : MonoBehaviour
         if (source == null)
         {
             FinishTargetStackVisual(target);
+           // RequestGravityOnly();
             return;
         }
 
@@ -677,6 +1003,7 @@ public class PlayManager : MonoBehaviour
                 return;
 
             SnapTargetToCurrentSlot(target);
+           // RequestGravityOnly();
         }
 
         target.PlayMergeImpact(AfterImpact);
@@ -705,6 +1032,16 @@ public class PlayManager : MonoBehaviour
         m_PendingGravityAfterSettlement = false;
     }
 
+    private void DestroyOrphanBlocks()
+    {
+        BlockManager[] blocks = FindObjectsByType<BlockManager>(FindObjectsSortMode.None);
+        foreach (BlockManager block in blocks)
+        {
+            if (block != null)
+                Destroy(block.gameObject);
+        }
+    }
+
     #endregion
 
     #region Utilities
@@ -717,7 +1054,7 @@ public class PlayManager : MonoBehaviour
         if (m_IsTurnProcessing || m_IsSettlementRunning)
             return true;
 
-        if (m_LevelManager != null && m_LevelManager.IsOutcomeResolved)
+        if (m_OutcomeResolved)
             return true;
 
         return false;
@@ -1032,6 +1369,107 @@ public class PlayManager : MonoBehaviour
 
             if (m_Remaining > 0)
                 Debug.LogWarning($"[PlayManager] Timeout chờ {label} — còn {m_Remaining} anim.");
+        }
+    }
+
+    private sealed class LevelRefillState
+    {
+        private static readonly LevelLoader s_CellParser = new LevelLoader();
+
+        private readonly System.Collections.Generic.Dictionary<int, LevelGridRow> m_RowsByDepth =
+            new System.Collections.Generic.Dictionary<int, LevelGridRow>();
+
+        private int[] m_NextDepthByCol = System.Array.Empty<int>();
+        private int m_MaxDepth = -1;
+        private int m_BinStartRow;
+        private int m_ColumnCount;
+
+        public void Reset(LevelData level, int boardRows, int boardColumns)
+        {
+            m_RowsByDepth.Clear();
+            m_MaxDepth = -1;
+            m_BinStartRow = Mathf.Max(0, boardRows);
+            m_ColumnCount = Mathf.Max(0, boardColumns);
+
+            if (m_NextDepthByCol.Length != m_ColumnCount)
+                m_NextDepthByCol = new int[m_ColumnCount];
+
+            for (int col = 0; col < m_ColumnCount; col++)
+                m_NextDepthByCol[col] = m_BinStartRow;
+
+            if (level?.Rows == null)
+                return;
+
+            foreach (LevelGridRow row in level.Rows)
+            {
+                m_RowsByDepth[row.Row] = row;
+                if (row.Row > m_MaxDepth)
+                    m_MaxDepth = row.Row;
+            }
+        }
+
+        public LevelBinBlock? TryDequeue(int col)
+        {
+            if (col < 0 || col >= m_ColumnCount)
+                return null;
+
+            while (m_NextDepthByCol[col] <= m_MaxDepth)
+            {
+                int depth = m_NextDepthByCol[col]++;
+
+                if (!m_RowsByDepth.TryGetValue(depth, out LevelGridRow row))
+                    continue;
+
+                if (row.ColBlockTypes == null || col >= row.ColBlockTypes.Length)
+                    continue;
+
+                if (s_CellParser.TryParseCell(row.ColBlockTypes[col], out string typeKey, out int stack))
+                {
+                    return new LevelBinBlock
+                    {
+                        BlockType = typeKey,
+                        Stack = stack
+                    };
+                }
+            }
+
+            return null;
+        }
+
+        public bool HasRemainingBlocks()
+        {
+            for (int col = 0; col < m_ColumnCount; col++)
+            {
+                if (HasRemainingInColumn(col))
+                    return true;
+            }
+
+            return false;
+        }
+
+        private bool HasRemainingInColumn(int col)
+        {
+            int savedDepth = m_NextDepthByCol[col];
+
+            while (m_NextDepthByCol[col] <= m_MaxDepth)
+            {
+                int depth = m_NextDepthByCol[col]++;
+
+                if (!m_RowsByDepth.TryGetValue(depth, out LevelGridRow row))
+                    continue;
+
+                if (row.ColBlockTypes == null || col >= row.ColBlockTypes.Length)
+                    continue;
+
+                if (s_CellParser.TryParseCell(row.ColBlockTypes[col], out _, out _))
+                {
+                    m_NextDepthByCol[col] = savedDepth;
+                    return true;
+                }
+            }
+
+            m_NextDepthByCol[col] = savedDepth;
+            return false;
         }
     }
 }

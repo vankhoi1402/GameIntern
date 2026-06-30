@@ -224,8 +224,15 @@ public class BoardManager : MonoBehaviour
             for (int c = 0; c < columns; c++)
             {
                 Slot slot = GetSlot(r, c);
-                if (slot != null && slot.HasBlock)
-                    RemoveBlock(r, c);
+                if (slot == null || slot.IsEmpty)
+                    continue;
+
+                BlockManager block = slot.CurrentBlock;
+                slot.Clear();
+                OnBlockRemoved?.Invoke(block, r, c);
+
+                if (block != null)
+                    Destroy(block.gameObject);
             }
         }
     }

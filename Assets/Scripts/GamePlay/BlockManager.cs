@@ -20,7 +20,7 @@ public class BlockManager : MonoBehaviour
     private const float c_RejectShakeDuration = 0.28f;
     private const float c_RejectShakeRotation = 10f;
     private const float c_RejectShakePosition = 0.06f;
-    private const float c_HoverTargetScale = 1.08f;
+    private const float c_HoverTargetScale = 1.2f;
     private const float c_HoverTargetDuration = 0.12f;
     private const float c_HoverFlashDuration = 0.06f;
     private const float c_HoverHoldDuration = 0.1f;
@@ -28,7 +28,8 @@ public class BlockManager : MonoBehaviour
     private const float c_HoverHoldBlend = 0.25f;
     private const float c_HoverBgFlashBlend = 0.2f;
     private const float c_HoverBgHoldBlend = 0.1f;
-    private const int c_Tier2PairOverlayMinStage = 2;
+    private const int c_Tier2PairOverlayMinStage = 1;
+    private const float c_SelectedRotateDuration = 2f;
 
     public const int SortingOrderPerRow = 10;
     public const int DragSortingOrder = 1000;
@@ -109,6 +110,8 @@ public class BlockManager : MonoBehaviour
     private Color m_BaseBgColor = Color.white;
     private Tween m_HoverTween;
     private Tween m_HoverColorTween;
+    private Tween m_SelectedRotateTween;
+    private float m_BaseSelectedRotationZ;
 
     #endregion
 
@@ -119,11 +122,14 @@ public class BlockManager : MonoBehaviour
         CacheTransformDefaults();
         m_SortingGroup = GetComponent<SortingGroup>();
         ResolveSelectedRenderer();
+        if (m_SelectedRenderer != null)
+            m_BaseSelectedRotationZ = m_SelectedRenderer.transform.localEulerAngles.z;
     }
 
     private void OnDestroy()
     {
         KillHoverTweens();
+        StopSelectedOverlayRotate();
     }
 
     #endregion
@@ -165,7 +171,7 @@ public class BlockManager : MonoBehaviour
 
         ResetSpriteAlpha();
         ResetTransformVisual();
-        UpdateTier2StageVisual(StackBackgroundConfig.BurstFallVisualStack, 0);
+        UpdateTier2StageVisual(StackBackgroundConfig.BurstFallVisualStack, 2);
         CacheBaseBgColor();
     }
 
@@ -214,10 +220,49 @@ public class BlockManager : MonoBehaviour
             return;
 
         bool showOverlay = stackCount == 2 && tier2MergeStage >= c_Tier2PairOverlayMinStage;
-        m_SelectedRenderer.gameObject.SetActive(showOverlay);
+        if (!showOverlay)
+        {
+            StopSelectedOverlayRotate();
+            m_SelectedRenderer.gameObject.SetActive(false);
+            return;
+        }
+
+        PlaySelectedOverlayRotate();
     }
 
-  private void ResolveSelectedRenderer()
+    /// <summary>Bật Selected và quay liên tục quanh trục Z.</summary>
+    public void PlaySelectedOverlayRotate()
+    {
+        ResolveSelectedRenderer();
+        if (m_SelectedRenderer == null)
+            return;
+
+        StopSelectedOverlayRotate();
+        m_SelectedRenderer.gameObject.SetActive(true);
+
+        Transform selectedTransform = m_SelectedRenderer.transform;
+        selectedTransform.localRotation = Quaternion.Euler(0f, 0f, m_BaseSelectedRotationZ);
+
+        m_SelectedRotateTween = selectedTransform
+            .DOLocalRotate(new Vector3(0f, 0f, 360f), c_SelectedRotateDuration, RotateMode.LocalAxisAdd)
+            .SetEase(Ease.Linear)
+            .SetLoops(-1, LoopType.Restart)
+            .SetLink(m_SelectedRenderer.gameObject);
+    }
+
+    /// <summary>Dừng quay Selected và reset góc Z.</summary>
+    public void StopSelectedOverlayRotate()
+    {
+        m_SelectedRotateTween?.Kill();
+        m_SelectedRotateTween = null;
+
+        if (m_SelectedRenderer == null)
+            return;
+
+        m_SelectedRenderer.transform.localRotation = Quaternion.Euler(0f, 0f, m_BaseSelectedRotationZ);
+    }
+
+    private void ResolveSelectedRenderer()
     {
         if (m_SelectedRenderer != null)
             return;
@@ -911,6 +956,7 @@ public class BlockManager : MonoBehaviour
     /// <summary>Reset tween/scale/alpha sau skill, gravity, refill.</summary>
     public void ResetVisualState()
     {
+        //StopSelectedOverlayRotate();
         transform.DOKill();
         ResetTransformVisual();
         ResetSpriteAlpha();
