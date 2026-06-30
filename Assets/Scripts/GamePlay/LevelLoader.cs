@@ -13,7 +13,6 @@ public class LevelLoader
     #region Constants
 
     public const int GridColumnCount = 5;
-    public const int DefaultVisibleRows = 7;
     private const int c_MergeGroupSize = 3;
 
     #endregion
@@ -21,7 +20,7 @@ public class LevelLoader
     #region Load
 
     /// <summary>Lấy LevelData từ catalog entry — ưu tiên asset, fallback CSV.</summary>
-    public LevelData LoadFromEntry(LevelCatalogEntry entry, BlockDatabase database, int visibleRows = DefaultVisibleRows)
+    public LevelData LoadFromEntry(LevelCatalogEntry entry, BlockDatabase database)
     {
         if (entry.LevelAsset != null)
             return entry.LevelAsset;
@@ -29,17 +28,17 @@ public class LevelLoader
         if (entry.LevelCsv == null || string.IsNullOrWhiteSpace(entry.LevelCsv.text))
             return null;
 
-        return ParseLevelFromCsv(entry.LevelId, entry.LevelCsv.text, visibleRows);
+        return ParseLevelFromCsv(entry.LevelId, entry.LevelCsv.text);
     }
 
-    /// <summary>Parse CSV thành LevelData runtime.</summary>
-    public LevelData ParseLevelFromCsv(int levelId, string csvText, int visibleRows = DefaultVisibleRows)
+    /// <summary>Parse CSV thành LevelData — toàn bộ depth; bàn/bin tách theo BoardManager.rows lúc chơi.</summary>
+    public LevelData ParseLevelFromCsv(int levelId, string csvText)
     {
         ParseBinCsv(csvText, out int timeLimitSeconds, out LevelGridRow[] rows);
 
         LevelData level = ScriptableObject.CreateInstance<LevelData>();
         level.LevelId = levelId;
-        level.VisibleRows = visibleRows;
+        level.VisibleRows = 0;
         level.TimeLimitSeconds = timeLimitSeconds;
         level.Rows = rows;
         return level;

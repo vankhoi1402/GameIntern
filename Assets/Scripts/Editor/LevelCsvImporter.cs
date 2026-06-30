@@ -11,7 +11,6 @@ public class LevelCsvImporter : EditorWindow
     private LevelCatalog _catalog;
     private BlockDatabase _database;
     private string _levelsFolder = c_LevelsFolder;
-    private int _visibleRows = LevelLoader.DefaultVisibleRows;
 
     [MenuItem("Grid Game/Import Levels From CSV")]
     public static void ShowWindow()
@@ -41,7 +40,10 @@ public class LevelCsvImporter : EditorWindow
         _catalog = (LevelCatalog)EditorGUILayout.ObjectField("Level Catalog", _catalog, typeof(LevelCatalog), false);
         _database = (BlockDatabase)EditorGUILayout.ObjectField("Block Database", _database, typeof(BlockDatabase), false);
         _levelsFolder = EditorGUILayout.TextField("Levels Folder", _levelsFolder);
-        _visibleRows = EditorGUILayout.IntField("Visible Rows (bàn ban đầu)", _visibleRows);
+
+        EditorGUILayout.HelpBox(
+            "Bàn/bin tách theo BoardManager.rows lúc chơi — CSV lưu toàn bộ depth.",
+            MessageType.Info);
 
         if (GUILayout.Button("Validate All (chỉ log Console)"))
             ValidateAllFromCatalog();
@@ -159,7 +161,7 @@ public class LevelCsvImporter : EditorWindow
     private LevelData ImportEntry(int levelId, TextAsset csv)
     {
         var loader = new LevelLoader();
-        LevelData data = loader.ParseLevelFromCsv(levelId, csv.text, _visibleRows);
+        LevelData data = loader.ParseLevelFromCsv(levelId, csv.text);
         loader.ValidateAndLog(data, _database);
 
         string assetPath = GetLevelAssetPathFromCsv(csv, levelId);

@@ -18,7 +18,7 @@ public class BoardManager : MonoBehaviour
     #region References
 
     [Header("Board Settings")]
-    [SerializeField] private int rows = 7;
+    [SerializeField] private int rows = 5;
     [SerializeField] private int columns = 5;
 
     [Header("Slot Size")]
@@ -343,12 +343,31 @@ public class BoardManager : MonoBehaviour
 
     public bool IsBoardEmpty() => !HasBlocksOnBoard();
 
+    /// <summary>Cả hàng trên cùng (row = rows - 1) không còn block — điều kiện chạy refill bin.</summary>
+    public bool IsTopRowCompletelyEmpty()
+    {
+        if (!IsGridReady)
+            return false;
+
+        int topRow = rows - 1;
+        for (int col = 0; col < columns; col++)
+        {
+            Slot slot = GetSlot(topRow, col);
+            if (slot != null && slot.HasBlock)
+                return false;
+        }
+
+        return true;
+    }
+
     public bool ColumnNeedsRefill(int col)
     {
         if (!IsGridReady || col < 0 || col >= columns)
             return false;
 
-        return CountBlocksInColumn(col) < rows;
+        int topRow = rows - 1;
+        Slot topSlot = GetSlot(topRow, col);
+        return topSlot != null && topSlot.IsEmpty;
     }
 
     public IReadOnlyList<Vector2Int> GetEmptySlots()

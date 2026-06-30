@@ -434,10 +434,10 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 929182504}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 777}
-  m_SizeDelta: {x: 200, y: 70.66}
+  m_AnchorMin: {x: 0.5, y: 1}
+  m_AnchorMax: {x: 0.5, y: 1}
+  m_AnchoredPosition: {x: 0, y: -183}
+  m_SizeDelta: {x: 200, y: 70.660034}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &748170626
 MonoBehaviour:
@@ -900,10 +900,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f789e18cf6fba60418d29457345a529f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  rows: 7
+  rows: 5
   columns: 5
-  cellWidth: 0.93
-  cellHeight: 1.15
+  cellWidth: 1.35
+  cellHeight: 1.65
   originTransform: {fileID: 0}
   centerOnScreen: 1
   targetCamera: {fileID: 0}
@@ -994,7 +994,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1505166882}
   - component: {fileID: 1505166884}
-  - component: {fileID: 1505166883}
+  - component: {fileID: 1505166885}
   m_Layer: 5
   m_Name: GamePlayUI
   m_TagString: Untagged
@@ -1023,7 +1023,15 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &1505166883
+--- !u!222 &1505166884
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1505166881}
+  m_CullTransparentMesh: 1
+--- !u!114 &1505166885
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -1043,7 +1051,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: d0cec088ac9c1e24ab8eb72bc9db188d, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 62eb5c9e39f2cf345914eef456b6e1bd, type: 2}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -1053,14 +1061,6 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
---- !u!222 &1505166884
-CanvasRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1505166881}
-  m_CullTransparentMesh: 1
 --- !u!1 &1622740541
 GameObject:
   m_ObjectHideFlags: 0

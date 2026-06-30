@@ -14,6 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   blockId: 12
   typeKey: 
-  visualSprite: {fileID: 21300000, guid: 91cc1257b4a43b842a0136ef34c18fe1, type: 2}
+  visualSprite: {fileID: 21300000, guid: c67183c920752f041b0b2380523f0ab7, type: 2}
   debugColor: {r: 1, g: 1, b: 1, a: 1}
   scoreValue: 10

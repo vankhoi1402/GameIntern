@@ -174,11 +174,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a7f3c2e19b4d48a6a9e0f1d2c3b4a5e6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  skillManager: {fileID: 1239278056}
-  skill: {fileID: 11400000, guid: 26e6175bd26f4a5c845e9457ec971a18, type: 2}
-  button: {fileID: 22031965}
-  labelText: {fileID: 57959381}
-  hotkey: 49
 --- !u!114 &22031965
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -390,10 +385,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8abf14452841e0c4888ed33d065f41ba, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _mainRenderer: {fileID: 922652967}
-  _bgRenderer: {fileID: 125680996}
-  m_SelectedRenderer: {fileID: 0}
-  stackBackgroundConfig: {fileID: 0}
 --- !u!61 &56994613
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -897,12 +888,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9066b1ba2ec16bf46b3355a532f6991f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  boardManager: {fileID: 1469599924}
-  gravityDurationPerSqrtCell: 0.17
-  gravityRowStagger: 0.035
-  gravityEase: 3
-  refillPushDuration: 0.12
-  refillPushEase: 3
 --- !u!114 &126036747
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -915,7 +900,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a112023b4dffa4a49b7a141b0d19cbdd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  boardManager: {fileID: 1469599924}
 --- !u!4 &126036748
 Transform:
   m_ObjectHideFlags: 0
@@ -1246,10 +1230,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8abf14452841e0c4888ed33d065f41ba, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _mainRenderer: {fileID: 1223840906}
-  _bgRenderer: {fileID: 1277642049}
-  m_SelectedRenderer: {fileID: 0}
-  stackBackgroundConfig: {fileID: 0}
 --- !u!61 &215656210
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -1382,10 +1362,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8abf14452841e0c4888ed33d065f41ba, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _mainRenderer: {fileID: 79984995}
-  _bgRenderer: {fileID: 587880610}
-  m_SelectedRenderer: {fileID: 0}
-  stackBackgroundConfig: {fileID: 0}
 --- !u!61 &222278936
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -1518,10 +1494,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8abf14452841e0c4888ed33d065f41ba, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _mainRenderer: {fileID: 1024842098}
-  _bgRenderer: {fileID: 1265466706}
-  m_SelectedRenderer: {fileID: 0}
-  stackBackgroundConfig: {fileID: 0}
 --- !u!61 &316035560
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -1637,9 +1609,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b8e4f1a29c3d4e5f8a7b6c5d4e3f2a1b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  boardManager: {fileID: 1469599924}
-  highlightTint: {r: 1, g: 1, b: 0.65, a: 1}
-  normalColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!114 &317413156
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1652,8 +1621,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e85936688e3f4f0fa6c39b11b013aa2f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  targetCamera: {fileID: 870654148}
-  boardManager: {fileID: 1469599924}
 --- !u!114 &317413157
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1666,10 +1633,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 58c4493a6b412fa40b7f8cb5e0cdffb6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  boardView: {fileID: 1469599926}
-  boardManager: {fileID: 1469599924}
-  moveSystem: {fileID: 1239278051}
-  targetCamera: {fileID: 870654148}
 --- !u!1 &353344192
 GameObject:
   m_ObjectHideFlags: 0
@@ -1733,10 +1696,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8abf14452841e0c4888ed33d065f41ba, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _mainRenderer: {fileID: 1889602444}
-  _bgRenderer: {fileID: 849120105}
-  m_SelectedRenderer: {fileID: 0}
-  stackBackgroundConfig: {fileID: 0}
 --- !u!61 &353344196
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -1869,10 +1828,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8abf14452841e0c4888ed33d065f41ba, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _mainRenderer: {fileID: 1582317321}
-  _bgRenderer: {fileID: 1796797728}
-  m_SelectedRenderer: {fileID: 0}
-  stackBackgroundConfig: {fileID: 0}
 --- !u!61 &387714361
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -2005,10 +1960,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8abf14452841e0c4888ed33d065f41ba, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _mainRenderer: {fileID: 1880328685}
-  _bgRenderer: {fileID: 2093613269}
-  m_SelectedRenderer: {fileID: 0}
-  stackBackgroundConfig: {fileID: 0}
 --- !u!61 &399686574
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -2387,10 +2338,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8abf14452841e0c4888ed33d065f41ba, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _mainRenderer: {fileID: 38824535}
-  _bgRenderer: {fileID: 415404778}
-  m_SelectedRenderer: {fileID: 0}
-  stackBackgroundConfig: {fileID: 0}
 --- !u!61 &479129531
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -2767,10 +2714,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8abf14452841e0c4888ed33d065f41ba, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _mainRenderer: {fileID: 524705333}
-  _bgRenderer: {fileID: 1861798437}
-  m_SelectedRenderer: {fileID: 0}
-  stackBackgroundConfig: {fileID: 0}
 --- !u!61 &513754625
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -3155,10 +3098,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8abf14452841e0c4888ed33d065f41ba, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _mainRenderer: {fileID: 1391892882}
-  _bgRenderer: {fileID: 76723191}
-  m_SelectedRenderer: {fileID: 0}
-  stackBackgroundConfig: {fileID: 0}
 --- !u!61 &544574617
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -3459,10 +3398,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8abf14452841e0c4888ed33d065f41ba, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _mainRenderer: {fileID: 1308849094}
-  _bgRenderer: {fileID: 899789644}
-  m_SelectedRenderer: {fileID: 0}
-  stackBackgroundConfig: {fileID: 0}
 --- !u!61 &602232654
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -3977,10 +3912,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8abf14452841e0c4888ed33d065f41ba, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _mainRenderer: {fileID: 146519300}
-  _bgRenderer: {fileID: 618389600}
-  m_SelectedRenderer: {fileID: 0}
-  stackBackgroundConfig: {fileID: 0}
 --- !u!61 &643174536
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -4347,10 +4278,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8abf14452841e0c4888ed33d065f41ba, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _mainRenderer: {fileID: 1023407058}
-  _bgRenderer: {fileID: 1354491470}
-  m_SelectedRenderer: {fileID: 0}
-  stackBackgroundConfig: {fileID: 0}
 --- !u!61 &713451617
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -4585,10 +4512,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8abf14452841e0c4888ed33d065f41ba, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _mainRenderer: {fileID: 714182094}
-  _bgRenderer: {fileID: 179761717}
-  m_SelectedRenderer: {fileID: 0}
-  stackBackgroundConfig: {fileID: 0}
 --- !u!61 &718261236
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -5317,10 +5240,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8abf14452841e0c4888ed33d065f41ba, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _mainRenderer: {fileID: 2057027012}
-  _bgRenderer: {fileID: 1385875810}
-  m_SelectedRenderer: {fileID: 0}
-  stackBackgroundConfig: {fileID: 0}
 --- !u!61 &911134311
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -5672,10 +5591,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d61bcb6a351c75941af0745e29e7e050, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  blockLayer:
-    serializedVersion: 2
-    m_Bits: 64
-  targetCamera: {fileID: 870654148}
 --- !u!114 &976001529
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5732,8 +5647,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 73ca6eaa9528ddc458e58f2a5f1851e4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  currentState: 0
-  logStateChanges: 0
 --- !u!4 &982405656
 Transform:
   m_ObjectHideFlags: 0
@@ -5812,10 +5725,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8abf14452841e0c4888ed33d065f41ba, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _mainRenderer: {fileID: 1434291553}
-  _bgRenderer: {fileID: 1751636651}
-  m_SelectedRenderer: {fileID: 0}
-  stackBackgroundConfig: {fileID: 0}
 --- !u!61 &1008933922
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -6350,10 +6259,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8abf14452841e0c4888ed33d065f41ba, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _mainRenderer: {fileID: 670359151}
-  _bgRenderer: {fileID: 1177713795}
-  m_SelectedRenderer: {fileID: 0}
-  stackBackgroundConfig: {fileID: 0}
 --- !u!61 &1142894524
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -6504,10 +6409,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8abf14452841e0c4888ed33d065f41ba, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _mainRenderer: {fileID: 637243098}
-  _bgRenderer: {fileID: 694031497}
-  m_SelectedRenderer: {fileID: 0}
-  stackBackgroundConfig: {fileID: 0}
 --- !u!61 &1152167764
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -6792,10 +6693,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8abf14452841e0c4888ed33d065f41ba, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _mainRenderer: {fileID: 483080535}
-  _bgRenderer: {fileID: 819433433}
-  m_SelectedRenderer: {fileID: 0}
-  stackBackgroundConfig: {fileID: 0}
 --- !u!61 &1196771681
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -7316,10 +7213,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8abf14452841e0c4888ed33d065f41ba, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _mainRenderer: {fileID: 579462418}
-  _bgRenderer: {fileID: 1130284145}
-  m_SelectedRenderer: {fileID: 0}
-  stackBackgroundConfig: {fileID: 0}
 --- !u!61 &1230415305
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -7430,7 +7323,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4d27deb93a408ef42919bbe0275af9dd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  mergeSystem: {fileID: 1239278052}
 --- !u!114 &1239278052
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7443,10 +7335,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 96ec95b80194df648b839bec48d8663b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  boardManager: {fileID: 1469599924}
-  spawnSystem: {fileID: 1239278058}
-  settlementService: {fileID: 1239278054}
-  tier2TripleClearVfx: {fileID: 1239278053}
 --- !u!114 &1239278053
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7459,21 +7347,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b4e8f1a23c5d6e7f8091a2b3c4d5e6f7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  boardManager: {fileID: 1469599924}
-  spawnSystem: {fileID: 1239278058}
-  stackBackgroundConfig: {fileID: 11400000, guid: c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3, type: 2}
-  shakeCamera: {fileID: 0}
-  centerBurstScale: 1.65
-  ringExpandDuration: 0.22
-  ringEndScaleMultiplier: 2.4
-  cameraShakeDuration: 0.14
-  cameraShakeStrength: 0.14
-  blastRadiusMultiplier: 0.52
-  diagonalBlastBonus: 1.12
-  blastDuration: 0.14
-  dissolveDuration: 0.16
-  radialStagger: 0.022
-  holdAfterDissolve: 0.08
 --- !u!114 &1239278054
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7486,11 +7359,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 003b365503d84440bbc7fff18e741542, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  boardManager: {fileID: 1469599924}
-  spawnSystem: {fileID: 1239278058}
-  columnPushSystem: {fileID: 1239278057}
-  levelManager: {fileID: 1239278055}
-  riseDuration: 0.15
 --- !u!114 &1239278055
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7503,13 +7371,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  catalog: {fileID: 11400000, guid: e2e3e4e5e6f7a8b9c0d1e2f3a4b5c6d7, type: 2}
-  spawnSystem: {fileID: 1239278058}
-  skillManager: {fileID: 1239278056}
-  blockDatabase: {fileID: 0}
-  m_IntroAnimator: {fileID: 0}
-  m_LevelTimer: {fileID: 0}
-  startLevelId: 1
 --- !u!114 &1239278056
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7522,12 +7383,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c59e7688e8f9437ab31a007a7c24ebe5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  boardManager: {fileID: 1469599924}
-  levelManager: {fileID: 1239278055}
-  settlementService: {fileID: 1239278054}
-  defaultSkills:
-  - {fileID: 11400000, guid: 26e6175bd26f4a5c845e9457ec971a18, type: 2}
-  unlimitedChargesForTest: 1
 --- !u!114 &1239278057
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7540,7 +7395,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  boardManager: {fileID: 1469599924}
 --- !u!114 &1239278058
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7553,33 +7407,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6ce03145deedd1440b0a5082cd10bbda, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  boardManager: {fileID: 1469599924}
-  boardView: {fileID: 1469599926}
-  blockPrefab: {fileID: 5471278117548067597, guid: fd3583425c7a79a44a3d68ade05e2d84, type: 3}
-  stackBackgroundConfig: {fileID: 11400000, guid: c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3, type: 2}
-  targetCamera: {fileID: 0}
-  levelManager: {fileID: 1239278055}
-  useTestLayout: 0
-  blockDatabase: {fileID: 11400000, guid: a19f7fa6da11bf24c9eeab25aa03c1df, type: 2}
-  testCells:
-  - row: 0
-    col: 0
-    blockType: 1
-    stack: 1
-  - row: 0
-    col: 1
-    blockType: 1
-    stack: 2
-  - row: 2
-    col: 2
-    blockType: 2
-    stack: 1
-  burstExplodeDuration: 0.22
-  burstFallDuration: 0.8
-  burstFallWorldDistance: 6
-  burstStaggerDelay: 0.05
-  burstExplodeHorizontal: 0.45
-  burstExplodeUp: 0.4
 --- !u!114 &1239278059
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7592,13 +7419,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a7b8c9d0e1f2345678901234abcdef01, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_SettlementService: {fileID: 1239278054}
-  m_BoardManager: {fileID: 1469599924}
-  m_LevelManager: {fileID: 1239278055}
-  m_LevelTimer: {fileID: 0}
-  m_VictoryUI: {fileID: 0}
-  m_DefeatUI: {fileID: 0}
-  m_DragController: {fileID: 0}
 --- !u!114 &1239278060
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7611,8 +7431,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 298e5324cc244692a80a89692fcddebe, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  skillManager: {fileID: 1239278056}
-  hotkey: 49
 --- !u!114 &1239278061
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7625,9 +7443,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  targetCamera: {fileID: 0}
-  fallDuration: 0.55
-  fallWorldDistance: 6
 --- !u!114 &1239278062
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7640,9 +7455,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  mergeSystem: {fileID: 1239278052}
-  boardManager: {fileID: 0}
-  stackBackgroundConfig: {fileID: 11400000, guid: c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3, type: 2}
 --- !u!114 &1239278063
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7655,8 +7467,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 73ca6eaa9528ddc458e58f2a5f1851e4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  currentState: 0
-  logStateChanges: 0
 --- !u!4 &1239278064
 Transform:
   m_ObjectHideFlags: 0
@@ -7717,10 +7527,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8abf14452841e0c4888ed33d065f41ba, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _mainRenderer: {fileID: 1647807952}
-  _bgRenderer: {fileID: 537022281}
-  m_SelectedRenderer: {fileID: 0}
-  stackBackgroundConfig: {fileID: 0}
 --- !u!61 &1249801668
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -8119,8 +7925,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: 00:00
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 13d0fe595ec8f4c3ab9be25b4328b0bd, type: 2}
-  m_sharedMaterial: {fileID: 7512481295523713106, guid: 13d0fe595ec8f4c3ab9be25b4328b0bd, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -8596,7 +8402,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1407070822
 RectTransform:
   m_ObjectHideFlags: 0
@@ -8613,7 +8419,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -0, y: -560.01}
+  m_AnchoredPosition: {x: 0, y: -560.01}
   m_SizeDelta: {x: 1080, y: 108.38}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1407070823
@@ -8765,7 +8571,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Root: {fileID: 1433026792}
   m_TimeText: {fileID: 1348047651}
-  m_Timer: {fileID: 0}
   m_LevelManager: {fileID: 0}
   m_WarningColor: {r: 1, g: 0.35, b: 0.35, a: 1}
   m_WarningThresholdSeconds: 10
@@ -9061,10 +8866,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   rows: 7
   columns: 5
-  boardArea: {fileID: 1996649329}
+  cellWidth: 0.93
+  cellHeight: 1.15
+  originTransform: {fileID: 0}
   centerOnScreen: 1
   targetCamera: {fileID: 870654148}
   screenCenterOffset: {x: 0, y: 0}
+  m_GravityDurationPerSqrtCell: 0.17
+  m_GravityRowStagger: 0.035
+  m_GravityEase: 3
+  m_PlayManager: {fileID: 0}
 --- !u!4 &1469599925
 Transform:
   m_ObjectHideFlags: 0
@@ -9093,12 +8904,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9cea30042fa5a684caf59cfd894d801b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  boardManager: {fileID: 1469599924}
-  boardArea: {fileID: 1996649329}
-  dragController: {fileID: 317413157}
-  moveSystem: {fileID: 0}
-  stackBackgroundConfig: {fileID: 11400000, guid: c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3, type: 2}
-  m_IntroAnimator: {fileID: 0}
 --- !u!1 &1540190327
 GameObject:
   m_ObjectHideFlags: 0
@@ -9116,7 +8921,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1540190328
 RectTransform:
   m_ObjectHideFlags: 0
@@ -9362,10 +9167,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8abf14452841e0c4888ed33d065f41ba, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _mainRenderer: {fileID: 805971384}
-  _bgRenderer: {fileID: 1846383693}
-  m_SelectedRenderer: {fileID: 0}
-  stackBackgroundConfig: {fileID: 0}
 --- !u!61 &1556605078
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -9516,10 +9317,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8abf14452841e0c4888ed33d065f41ba, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _mainRenderer: {fileID: 628038291}
-  _bgRenderer: {fileID: 2085410969}
-  m_SelectedRenderer: {fileID: 0}
-  stackBackgroundConfig: {fileID: 0}
 --- !u!61 &1564159589
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -11523,8 +11320,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1b9d247e5c726054981d5ab6f716be9b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  cellWidth: 0.93
-  cellHeight: 1.15
 --- !u!61 &1996649330
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -11648,10 +11443,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8abf14452841e0c4888ed33d065f41ba, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _mainRenderer: {fileID: 1216255720}
-  _bgRenderer: {fileID: 519043903}
-  m_SelectedRenderer: {fileID: 0}
-  stackBackgroundConfig: {fileID: 0}
 --- !u!61 &2002758590
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -11784,10 +11575,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8abf14452841e0c4888ed33d065f41ba, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _mainRenderer: {fileID: 1785408189}
-  _bgRenderer: {fileID: 2071404826}
-  m_SelectedRenderer: {fileID: 0}
-  stackBackgroundConfig: {fileID: 0}
 --- !u!61 &2003438539
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -11872,7 +11659,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &2018167336
 Transform:
   m_ObjectHideFlags: 0

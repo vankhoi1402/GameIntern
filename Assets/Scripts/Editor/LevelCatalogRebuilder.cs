@@ -78,10 +78,7 @@ public static class LevelCatalogRebuilder
     private static LevelData ImportLevel(int levelId, TextAsset csv, BlockDatabase database)
     {
         var loader = new LevelLoader();
-        LevelData data = loader.ParseLevelFromCsv(
-            levelId,
-            csv.text,
-            LevelLoader.DefaultVisibleRows);
+        LevelData data = loader.ParseLevelFromCsv(levelId, csv.text);
 
         loader.ValidateAndLog(data, database);
 

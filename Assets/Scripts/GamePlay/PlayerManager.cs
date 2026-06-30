@@ -271,7 +271,7 @@ public class PlayManager : MonoBehaviour
 
         if (target == null)
         {
-            RequestFullSettlement();
+            RequestGravityOnly();
             return;
         }
 
@@ -286,10 +286,7 @@ public class PlayManager : MonoBehaviour
             if (targetBlock != null && isTier2TripleClear)
                 Destroy(targetBlock.gameObject);
 
-            if (isTier2TripleClear)
-                RequestFullSettlement();
-            else
-                RequestGravityOnly();
+            RequestGravityOnly();
             return;
         }
 
@@ -313,7 +310,7 @@ public class PlayManager : MonoBehaviour
                 {
                     if (targetBlock != null)
                         Destroy(targetBlock.gameObject);
-                    RequestFullSettlement();
+                    RequestGravityOnly();
                 });
             return;
         }
@@ -326,14 +323,8 @@ public class PlayManager : MonoBehaviour
             {
                 if (targetBlock != null)
                     Destroy(targetBlock.gameObject);
-                RequestFullSettlement();
+                RequestGravityOnly();
             });
-    }
-
-    private void RequestFullSettlement(IReadOnlyList<Tier2NeighborRestore> neighborRestores = null)
-    {
-        ClearMergeVisual();
-        StartSettlement(includeRefill: true, neighborRestores);
     }
 
     private void RequestGravityOnly()
@@ -350,7 +341,7 @@ public class PlayManager : MonoBehaviour
         }
 
         ClearMergeVisual();
-        StartSettlement(includeRefill: false, neighborRestores: null);
+        StartSettlement(neighborRestores: null);
     }
 
     private void HandlePendingGravityAfterSettlement(bool _)
@@ -366,25 +357,24 @@ public class PlayManager : MonoBehaviour
 
     public void SettlementLoop()
     {
-        StartSettlement(includeRefill: true, neighborRestores: null);
+        StartSettlement(neighborRestores: null);
     }
 
-    private void StartSettlement(bool includeRefill, IReadOnlyList<Tier2NeighborRestore> neighborRestores)
+    private void StartSettlement(IReadOnlyList<Tier2NeighborRestore> neighborRestores)
     {
         if (m_SettlementCoroutine != null)
             StopCoroutine(m_SettlementCoroutine);
 
-        m_SettlementCoroutine = StartCoroutine(SettlementRoutine(includeRefill, neighborRestores));
+        m_SettlementCoroutine = StartCoroutine(SettlementRoutine(neighborRestores));
     }
 
-    private IEnumerator SettlementRoutine(
-        bool includeRefill,
-        IReadOnlyList<Tier2NeighborRestore> neighborRestores)
+    private IEnumerator SettlementRoutine(IReadOnlyList<Tier2NeighborRestore> neighborRestores)
     {
         if (m_IsSettlementRunning)
             yield break;
 
         m_IsSettlementRunning = true;
+        bool refillRan = false;
 
         try
         {
@@ -395,16 +385,20 @@ public class PlayManager : MonoBehaviour
                 BuildNeighborQueues(neighborRestores);
 
             bool hasNeighborRefill = HasPendingNeighborRestore(neighborQueues);
+            bool needsBinRefill = m_BoardManager != null && m_BoardManager.IsTopRowCompletelyEmpty();
 
-            if (includeRefill || hasNeighborRefill)
-                yield return RunRefillPhase(includeRefill, neighborQueues);
+            if (needsBinRefill || hasNeighborRefill)
+            {
+                refillRan = true;
+                yield return RunRefillPhase(needsBinRefill, neighborQueues);
+            }
         }
         finally
         {
             m_IsSettlementRunning = false;
             m_IsTurnProcessing = false;
             m_SettlementCoroutine = null;
-            OnSettlementCompleted?.Invoke(includeRefill);
+            OnSettlementCompleted?.Invoke(refillRan);
         }
     }
 
@@ -412,18 +406,15 @@ public class PlayManager : MonoBehaviour
         bool includeBin,
         Dictionary<int, Queue<Tier2NeighborRestore>> neighborQueues)
     {
-        while (true)
-        {
-            List<ColumnRefillPacket> wave = CollectFillWave(includeBin, neighborQueues);
-            if (wave.Count == 0)
-                break;
+        List<ColumnRefillPacket> wave = CollectFillWave(includeBin, neighborQueues);
+        if (wave.Count == 0)
+            yield break;
 
-            var batch = new AnimationCompletionBatch();
-            PlayRefillPushAnimations(wave, batch);
-            PlayRefillRiseAnimations(wave, batch);
+        var batch = new AnimationCompletionBatch();
+        PlayRefillPushAnimations(wave, batch);
+        PlayRefillRiseAnimations(wave, batch);
 
-            yield return batch.WaitRoutine(c_SettlementTimeout, "refill wave");
-        }
+        yield return batch.WaitRoutine(c_SettlementTimeout, "refill wave");
     }
 
     #endregion
@@ -441,12 +432,16 @@ public class PlayManager : MonoBehaviour
         if (level.Rows == null)
             return;
 
+        int boardRows = m_BoardManager.Rows;
+        int boardCols = m_BoardManager.Columns;
+
         foreach (LevelGridRow gridRow in level.Rows)
         {
-            if (gridRow.Row >= level.VisibleRows || gridRow.ColBlockTypes == null)
+            if (gridRow.Row >= boardRows || gridRow.ColBlockTypes == null)
                 continue;
 
-            for (int col = 0; col < gridRow.ColBlockTypes.Length; col++)
+            int colCount = Mathf.Min(boardCols, gridRow.ColBlockTypes.Length);
+            for (int col = 0; col < colCount; col++)
             {
                 if (!m_LevelLoader.TryParseCell(gridRow.ColBlockTypes[col], out string typeKey, out int stack))
                     continue;

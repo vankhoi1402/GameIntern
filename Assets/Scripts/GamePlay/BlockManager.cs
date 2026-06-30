@@ -33,6 +33,8 @@ public class BlockManager : MonoBehaviour
     public const int SortingOrderPerRow = 10;
     public const int DragSortingOrder = 1000;
 
+    private bool m_IsDragging;
+
     #endregion
 
     #region Logic State
@@ -242,7 +244,7 @@ public class BlockManager : MonoBehaviour
     {
         if (m_SortingGroup == null)
             return;
-
+        m_IsDragging = isDragging;
         if (isDragging)
         {
             m_SortingGroup.sortingOrder = DragSortingOrder;
@@ -260,9 +262,9 @@ public class BlockManager : MonoBehaviour
 
     /// <summary>Bắt đầu kéo — sorting + pickup feedback.</summary>
     public void BeginDrag()
-    {
-        SetDragSorting(true);
+    {    
         PlayPickupFeedback();
+        SetDragSorting(true);
     }
 
     /// <summary>Cập nhật vị trí khi đang kéo.</summary>
@@ -639,7 +641,7 @@ public class BlockManager : MonoBehaviour
             ResetVisualState();
             transform.position = fromWorldPos;
         }
-
+        
         Tween move = transform
             .DOMove(targetWorldPos, duration)
             .SetEase(ease)
@@ -698,6 +700,8 @@ public class BlockManager : MonoBehaviour
     /// <summary>Snap về ô lưới (không tween).</summary>
     public void SnapToGridCell(Vector3 worldPos, int row)
     {
+        if (m_IsDragging)
+            return;
         ResetVisualState();
         transform.position = worldPos;
         ApplyGridSorting(row);

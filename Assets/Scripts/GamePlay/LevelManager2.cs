@@ -22,10 +22,6 @@ public class LevelManager2 : MonoBehaviour
 
     [SerializeField] private int m_StartLevelId = 1;
 
-    [SerializeField] private int m_VisibleRows = LevelLoader.DefaultVisibleRows;
-
-
-
     [Header("Board")]
 
     [SerializeField] private BoardManager m_BoardManager;
@@ -199,7 +195,7 @@ public class LevelManager2 : MonoBehaviour
 
         LevelCatalogEntry entry = m_Catalog.FindById(m_StartLevelId);
 
-        LevelData level = m_Loader.LoadFromEntry(entry, m_BlockDatabase, m_VisibleRows);
+        LevelData level = m_Loader.LoadFromEntry(entry, m_BlockDatabase);
 
 
 
@@ -233,7 +229,8 @@ public class LevelManager2 : MonoBehaviour
 
         m_CurrentLevel = level;
 
-        m_RefillState.Reset(level);
+        m_RefillState.Reset(level, m_BoardManager.Rows, m_BoardManager.Columns);
+        WarnIfLevelCsvNarrowerThanBoard(level);
 
         StopTimer();
 
@@ -277,7 +274,7 @@ public class LevelManager2 : MonoBehaviour
 
 
 
-        LevelData level = m_Loader.LoadFromEntry(next, m_BlockDatabase, m_VisibleRows);
+        LevelData level = m_Loader.LoadFromEntry(next, m_BlockDatabase);
 
         if (level == null)
 
@@ -528,11 +525,9 @@ public class LevelManager2 : MonoBehaviour
 
 
         Debug.Log($"[LevelManager2] Loaded level {m_CurrentLevel.LevelId}" +
-
+                  $" — board {m_BoardManager.Rows}x{m_BoardManager.Columns}" +
                   (m_CurrentLevel.TimeLimitSeconds > 0
-
                       ? $" — time limit {m_CurrentLevel.TimeLimitSeconds}s"
-
                       : string.Empty));
 
 
@@ -692,18 +687,23 @@ public class LevelManager2 : MonoBehaviour
         private readonly System.Collections.Generic.Dictionary<int, LevelGridRow> m_RowsByDepth =
             new System.Collections.Generic.Dictionary<int, LevelGridRow>();
 
-        private readonly int[] m_NextDepthByCol = new int[LevelLoader.GridColumnCount];
+        private int[] m_NextDepthByCol = System.Array.Empty<int>();
         private int m_MaxDepth = -1;
-        private int m_VisibleRows;
+        private int m_BinStartRow;
+        private int m_ColumnCount;
 
-        public void Reset(LevelData level)
+        public void Reset(LevelData level, int boardRows, int boardColumns)
         {
             m_RowsByDepth.Clear();
             m_MaxDepth = -1;
-            m_VisibleRows = level != null ? level.VisibleRows : LevelLoader.DefaultVisibleRows;
+            m_BinStartRow = Mathf.Max(0, boardRows);
+            m_ColumnCount = Mathf.Max(0, boardColumns);
 
-            for (int col = 0; col < LevelLoader.GridColumnCount; col++)
-                m_NextDepthByCol[col] = m_VisibleRows;
+            if (m_NextDepthByCol.Length != m_ColumnCount)
+                m_NextDepthByCol = new int[m_ColumnCount];
+
+            for (int col = 0; col < m_ColumnCount; col++)
+                m_NextDepthByCol[col] = m_BinStartRow;
 
             if (level?.Rows == null)
                 return;
@@ -718,7 +718,7 @@ public class LevelManager2 : MonoBehaviour
 
         public LevelBinBlock? TryDequeue(int col)
         {
-            if (col < 0 || col >= LevelLoader.GridColumnCount)
+            if (col < 0 || col >= m_ColumnCount)
                 return null;
 
             while (m_NextDepthByCol[col] <= m_MaxDepth)
@@ -746,7 +746,7 @@ public class LevelManager2 : MonoBehaviour
 
         public bool HasRemainingBlocks()
         {
-            for (int col = 0; col < LevelLoader.GridColumnCount; col++)
+            for (int col = 0; col < m_ColumnCount; col++)
             {
                 if (HasRemainingInColumn(col))
                     return true;
@@ -778,6 +778,33 @@ public class LevelManager2 : MonoBehaviour
 
             m_NextDepthByCol[col] = savedDepth;
             return false;
+        }
+    }
+
+    private void WarnIfLevelCsvNarrowerThanBoard(LevelData level)
+    {
+        if (level?.Rows == null || m_BoardManager == null)
+            return;
+
+        if (level.VisibleRows > 0 && level.VisibleRows != m_BoardManager.Rows)
+        {
+            Debug.LogWarning(
+                $"[LevelManager2] Level {level.LevelId}: VisibleRows asset ({level.VisibleRows}) " +
+                $"khác BoardManager.rows ({m_BoardManager.Rows}) — runtime dùng BoardManager.");
+        }
+
+        int csvCols = 0;
+        foreach (LevelGridRow row in level.Rows)
+        {
+            if (row.ColBlockTypes != null && row.ColBlockTypes.Length > csvCols)
+                csvCols = row.ColBlockTypes.Length;
+        }
+
+        if (csvCols > 0 && m_BoardManager.Columns > csvCols)
+        {
+            Debug.LogWarning(
+                $"[LevelManager2] Level {level.LevelId}: BoardManager.columns ({m_BoardManager.Columns}) " +
+                $"lớn hơn số cột CSV ({csvCols}).");
         }
     }
 
