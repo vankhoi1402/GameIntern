@@ -55,7 +55,6 @@ public class PlayManager : MonoBehaviour
 
     [Header("Boosters")]
     [SerializeField] private FrostAnimation m_FrostAnimation;
-    [SerializeField] private Transform m_FreezeButtonTransform;
 
     #endregion
 
@@ -1678,47 +1677,10 @@ public class PlayManager : MonoBehaviour
             return;
         }
 
-        Vector3 start = m_FrostAnimation.startPos;
-        Vector3 end = m_FrostAnimation.endPos;
-
-        if (m_FreezeButtonTransform != null &&
-            TryGetWorldPosition(m_FreezeButtonTransform, out Vector3 startWorld))
-            start = startWorld;
-
-        if (m_TimeLimitText != null &&
-            TryGetWorldPosition(m_TimeLimitText.rectTransform, out Vector3 endWorld))
-            end = endWorld;
-
-        m_FrostAnimation.Configure(start, end, StartFreezeDuration);
-    }
-
-    private static bool TryGetWorldPosition(Transform target, out Vector3 worldPos)
-    {
-        worldPos = default;
-        if (target == null)
-            return false;
-
-        if (target is RectTransform rect)
-        {
-            Canvas canvas = rect.GetComponentInParent<Canvas>();
-            Camera camera = canvas != null && canvas.renderMode != RenderMode.ScreenSpaceOverlay
-                ? canvas.worldCamera
-                : Camera.main;
-
-            if (camera == null)
-                return false;
-
-            Vector3 screenPos = RectTransformUtility.WorldToScreenPoint(
-                canvas != null && canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : camera,
-                rect.position);
-            worldPos = camera.ScreenToWorldPoint(new Vector3(screenPos.x, screenPos.y, Mathf.Abs(camera.transform.position.z)));
-            worldPos.z = 0f;
-            return true;
-        }
-
-        worldPos = target.position;
-        worldPos.z = 0f;
-        return true;
+        m_FrostAnimation.Configure(
+            m_FrostAnimation.startPos,
+            m_FrostAnimation.endPos,
+            StartFreezeDuration);
     }
 
     private void StartFreezeDuration()

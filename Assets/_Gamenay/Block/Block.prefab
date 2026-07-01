@@ -194,7 +194,7 @@ MonoBehaviour:
   m_BgRenderer: {fileID: 3403171199601775358}
   m_SelectedRenderer: {fileID: 4994565975647431950}
   m_Stack1BgColor: {r: 1, g: 1, b: 1, a: 1}
-  m_Stack2BgColor: {r: 0.9400883, g: 0, b: 1, a: 1}
+  m_Stack2BgColor: {r: 0.9895365, g: 1, b: 0, a: 1}
   m_BurstFallBgColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!1 &4884009005215509979
 GameObject:
