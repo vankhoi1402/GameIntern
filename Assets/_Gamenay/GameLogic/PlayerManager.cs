@@ -87,6 +87,7 @@ public class PlayManager : MonoBehaviour
     private Coroutine m_SettlementCoroutine;
     private Coroutine m_HintCoroutine;
     private Coroutine m_FreezeCoroutine;
+    private Coroutine m_MagnetCoroutine;
     private readonly List<BlockManager> m_ActiveHintBlocks = new List<BlockManager>();
 
     private bool m_IsTimerFrozen;
@@ -101,7 +102,7 @@ public class PlayManager : MonoBehaviour
     public bool IsTimerFrozen => m_IsTimerFrozen;
     public bool HasTimeLimit => m_TimeLimitSeconds > 0;
     public bool IsTimerExpired => HasTimeLimit && m_RemainingSeconds <= 0f;
-
+    private bool m_IsFreezeAnimationPlaying;
     public event Action OnTimerExpired;
 
     #endregion
@@ -191,6 +192,7 @@ public class PlayManager : MonoBehaviour
         ResetOutcomeSession();
         SetLockInput(true);
         PrepareForLevelLoad();
+        m_BoardManager.RefreshScreenLayout();
         SpawnBoardLayout(level, OnBoardLayoutReady);
     }
 
@@ -362,7 +364,7 @@ public class PlayManager : MonoBehaviour
 
     #region Refill
 
-    public LevelBinBlock? TryDequeueBin(int col) => m_RefillState.TryDequeue(col);
+    public BlockState? TryDequeueBin(int col) => m_RefillState.TryDequeue(col);
 
     #endregion
 
@@ -869,13 +871,44 @@ public class PlayManager : MonoBehaviour
         if (block == null)
             return null;
 
-        if (restore.Stack == 2 && restore.Tier2MergeStage > 0)
+        ApplyTier2StageIfNeeded(block, restore.Tier2MergeStage);
+        return block;
+    }
+
+    private BlockManager SpawnBlockFromState(BlockState state)
+    {
+        BlockManager block = SpawnBlockInstance(state.TypeKey, state.Stack);
+        if (block == null)
+            return null;
+
+        ApplyTier2StageIfNeeded(block, state.Tier2MergeStage);
+        return block;
+    }
+
+    private void ApplyBlockStateToBlock(BlockManager block, BlockState state)
+    {
+        if (block == null || m_BlockDatabase == null || m_BoardManager == null)
+            return;
+
+        BlockData data = m_BlockDatabase.GetBlockData(state.TypeKey);
+        if (data == null)
         {
-            block.SetTier2MergeStage(restore.Tier2MergeStage);
-            block.UpdateTier2StageVisual(block.StackCount, block.Tier2MergeStage);
+            Debug.LogWarning($"[PlayManager] Shuffle: không tìm thấy BlockData '{state.TypeKey}'.");
+            return;
         }
 
-        return block;
+        block.Init(data, state.Stack);
+        block.Initialize(data, m_BoardManager.CellWidth, m_BoardManager.CellHeight);
+        ApplyTier2StageIfNeeded(block, state.Tier2MergeStage);
+    }
+
+    private static void ApplyTier2StageIfNeeded(BlockManager block, int tier2MergeStage)
+    {
+        if (tier2MergeStage <= 0)
+            return;
+
+        block.SetTier2MergeStage(tier2MergeStage);
+        block.UpdateTier2StageVisual(block.StackCount, block.Tier2MergeStage);
     }
 
     private List<ColumnRefillPacket> CollectFillWave(
@@ -898,11 +931,11 @@ public class PlayManager : MonoBehaviour
             if (hasNeighbor)
                 restore = queue.Dequeue();
 
-            LevelBinBlock? binBlock = null;
+            BlockState? binState = null;
             if (!restore.HasValue && includeBin)
-                binBlock = TryDequeueBin(col);
+                binState = TryDequeueBin(col);
 
-            if (!restore.HasValue && !binBlock.HasValue)
+            if (!restore.HasValue && !binState.HasValue)
                 continue;
 
             if (!m_BoardManager.TryShiftColumnUp(col, out List<ColumnPushCommand> commands))
@@ -914,7 +947,7 @@ public class PlayManager : MonoBehaviour
 
             BlockManager newBlock = restore.HasValue
                 ? SpawnRestoredNeighbor(restore.Value)
-                : SpawnBlockInstance(binBlock.Value.BlockType, binBlock.Value.Stack);
+                : SpawnBlockFromState(binState.Value);
 
             if (newBlock == null)
                 continue;
@@ -975,7 +1008,7 @@ public class PlayManager : MonoBehaviour
     #endregion
 
     #region Merge View
-
+    //hiển thị merge stack visual
     private void PlayMergeStackVisual(BlockManager source, BlockManager target)
     {
         if (target == null)
@@ -991,7 +1024,7 @@ public class PlayManager : MonoBehaviour
         if (source == null)
         {
             FinishTargetStackVisual(target);
-           // RequestGravityOnly();
+            // RequestGravityOnly();
             return;
         }
 
@@ -1004,6 +1037,7 @@ public class PlayManager : MonoBehaviour
         });
     }
 
+    //resolve absorb target world pos
     private Vector3 ResolveAbsorbTargetWorldPos(BlockManager target)
     {
         if (target?.CurrentSlot == null || m_BoardManager == null || !m_BoardManager.IsGridReady)
@@ -1014,6 +1048,7 @@ public class PlayManager : MonoBehaviour
         return m_BoardManager.GridToWorld(finalRow, slot.Col);
     }
 
+    //finish target stack visual
     private void FinishTargetStackVisual(BlockManager target)
     {
         if (target == null)
@@ -1037,12 +1072,13 @@ public class PlayManager : MonoBehaviour
 
             target.UpdateTier2StageVisual(target.StackCount, target.Tier2MergeStage);
             SnapTargetToCurrentSlot(target);
-           // RequestGravityOnly();
+            // RequestGravityOnly();
         }
 
         target.PlayMergeImpact(AfterImpact);
     }
 
+    //snap target to current slot
     private void SnapTargetToCurrentSlot(BlockManager target)
     {
         if (target == null || target.CurrentSlot == null)
@@ -1292,8 +1328,16 @@ public class PlayManager : MonoBehaviour
         if (a.StackCount == 1 && b.StackCount == 1)
             return totalStack <= 3;
 
+        // SỬA TẠI ĐÂY: Thay vì luôn return true, hãy check Stage của chúng
         if (a.StackCount == 2 && b.StackCount == 2)
+        {
+            // Nếu cả 2 đều là Stage 2 (khối 4), CHẶN lại bằng cách trả về false
+            if (a.Tier2MergeStage == 2 && b.Tier2MergeStage == 2)
+                return false;
+
+            // Các trường hợp 2 + 2 khác (ví dụ Stage 1 + Stage 1) thì vẫn cho gộp
             return true;
+        }
 
         if (totalStack != 3)
             return false;
@@ -1301,14 +1345,16 @@ public class PlayManager : MonoBehaviour
         BlockManager tier2Block = a.StackCount == 2 ? a : b;
         return tier2Block.Tier2MergeStage == 1;
     }
-
+    //kiểm tra merge có hợp lệ không
     private MergeResult ResolveMerge(BlockManager source, BlockManager target)
     {
+        // 1. Kiểm tra cơ bản
         if (!CanMergeBlocks(source, target))
             return MergeResult.Invalid;
+        Debug.Log($"Source: {source.StackCount}, Target: {target.StackCount}");
 
+        // 3. Logic xử lý cho Stack 2 + Stack 2 cũ của bạn
         bool isTier2Pair = source.StackCount == 2 && target.StackCount == 2;
-
         if (isTier2Pair)
         {
             int combinedStage = target.Tier2MergeStage + source.Tier2MergeStage;
@@ -1319,6 +1365,7 @@ public class PlayManager : MonoBehaviour
             return new MergeResult(true, 2, combinedStage, clearKind);
         }
 
+        // 4. Logic xử lý thông thường (1+1, hoặc các số khác)
         int newStack = target.StackCount + source.StackCount;
         int newStage = target.Tier2MergeStage;
 
@@ -1331,18 +1378,18 @@ public class PlayManager : MonoBehaviour
 
         return new MergeResult(true, newStack, newStage, stackClear);
     }
-
     #endregion
 
     #region Merge Visual Context
 
     private BlockManager m_MergeVisualTarget;
-
+    //bắt đầu hiển thị merge
     private void BeginMergeVisual(BlockManager source, BlockManager target)
         => m_MergeVisualTarget = target != null ? target : source;
-
+    //xóa hiển thị merge
     public void ClearMergeVisual() => m_MergeVisualTarget = null;
 
+    //kiểm tra block có phải là target merge không
     public bool IsMergeVisualTarget(BlockManager block)
         => block != null && block == m_MergeVisualTarget;
 
@@ -1350,11 +1397,13 @@ public class PlayManager : MonoBehaviour
 
     #region Board Query
 
+    //kiểm tra có move hợp lệ không
     public bool HasAvailableMove()
     {
         if (m_BoardManager == null || !m_BoardManager.IsGridReady)
             return false;
 
+        //kiểm tra từng cell trên bảng
         for (int r = 0; r < m_BoardManager.Rows; r++)
         {
             for (int c = 0; c < m_BoardManager.Columns; c++)
@@ -1363,6 +1412,7 @@ public class PlayManager : MonoBehaviour
                 if (a == null)
                     continue;
 
+                //kiểm tra merge có hợp lệ không
                 if (TryMergePairAt(r, c, r + 1, c, a))
                     return true;
                 if (TryMergePairAt(r, c, r, c + 1, a))
@@ -1373,6 +1423,7 @@ public class PlayManager : MonoBehaviour
         return false;
     }
 
+    //kiểm tra merge có hợp lệ không
     private bool TryMergePairAt(int rowA, int colA, int rowB, int colB, BlockManager blockA)
     {
         BlockManager blockB = m_BoardManager.GetBlock(rowB, colB);
@@ -1381,6 +1432,7 @@ public class PlayManager : MonoBehaviour
 
     #endregion
 
+    //batch animation
     private sealed class AnimationCompletionBatch
     {
         private int m_Remaining;
@@ -1406,108 +1458,153 @@ public class PlayManager : MonoBehaviour
         }
     }
 
+    //state refill
     private sealed class LevelRefillState
     {
         private static readonly LevelLoader s_CellParser = new LevelLoader();
 
-        private readonly System.Collections.Generic.Dictionary<int, LevelGridRow> m_RowsByDepth =
-            new System.Collections.Generic.Dictionary<int, LevelGridRow>();
-
-        private int[] m_NextDepthByCol = System.Array.Empty<int>();
-        private int m_MaxDepth = -1;
-        private int m_BinStartRow;
+        private Queue<BlockState>[] m_RuntimeQueues = System.Array.Empty<Queue<BlockState>>();
         private int m_ColumnCount;
-
+        // Lấy các block từ level và đẩy vào các cột
         public void Reset(LevelData level, int boardRows, int boardColumns)
         {
-            m_RowsByDepth.Clear();
-            m_MaxDepth = -1;
-            m_BinStartRow = Mathf.Max(0, boardRows);
             m_ColumnCount = Mathf.Max(0, boardColumns);
 
-            if (m_NextDepthByCol.Length != m_ColumnCount)
-                m_NextDepthByCol = new int[m_ColumnCount];
+            if (m_RuntimeQueues.Length != m_ColumnCount)
+                m_RuntimeQueues = new Queue<BlockState>[m_ColumnCount];
+
+            int binStartRow = Mathf.Max(0, boardRows);
+            var rowsByDepth = new Dictionary<int, LevelGridRow>();
+            int maxDepth = -1;
+
+            if (level?.Rows != null)
+            {
+                foreach (LevelGridRow row in level.Rows)
+                {
+                    rowsByDepth[row.Row] = row;
+                    if (row.Row > maxDepth)
+                        maxDepth = row.Row;
+                }
+            }
 
             for (int col = 0; col < m_ColumnCount; col++)
-                m_NextDepthByCol[col] = m_BinStartRow;
-
-            if (level?.Rows == null)
-                return;
-
-            foreach (LevelGridRow row in level.Rows)
             {
-                m_RowsByDepth[row.Row] = row;
-                if (row.Row > m_MaxDepth)
-                    m_MaxDepth = row.Row;
+                m_RuntimeQueues[col] = new Queue<BlockState>();
+
+                for (int depth = binStartRow; depth <= maxDepth; depth++)
+                {
+                    if (!rowsByDepth.TryGetValue(depth, out LevelGridRow gridRow))
+                        continue;
+
+                    if (gridRow.ColBlockTypes == null || col >= gridRow.ColBlockTypes.Length)
+                        continue;
+
+                    if (s_CellParser.TryParseCell(gridRow.ColBlockTypes[col], out string typeKey, out int stack))
+                        m_RuntimeQueues[col].Enqueue(BlockState.FromBinCell(typeKey, stack));
+                }
             }
         }
-
-        public LevelBinBlock? TryDequeue(int col)
+        //lấy block từ cột
+        public BlockState? TryDequeue(int col)
         {
             if (col < 0 || col >= m_ColumnCount)
                 return null;
 
-            while (m_NextDepthByCol[col] <= m_MaxDepth)
-            {
-                int depth = m_NextDepthByCol[col]++;
+            Queue<BlockState> queue = m_RuntimeQueues[col];
+            if (queue == null || queue.Count == 0)
+                return null;
 
-                if (!m_RowsByDepth.TryGetValue(depth, out LevelGridRow row))
-                    continue;
-
-                if (row.ColBlockTypes == null || col >= row.ColBlockTypes.Length)
-                    continue;
-
-                if (s_CellParser.TryParseCell(row.ColBlockTypes[col], out string typeKey, out int stack))
-                {
-                    return new LevelBinBlock
-                    {
-                        BlockType = typeKey,
-                        Stack = stack
-                    };
-                }
-            }
-
-            return null;
+            return queue.Dequeue();
         }
-
+        //kiểm tra có block còn lại không
         public bool HasRemainingBlocks()
         {
             for (int col = 0; col < m_ColumnCount; col++)
             {
-                if (HasRemainingInColumn(col))
+                if (m_RuntimeQueues[col] != null && m_RuntimeQueues[col].Count > 0)
                     return true;
             }
 
             return false;
         }
-
-        private bool HasRemainingInColumn(int col)
+        //lấy hết các block từ các cột
+        public int[] DrainAllTo(List<BlockState> pool)
         {
-            int savedDepth = m_NextDepthByCol[col];
+            int[] counts = new int[m_ColumnCount];
 
-            while (m_NextDepthByCol[col] <= m_MaxDepth)
+            for (int col = 0; col < m_ColumnCount; col++)
             {
-                int depth = m_NextDepthByCol[col]++;
-
-                if (!m_RowsByDepth.TryGetValue(depth, out LevelGridRow row))
-                    continue;
-
-                if (row.ColBlockTypes == null || col >= row.ColBlockTypes.Length)
-                    continue;
-
-                if (s_CellParser.TryParseCell(row.ColBlockTypes[col], out _, out _))
+                Queue<BlockState> queue = m_RuntimeQueues[col];
+                while (queue != null && queue.Count > 0)
                 {
-                    m_NextDepthByCol[col] = savedDepth;
-                    return true;
+                    pool.Add(queue.Dequeue());
+                    counts[col]++;
                 }
             }
 
-            m_NextDepthByCol[col] = savedDepth;
-            return false;
+            return counts;
+        }
+        //đẩy hết các block vào pool
+        public void RebuildFrom(List<BlockState> pool, int startIndex, int[] countsPerCol)
+        {
+            for (int col = 0; col < m_ColumnCount; col++)
+            {
+                Queue<BlockState> queue = m_RuntimeQueues[col] ?? new Queue<BlockState>();
+                queue.Clear();
+
+                for (int i = 0; i < countsPerCol[col]; i++)
+                    queue.Enqueue(pool[startIndex++]);
+
+                m_RuntimeQueues[col] = queue;
+            }
+        }
+
+        public void AppendBinStates(List<BlockState> pool)
+        {
+            for (int col = 0; col < m_ColumnCount; col++)
+            {
+                Queue<BlockState> queue = m_RuntimeQueues[col];
+                if (queue == null)
+                    continue;
+
+                foreach (BlockState state in queue)
+                    pool.Add(state);
+            }
+        }
+
+        public int TryTakeMatchingType(string typeKey, int count, List<BlockState> taken)
+        {
+            int found = 0;
+            for (int col = 0; col < m_ColumnCount && found < count; col++)
+            {
+                Queue<BlockState> queue = m_RuntimeQueues[col];
+                if (queue == null || queue.Count == 0)
+                    continue;
+
+                var kept = new Queue<BlockState>();
+                while (queue.Count > 0)
+                {
+                    BlockState state = queue.Dequeue();
+                    if (found < count && state.TypeKey == typeKey)
+                    {
+                        taken.Add(state);
+                        found++;
+                    }
+                    else
+                    {
+                        kept.Enqueue(state);
+                    }
+                }
+
+                m_RuntimeQueues[col] = kept;
+            }
+
+            return found;
         }
     }
     #region Boosters
 
+    //sử dụng hint booster
     public void hintBooster()
     {
         if (m_BoardManager == null || !m_BoardManager.IsGridReady || IsInputBlocked())
@@ -1527,6 +1624,7 @@ public class PlayManager : MonoBehaviour
         m_HintCoroutine = StartCoroutine(HintTimeoutRoutine());
     }
 
+    //timeout hint
     private IEnumerator HintTimeoutRoutine()
     {
         yield return new WaitForSeconds(c_HintDuration);
@@ -1534,6 +1632,7 @@ public class PlayManager : MonoBehaviour
         m_HintCoroutine = null;
     }
 
+    //xóa hint active
     private void ClearActiveHint()
     {
         if (m_HintCoroutine != null)
@@ -1548,6 +1647,7 @@ public class PlayManager : MonoBehaviour
         m_ActiveHintBlocks.Clear();
     }
 
+    //tìm các block có thể merge
     private bool TryFindHintBlocks(List<BlockManager> result)
     {
         result.Clear();
@@ -1556,38 +1656,51 @@ public class PlayManager : MonoBehaviour
         if (allBlocks.Count < 2)
             return false;
 
+        //kiểm tra từng cặp block
         for (int i = 0; i < allBlocks.Count; i++)
         {
             BlockManager a = allBlocks[i];
+            //kiểm tra từng cặp block
             for (int j = i + 1; j < allBlocks.Count; j++)
             {
                 BlockManager b = allBlocks[j];
+                //kiểm tra merge có hợp lệ không
                 if (!CanMergeBlocks(a, b))
                     continue;
 
                 MergeResult merge = ResolveMerge(a, b);
+                //kiểm tra merge có hợp lệ không
                 if (!merge.ShouldClear)
                     continue;
 
+                //thêm block vào result
                 AddUniqueHintBlock(result, a);
+                //thêm block vào result
                 AddUniqueHintBlock(result, b);
+                //thêm block vào result
                 TryAddThirdSameType(result, a.TypeId, allBlocks);
+                //trả về true
                 return true;
             }
         }
 
+        //kiểm tra từng block
         Dictionary<int, List<BlockManager>> byType = new Dictionary<int, List<BlockManager>>();
         foreach (BlockManager block in allBlocks)
         {
+            //kiểm tra block có type id khác 0 không
             if (block.TypeId == 0)
                 continue;
 
+            //kiểm tra block có type id trong byType không
             if (!byType.TryGetValue(block.TypeId, out List<BlockManager> list))
             {
                 list = new List<BlockManager>();
+                //thêm block vào byType
                 byType[block.TypeId] = list;
             }
 
+            //thêm block vào list
             list.Add(block);
         }
 
@@ -1670,6 +1783,9 @@ public class PlayManager : MonoBehaviour
         if (m_FreezeCoroutine != null)
             return;
 
+        if (m_IsFreezeAnimationPlaying)
+            return;
+
         if (m_FrostAnimation == null)
         {
             Debug.LogWarning("[PlayManager] Chưa gán FrostAnimation.");
@@ -1677,10 +1793,16 @@ public class PlayManager : MonoBehaviour
             return;
         }
 
+        m_IsFreezeAnimationPlaying = true;
+
         m_FrostAnimation.Configure(
             m_FrostAnimation.startPos,
             m_FrostAnimation.endPos,
-            StartFreezeDuration);
+            () =>
+            {
+                m_IsFreezeAnimationPlaying = false;
+                StartFreezeDuration();
+            });
     }
 
     private void StartFreezeDuration()
@@ -1716,14 +1838,521 @@ public class PlayManager : MonoBehaviour
         m_FrostAnimation?.OffFrostImageBG();
         m_FrostAnimation?.ResetAnimation();
     }
-    /// <summary>
-    /// Xáo trộn các block trên bảng
-    /// </summary>  
+    /// <summary>Xáo trộn toàn bộ block trên board và bin còn lại.</summary>
     public void ShuffleBoard()
     {
-        
+        if (m_BoardManager == null || !m_BoardManager.IsGridReady || m_BlockDatabase == null)
+            return;
 
-        
+        if (IsInputBlocked() || m_IsDragging)
+            return;
+
+        ClearActiveHint();
+
+        var boardBlocks = new List<BlockManager>();
+        var pool = new List<BlockState>();
+
+        CollectBoardStatesForShuffle(boardBlocks, pool);
+        int[] binCountsPerCol = m_RefillState.DrainAllTo(pool);
+
+        if (pool.Count < 2)
+            return;
+
+        FisherYatesShuffle(pool);
+
+        int index = 0;
+        for (int i = 0; i < boardBlocks.Count; i++)
+            ApplyBlockStateToBlock(boardBlocks[i], pool[index++]);
+
+        m_RefillState.RebuildFrom(pool, index, binCountsPerCol);
+    }
+
+    private void CollectBoardStatesForShuffle(List<BlockManager> boardBlocks, List<BlockState> pool)
+    {
+        for (int r = 0; r < m_BoardManager.Rows; r++)
+        {
+            for (int c = 0; c < m_BoardManager.Columns; c++)
+            {
+                BlockManager block = m_BoardManager.GetBlock(r, c);
+                if (block == null || block.IsPendingDestroy)
+                    continue;
+
+                boardBlocks.Add(block);
+                pool.Add(BlockState.FromBoard(block));
+            }
+        }
+    }
+
+    private static void FisherYatesShuffle(List<BlockState> list)
+    {
+        for (int i = list.Count - 1; i > 0; i--)
+        {
+            int j = UnityEngine.Random.Range(0, i + 1);
+            BlockState tmp = list[i];
+            list[i] = list[j];
+            list[j] = tmp;
+        }
+    }
+    /// <summary>
+    /// Tự động gom đủ 3 block cùng TypeKey từ Board + Bin rồi merge bằng luật hiện có.
+    /// </summary>
+
+    //tự động gom đủ 3 block cùng TypeKey từ Board + Bin rồi merge bằng luật hiện có.
+    public void MagnetBooster()
+    {
+        if (m_BoardManager == null || !m_BoardManager.IsGridReady || m_BlockDatabase == null)
+            return;
+
+        if (IsInputBlocked() || m_IsDragging || m_MagnetCoroutine != null)
+            return;
+
+        ClearActiveHint();
+
+        if (!TryResolveMagnetPlan(
+                out string typeKey,
+                out List<BlockManager> boardBlocks,
+                out int needFromBin))
+        {
+            Debug.Log("[PlayManager] Magnet: không tìm thấy merge khả thi.");
+            return;
+        }
+
+        var trio = new List<BlockManager>(boardBlocks);
+
+        if (needFromBin > 0)
+        {
+            // Lấy danh sách ô trống hiện tại
+            IReadOnlyList<Vector2Int> emptySlots = m_BoardManager.GetEmptySlots();
+
+            var takenFromBin = new List<BlockState>();
+            int takenCount = m_RefillState.TryTakeMatchingType(typeKey, needFromBin, takenFromBin);
+            if (takenCount < needFromBin)
+                return;
+
+            for (int i = 0; i < takenFromBin.Count; i++)
+            {
+                BlockManager spawned = SpawnBlockFromState(takenFromBin[i]);
+                if (spawned == null)
+                    return;
+
+                // ================= LOGIC SỬA ĐỔI Ô TRỐNG THÔNG MINH =================
+                if (emptySlots != null && i < emptySlots.Count)
+                {
+                    // Nếu bàn CÒN ô trống, đặt khối vào ô trống như bình thường
+                    Vector2Int slot = emptySlots[i];
+                    m_BoardManager.PlaceBlock(spawned, slot.x, slot.y);
+                }
+                else
+                {
+                    // NẾU BÀN ĐẦY KÍN (0 ô trống): 
+                    // Đặt tạm vị trí khối này trùng với viên khối đầu tiên trên Board 
+                    // để tí nữa hàm MagnetMergeRoutine hút tụi nó nhập vào nhau tạo hiệu ứng nổ.
+                    if (boardBlocks.Count > 0 && boardBlocks[0] != null)
+                    {
+                        spawned.transform.position = boardBlocks[0].transform.position;
+                    }
+
+                    // Chú ý: Không gọi PlaceBlock vì bàn đầy, khối này sẽ tồn tại ở trạng thái tự do 
+                    // và được nạp ngay vào danh sách trio để chuẩn bị biến mất lập tức khi gộp.
+                }
+                // ===================================================================
+
+                trio.Add(spawned);
+            }
+        }
+
+        if (trio.Count < 3)
+            return;
+
+        m_MagnetCoroutine = StartCoroutine(MagnetMergeRoutine(trio));
+    }
+    //tìm kiếm các block cùng TypeKey từ Board + Bin
+    private bool TryResolveMagnetPlan(
+        out string typeKey,
+        out List<BlockManager> boardBlocks,
+        out int needFromBin)
+    {
+        // 1. KHỞI TẠO CÁC GIÁ TRỊ ĐẦU RA MẶC ĐỊNH
+        typeKey = null;
+        boardBlocks = new List<BlockManager>();
+        needFromBin = 0;
+
+        var totalCounts = new Dictionary<string, int>();
+        var binCounts = new Dictionary<string, int>();
+        var binPool = new List<BlockState>();
+        m_RefillState.AppendBinStates(binPool);
+
+        // Đếm số lượng trên Board
+        for (int r = 0; r < m_BoardManager.Rows; r++)
+        {
+            for (int c = 0; c < m_BoardManager.Columns; c++)
+            {
+                BlockManager block = m_BoardManager.GetBlock(r, c);
+                if (block == null || block.IsPendingDestroy || string.IsNullOrEmpty(block.TypeKey))
+                    continue;
+
+                AddTypeKeyCount(totalCounts, block.TypeKey, 1);
+            }
+        }
+
+        // Đếm số lượng trong Bin
+        foreach (BlockState state in binPool)
+        {
+            if (string.IsNullOrEmpty(state.TypeKey))
+                continue;
+
+            AddTypeKeyCount(totalCounts, state.TypeKey, 1);
+            AddTypeKeyCount(binCounts, state.TypeKey, 1);
+        }
+
+        string bestKey = null;
+        int bestBoardCount = -1;
+
+        // 2. DUYỆT QUA TỪNG LOẠI KHỐI ĐỂ TÌM PHƯƠNG ÁN
+        foreach (KeyValuePair<string, int> pair in totalCounts)
+        {
+            // Tổng số lượng cả Board + Bin phải >= 3
+            if (pair.Value < 3)
+                continue;
+
+            int onBoard = pair.Value - GetTypeKeyCount(binCounts, pair.Key);
+
+            // Ưu tiên loại khối có số lượng trên bàn nhiều hơn
+            if (onBoard <= bestBoardCount)
+                continue;
+
+            List<BlockManager> candidateBoard = CollectBoardBlocksByTypeKey(pair.Key, 3);
+            int candidateNeedFromBin = Mathf.Max(0, 3 - candidateBoard.Count);
+
+            // Kiểm tra trong Bin có đủ số lượng viên đang thiếu hay không
+            if (GetTypeKeyCount(binCounts, pair.Key) < candidateNeedFromBin)
+                continue;
+
+            // ======================================================================
+            // ĐÃ GỠ BỎ HOÀN TOÀN ĐOẠN CODE KIỂM TRA Ô TRỐNG (GetEmptySlots) Ở ĐÂY!
+            // ======================================================================
+
+            // Tiến hành đóng gói dữ liệu nạp từ Bin
+            var candidateBinStates = new List<BlockState>();
+            int collected = 0;
+            foreach (BlockState state in binPool)
+            {
+                if (state.TypeKey != pair.Key)
+                    continue;
+
+                candidateBinStates.Add(state);
+                collected++;
+                if (collected >= candidateNeedFromBin)
+                    break;
+            }
+
+            // Gom đủ 3 khối (Board + Bin) vào danh sách giả lập ảo
+            var planStates = new List<BlockState>(3);
+            for (int i = 0; i < candidateBoard.Count; i++)
+                planStates.Add(BlockState.FromBoard(candidateBoard[i]));
+            planStates.AddRange(candidateBinStates);
+
+            // Chạy qua phòng thí nghiệm ảo CanSimulateMagnetMerge (Bắt buộc gộp phải nổ)
+            if (planStates.Count < 3 || !CanSimulateMagnetMerge(planStates))
+                continue;
+
+            // Nếu vượt qua tất cả các bộ lọc logic gộp, ghi nhận kế hoạch thành công
+            bestKey = pair.Key;
+            bestBoardCount = onBoard;
+            boardBlocks = candidateBoard;
+            needFromBin = candidateNeedFromBin;
+        }
+
+        // 3. KẾT LUẬN LUỒNG CHẠY
+        if (bestKey == null)
+            return false;
+
+        typeKey = bestKey;
+        return true;
+    }
+
+    private List<BlockManager> CollectBoardBlocksByTypeKey(string typeKey, int maxCount)
+    {
+        var result = new List<BlockManager>();
+
+        for (int r = 0; r < m_BoardManager.Rows; r++)
+        {
+            for (int c = 0; c < m_BoardManager.Columns; c++)
+            {
+                BlockManager block = m_BoardManager.GetBlock(r, c);
+                if (block == null || block.IsPendingDestroy || block.TypeKey != typeKey)
+                    continue;
+
+                result.Add(block);
+                if (result.Count >= maxCount)
+                    return result;
+            }
+        }
+
+        return result;
+    }
+
+
+    private static void AddTypeKeyCount(Dictionary<string, int> counts, string key, int delta)
+    {
+        counts.TryGetValue(key, out int current);
+        counts[key] = current + delta;
+    }
+
+    private static int GetTypeKeyCount(Dictionary<string, int> counts, string key)
+    {
+        return counts.TryGetValue(key, out int value) ? value : 0;
+    }
+
+    private static bool CanSimulateMagnetMerge(IReadOnlyList<BlockState> states)
+    {
+        if (states == null || states.Count < 3)
+            return false;
+
+        if (TryFindSimulatedDirectClear(states))
+            return true;
+
+        for (int i = 0; i < states.Count; i++)
+        {
+            for (int j = 0; j < states.Count; j++)
+            {
+                if (i == j || !CanMergeSim(states[i], states[j]))
+                    continue;
+
+                BlockState merged = ApplyMergeSim(states[i], states[j]);
+                for (int k = 0; k < states.Count; k++)
+                {
+                    if (k == i || k == j)
+                        continue;
+
+                    if (CanMergeSim(states[k], merged) && ResolveMergeSimClears(states[k], merged))
+                        return true;
+                }
+            }
+        }
+
+        return false;
+    }
+    //kiểm tra các block có thể merge không
+    private static bool TryFindSimulatedDirectClear(IReadOnlyList<BlockState> states)
+    {
+        for (int i = 0; i < states.Count; i++)
+        {
+            for (int j = 0; j < states.Count; j++)
+            {
+                if (i == j || !CanMergeSim(states[i], states[j]))
+                    continue;
+
+                if (ResolveMergeSimClears(states[i], states[j]))
+                    return true;
+            }
+        }
+
+        return false;
+    }
+
+    //kiểm tra các block có thể merge không
+    private static bool CanMergeSim(BlockState a, BlockState b)
+    {
+        int totalStack = a.Stack + b.Stack;
+
+        if (a.Stack == 1 && b.Stack == 1)
+            return totalStack <= 3;
+
+        if (a.Stack == 2 && b.Stack == 2)
+        {
+            if (a.Tier2MergeStage == 2 && b.Tier2MergeStage == 2)
+                return false;
+
+            return true;
+        }
+
+        if (totalStack != 3)
+            return false;
+
+        int tier2Stage = a.Stack == 2 ? a.Tier2MergeStage : b.Tier2MergeStage;
+        return tier2Stage == 1;
+    }
+    //áp dụng merge sim
+    private static BlockState ApplyMergeSim(BlockState source, BlockState target)
+    {
+        if (source.Stack == 2 && target.Stack == 2)
+        {
+            return new BlockState
+            {
+                TypeKey = target.TypeKey,
+                Stack = 2,
+                Tier2MergeStage = target.Tier2MergeStage + source.Tier2MergeStage
+            };
+        }
+
+        int newStack = target.Stack + source.Stack;
+        int newStage = target.Tier2MergeStage;
+        if (newStack == 2 && source.Stack == 1 && target.Stack == 1)
+            newStage = 1;
+
+        return new BlockState
+        {
+            TypeKey = target.TypeKey,
+            Stack = newStack,
+            Tier2MergeStage = newStage
+        };
+    }
+    //kiểm tra các block có thể merge không
+    private static bool ResolveMergeSimClears(BlockState source, BlockState target)
+    {
+        if (source.Stack == 2 && target.Stack == 2)
+            return target.Tier2MergeStage + source.Tier2MergeStage >= 3;
+
+        BlockState merged = ApplyMergeSim(source, target);
+        return merged.Stack >= 3;
+    }
+    //tự động gom đủ 3 block cùng TypeKey từ Board + Bin rồi merge bằng luật hiện có.
+    private IEnumerator MagnetMergeRoutine(List<BlockManager> blocks)
+    {
+        try
+        {
+            if (TryFindDirectClearPair(blocks, out BlockManager directSource, out BlockManager directTarget))
+            {
+                TriggerMagnetMerge(directSource, directTarget);
+                yield break;
+            }
+
+            if (!TryFindFirstMergePair(blocks, out BlockManager stepSource, out BlockManager stepTarget))
+                yield break;
+
+            TriggerMagnetMerge(stepSource, stepTarget);
+            yield return WaitGameplayIdle();
+
+            if (stepTarget == null || stepTarget.IsPendingDestroy)
+                yield break;
+
+            BlockManager third = FindThirdMagnetBlock(blocks, stepSource, stepTarget);
+            if (third == null || !CanMergeBlocks(third, stepTarget))
+                yield break;
+
+            TriggerMagnetMerge(third, stepTarget);
+        }
+        finally
+        {
+            m_MagnetCoroutine = null;
+        }
+    }
+    //trigger magnet merge
+    private void TriggerMagnetMerge(BlockManager source, BlockManager target)
+    {
+        m_SourceSlot = source.CurrentSlot;
+        m_HoverSlot = target.CurrentSlot;
+        ProcessTurn();
+    }
+
+    private IEnumerator WaitGameplayIdle()
+    {
+        while (m_IsTurnProcessing || m_IsSettlementRunning)
+            yield return null;
+    }
+    //tìm kiếm các block có thể merge không 
+    private bool TryFindDirectClearPair(
+        IReadOnlyList<BlockManager> blocks,
+        out BlockManager source,
+        out BlockManager target)
+    {
+        source = null;
+        target = null;
+
+        for (int i = 0; i < blocks.Count; i++)
+        {
+            BlockManager a = blocks[i];
+            if (a == null || a.IsPendingDestroy)
+                continue;
+
+            for (int j = 0; j < blocks.Count; j++)
+            {
+                if (i == j)
+                    continue;
+
+                BlockManager b = blocks[j];
+                if (b == null || b.IsPendingDestroy || !CanMergeBlocks(a, b))
+                    continue;
+
+                MergeResult merge = ResolveMerge(a, b);
+                if (!merge.ShouldClear)
+                    continue;
+
+                source = a;
+                target = b;
+                return true;
+            }
+        }
+
+        return false;
+    }
+    //tìm kiếm các block có thể merge không từ Board
+    private bool TryFindFirstMergePair(
+        IReadOnlyList<BlockManager> blocks,
+        out BlockManager source,
+        out BlockManager target)
+    {
+        source = null;
+        target = null;
+        BlockManager fallbackSource = null;
+        BlockManager fallbackTarget = null;
+
+        for (int i = 0; i < blocks.Count; i++)
+        {
+            BlockManager a = blocks[i];
+            if (a == null || a.IsPendingDestroy)
+                continue;
+
+            for (int j = 0; j < blocks.Count; j++)
+            {
+                if (i == j)
+                    continue;
+
+                BlockManager b = blocks[j];
+                if (b == null || b.IsPendingDestroy || !CanMergeBlocks(a, b))
+                    continue;
+
+                if (a.StackCount == 1 && b.StackCount == 1)
+                {
+                    source = a;
+                    target = b;
+                    return true;
+                }
+
+                if (fallbackSource == null)
+                {
+                    fallbackSource = a;
+                    fallbackTarget = b;
+                }
+            }
+        }
+
+        if (fallbackSource == null)
+            return false;
+
+        source = fallbackSource;
+        target = fallbackTarget;
+        return true;
+    }
+    //tìm kiếm các block có thể merge không từ Board + Bin
+    private static BlockManager FindThirdMagnetBlock(
+        IReadOnlyList<BlockManager> blocks,
+        BlockManager firstSource,
+        BlockManager survivor)
+    {
+        foreach (BlockManager block in blocks)
+        {
+            if (block == null || block.IsPendingDestroy)
+                continue;
+
+            if (block == firstSource || block == survivor)
+                continue;
+
+            return block;
+        }
+
+        return null;
     }
     #endregion Boosters
 
@@ -1762,6 +2391,33 @@ public struct Tier2NeighborRestore
     public string TypeKey;
     public int Stack;
     public int Tier2MergeStage;
+}
+
+public struct BlockState
+{
+    public string TypeKey;
+    public int Stack;
+    public int Tier2MergeStage;
+
+    public static BlockState FromBoard(BlockManager block)
+    {
+        return new BlockState
+        {
+            TypeKey = block.TypeKey,
+            Stack = block.StackCount,
+            Tier2MergeStage = block.Tier2MergeStage
+        };
+    }
+
+    public static BlockState FromBinCell(string typeKey, int stack)
+    {
+        return new BlockState
+        {
+            TypeKey = typeKey,
+            Stack = stack,
+            Tier2MergeStage = stack == 2 ? 1 : 0
+        };
+    }
 }
 
 #endregion

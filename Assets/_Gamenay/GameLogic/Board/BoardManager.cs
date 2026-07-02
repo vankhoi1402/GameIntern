@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using DG.Tweening;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 /// <summary>
 /// Trung tâm trạng thái và logic bàn cờ — grid, mutate, query, gravity.
@@ -28,10 +29,17 @@ public class BoardManager : MonoBehaviour
     [Header("Grid Origin")]
     [SerializeField] private Transform originTransform;
 
-    [Header("Screen Layout")]
-    [SerializeField] private bool centerOnScreen = true;
+    [Header("Camera Layout")]
+    [FormerlySerializedAs("centerOnScreen")]
+    [SerializeField] private bool centerCameraOnBoard = true;
+    [FormerlySerializedAs("fitBoardToScreen")]
+    [SerializeField] private bool fitCameraToBoard = true;
     [SerializeField] private Camera targetCamera;
-    [SerializeField] private Vector2 screenCenterOffset;
+    [FormerlySerializedAs("screenCenterOffset")]
+    [SerializeField] private Vector2 cameraCenterOffset;
+    [FormerlySerializedAs("screenPaddingX")]
+    [SerializeField] private float cameraPaddingX = 0f;
+    [SerializeField] private float cameraPaddingY = 0f;
 
     [Header("Gravity Animation")]
     [SerializeField] private float m_GravityDurationPerSqrtCell = 0.17f;
@@ -48,6 +56,7 @@ public class BoardManager : MonoBehaviour
     private Slot[,] m_Slots;
     private float m_GridStartX;
     private float m_GridStartY;
+    private Vector2Int m_LastScreenSize;
 
     #endregion
 
@@ -86,11 +95,99 @@ public class BoardManager : MonoBehaviour
             m_PlayManager = FindObjectOfType<PlayManager>();
 
         InitGrid();
-        if (centerOnScreen)
-            CenterBoardOnScreen();
-        RefreshGridMetrics();
         IsGridReady = true;
+        RefreshScreenLayout();
     }
+
+    private void Start()
+    {
+        m_LastScreenSize = new Vector2Int(Screen.width, Screen.height);
+    }
+
+    private void Update()
+    {
+        Vector2Int screenSize = new Vector2Int(Screen.width, Screen.height);
+        if (screenSize == m_LastScreenSize)
+            return;
+
+        m_LastScreenSize = screenSize;
+        RefreshScreenLayout();
+    }
+
+    #endregion
+
+    #region Screen Layout
+
+    /// <summary>Giữ board cố định, rồi cập nhật camera và snap lại block theo layout hiện tại.</summary>
+    public void RefreshScreenLayout()
+    {
+        RefreshGridMetrics();
+
+        if (fitCameraToBoard)
+            FitCameraToBoard();
+
+        if (centerCameraOnBoard)
+            // CenterCameraOnBoard();
+            CenterBoardOnScreen();
+            RepositionAllBlocks();
+    }
+
+    private void FitCameraToBoard()
+    {
+        Camera cam = ResolveTargetCamera();
+        if (cam == null || !cam.orthographic)
+            return;
+
+        float boardWidth = cellWidth * columns;
+        float boardHeight = cellHeight * rows;
+
+        float requiredHalfHeightFromHeight = (boardHeight * 0.5f);
+        float requiredHalfHeightFromWidth = ((boardWidth * 0.5f) / cam.aspect);
+
+        cam.orthographicSize = requiredHalfHeightFromWidth + cameraPaddingX;
+
+    }
+
+    private void RepositionAllBlocks()
+    {
+        if (!IsGridReady || m_Slots == null)
+            return;
+
+        for (int r = 0; r < rows; r++)
+        {
+            for (int c = 0; c < columns; c++)
+            {
+                BlockManager block = GetBlock(r, c);
+                if (block == null)
+                    continue;
+
+                block.SnapToGridCell(GridToWorld(r, c), r);
+            }
+        }
+    }
+    private void CenterBoardOnScreen()
+    {
+        Camera cam = ResolveTargetCamera();
+        if (cam == null)
+            return;
+
+        Transform origin = OriginTransform;
+
+        // Khoảng cách từ camera tới mặt phẳng board (z = 0)
+        float planeDistance = Mathf.Abs(cam.transform.position.z - origin.position.z);
+        Vector3 viewportCenter = cam.ViewportToWorldPoint(new Vector3(0.5f, 0.5f, planeDistance));
+
+        Vector2 worldCenter = new Vector2(viewportCenter.x, viewportCenter.y) + cameraCenterOffset;
+        Vector2 size = new Vector2(cellWidth * columns, cellHeight * rows);
+
+        // Origin = góc dưới-trái → lùi nửa size để tâm board khớp tâm màn
+        Vector2 originPos = worldCenter - size * 0.5f;
+
+        origin.position = new Vector3(originPos.x, originPos.y, origin.position.z);
+    }
+
+    private Camera ResolveTargetCamera()
+        => targetCamera != null ? targetCamera : Camera.main;
 
     #endregion
 
@@ -106,21 +203,6 @@ public class BoardManager : MonoBehaviour
             for (int c = 0; c < columns; c++)
                 m_Slots[r, c] = new Slot(r, c);
         }
-    }
-
-    private void CenterBoardOnScreen()
-    {
-        Camera cam = targetCamera != null ? targetCamera : Camera.main;
-        if (cam == null)
-            return;
-
-        Transform origin = OriginTransform;
-        float planeDistance = Mathf.Abs(cam.transform.position.z - origin.position.z);
-        Vector3 viewportCenter = cam.ViewportToWorldPoint(new Vector3(0.5f, 0.5f, planeDistance));
-        Vector2 worldCenter = new Vector2(viewportCenter.x, viewportCenter.y) + screenCenterOffset;
-        Vector2 size = new Vector2(cellWidth * columns, cellHeight * rows);
-        Vector2 originPos = worldCenter - size * 0.5f;
-        origin.position = new Vector3(originPos.x, originPos.y, origin.position.z);
     }
 
     private void RefreshGridMetrics()
@@ -184,18 +266,18 @@ public class BoardManager : MonoBehaviour
     #region Block Mutations
 
     public void PlaceBlock(BlockManager block, int row, int col)
-{
-    Slot slot = GetSlot(row, col);
-    if (slot == null || block == null)
-        return;
+    {
+        Slot slot = GetSlot(row, col);
+        if (slot == null || block == null)
+            return;
 
-    slot.SetBlock(block);
+        slot.SetBlock(block);
 
-    Vector3 pos = GridToWorld(row, col);
-    block.SnapToGridCell(pos, row);
+        Vector3 pos = GridToWorld(row, col);
+        block.SnapToGridCell(pos, row);
 
-    OnBlockPlaced?.Invoke(block, row, col);
-}
+        OnBlockPlaced?.Invoke(block, row, col);
+    }
 
     public void ClearSlot(int row, int col)
     {
