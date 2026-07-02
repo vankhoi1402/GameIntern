@@ -55,6 +55,7 @@ public class PlayManager : MonoBehaviour
 
     [Header("Boosters")]
     [SerializeField] private FrostAnimation m_FrostAnimation;
+    [SerializeField] private VisualBooster m_VisualBooster;
 
     #endregion
 
@@ -89,8 +90,12 @@ public class PlayManager : MonoBehaviour
     private Coroutine m_FreezeCoroutine;
     private Coroutine m_MagnetCoroutine;
     private readonly List<BlockManager> m_ActiveHintBlocks = new List<BlockManager>();
+    private readonly List<BlockManager> m_ShuffleBlocks = new List<BlockManager>(32);
 
     private bool m_IsTimerFrozen;
+    private bool m_MagnetDeferSettlement;
+    private BlockManager m_MagnetSurvivor;
+    private MergeClearKind m_MagnetSurvivorClearKind;
 
     #endregion
 
@@ -137,6 +142,7 @@ public class PlayManager : MonoBehaviour
     {
         BindPopupEvents(false);
         OnSettlementCompleted -= HandleSettlementCompleted;
+        m_VisualBooster?.KillActiveVisual(false);
     }
 
     private void Update()
@@ -591,6 +597,18 @@ public class PlayManager : MonoBehaviour
         if (result.NeedsWindUp)
             m_PendingTier2TripleClearTarget = targetBlock;
 
+        if (m_MagnetDeferSettlement)
+        {
+            if (sourceBlock != null)
+                Destroy(sourceBlock.gameObject);
+
+            targetBlock.UpdateTier2StageVisual(targetBlock.StackCount, targetBlock.Tier2MergeStage);
+            m_MagnetSurvivor = targetBlock;
+            m_MagnetSurvivorClearKind = result.ClearKind;
+            m_IsTurnProcessing = false;
+            return;
+        }
+
         BeginMergeVisual(sourceBlock, targetBlock);
         PlayMergeStackVisual(sourceBlock, targetBlock);
 
@@ -770,6 +788,7 @@ public class PlayManager : MonoBehaviour
     public void PrepareForLevelLoad()
     {
         CancelActiveDrag();
+        m_VisualBooster?.KillActiveVisual(false);
 
         if (m_SettlementCoroutine != null)
         {
@@ -781,6 +800,7 @@ public class PlayManager : MonoBehaviour
         m_IsTurnProcessing = false;
         m_PendingTier2TripleClearTarget = null;
         m_PendingGravityAfterSettlement = false;
+        ResetMagnetDeferredState();
     }
 
     /// <summary>Xóa bàn và spawn layout ban đầu từ level data.</summary>
@@ -1849,6 +1869,32 @@ public class PlayManager : MonoBehaviour
 
         ClearActiveHint();
 
+        if (m_VisualBooster == null)
+        {
+            ExecuteShuffleBoardCore();
+            return;
+        }
+
+        CollectShuffleBlocks(m_ShuffleBlocks);
+        if (m_ShuffleBlocks.Count < 2)
+            return;
+
+        SetLockInput(true);
+        m_VisualBooster.PlayShuffle(
+            ExecuteShuffleBoardCore,
+            HandleShuffleVisualCompleted,
+            m_ShuffleBlocks);
+    }
+
+    /// <summary>
+    /// Chạy logic shuffle thuần, không chứa visual và không tự khóa gameplay.
+    /// Hàm này được gọi từ peak flash của VisualBooster để giữ nguyên thuật toán hiện có.
+    /// </summary>
+    private void ExecuteShuffleBoardCore()
+    {
+        if (m_BoardManager == null || !m_BoardManager.IsGridReady || m_BlockDatabase == null)
+            return;
+
         var boardBlocks = new List<BlockManager>();
         var pool = new List<BlockState>();
 
@@ -1865,6 +1911,15 @@ public class PlayManager : MonoBehaviour
             ApplyBlockStateToBlock(boardBlocks[i], pool[index++]);
 
         m_RefillState.RebuildFrom(pool, index, binCountsPerCol);
+    }
+
+    /// <summary>
+    /// Chỉ mở lại gameplay sau khi visual shuffle hoàn tất hoàn toàn.
+    /// </summary>
+    private void HandleShuffleVisualCompleted()
+    {
+        if (!m_OutcomeResolved)
+            SetLockInput(false);
     }
 
     private void CollectBoardStatesForShuffle(List<BlockManager> boardBlocks, List<BlockState> pool)
@@ -1893,6 +1948,29 @@ public class PlayManager : MonoBehaviour
             list[j] = tmp;
         }
     }
+      /// <summary>
+        /// Thu toàn bộ block hợp lệ đang nằm trên board vào list cache.
+        /// Không tạo list mới để hạn chế GC Allocation trong gameplay.
+        /// </summary>
+        private void CollectShuffleBlocks(List<BlockManager> _result)
+        {
+            _result.Clear();
+
+            if (m_BoardManager == null)
+                return;
+
+            for (int row = 0; row < m_BoardManager.Rows; row++)
+            {
+                for (int col = 0; col < m_BoardManager.Columns; col++)
+                {
+                    BlockManager block = m_BoardManager.GetBlock(row, col);
+                    if (block == null || block.IsPendingDestroy)
+                        continue;
+
+                    _result.Add(block);
+                }
+            }
+        }
     /// <summary>
     /// Tự động gom đủ 3 block cùng TypeKey từ Board + Bin rồi merge bằng luật hiện có.
     /// </summary>
@@ -1964,6 +2042,7 @@ public class PlayManager : MonoBehaviour
         if (trio.Count < 3)
             return;
 
+        SetLockInput(true);
         m_MagnetCoroutine = StartCoroutine(MagnetMergeRoutine(trio));
     }
     //tìm kiếm các block cùng TypeKey từ Board + Bin
@@ -2212,31 +2291,208 @@ public class PlayManager : MonoBehaviour
     {
         try
         {
-            if (TryFindDirectClearPair(blocks, out BlockManager directSource, out BlockManager directTarget))
-            {
-                TriggerMagnetMerge(directSource, directTarget);
+            bool hasDirectClear = TryFindDirectClearPair(
+                blocks,
+                out BlockManager directSource,
+                out BlockManager directTarget);
+
+            BlockManager stepSource = null;
+            BlockManager stepTarget = null;
+            bool hasTwoStep = !hasDirectClear
+                && TryFindFirstMergePair(blocks, out stepSource, out stepTarget);
+
+            if (!hasDirectClear && !hasTwoStep)
                 yield break;
+
+            ResetMagnetDeferredState();
+
+            List<BlockManager> flyBlocks = BuildMagnetFlyBlocks(
+                blocks,
+                hasDirectClear,
+                directSource,
+                directTarget);
+
+            bool visualFinished = false;
+            bool hammerCommitted = false;
+            bool mergeExecuted = false;
+
+            Action onFlyArrived = () =>
+            {
+                if (mergeExecuted)
+                    return;
+
+                mergeExecuted = true;
+                ExecuteMagnetDeferredMergeChain(
+                    blocks,
+                    hasDirectClear,
+                    directSource,
+                    directTarget,
+                    stepSource,
+                    stepTarget);
+
+                BlockManager survivor = m_MagnetSurvivor;
+                if (survivor != null && !survivor.IsPendingDestroy)
+                    survivor.PlayMergeImpact();
+            };
+
+            Action onHammerHit = () =>
+            {
+                if (hammerCommitted)
+                    return;
+
+                hammerCommitted = true;
+                CommitMagnetSurvivorClear();
+            };
+
+            if (m_VisualBooster == null)
+            {
+                onFlyArrived();
+                onHammerHit();
+            }
+            else
+            {
+                Vector3 screenCenterWorldPos = ResolveMagnetScreenCenterWorldPos();
+
+                m_VisualBooster.PlayMagnet(
+                    flyBlocks,
+                    screenCenterWorldPos,
+                    onFlyArrived,
+                    onHammerHit,
+                    () => visualFinished = true);
+
+                while (!visualFinished)
+                    yield return null;
             }
 
-            if (!TryFindFirstMergePair(blocks, out BlockManager stepSource, out BlockManager stepTarget))
-                yield break;
-
-            TriggerMagnetMerge(stepSource, stepTarget);
             yield return WaitGameplayIdle();
-
-            if (stepTarget == null || stepTarget.IsPendingDestroy)
-                yield break;
-
-            BlockManager third = FindThirdMagnetBlock(blocks, stepSource, stepTarget);
-            if (third == null || !CanMergeBlocks(third, stepTarget))
-                yield break;
-
-            TriggerMagnetMerge(third, stepTarget);
         }
         finally
         {
+            ResetMagnetDeferredState();
             m_MagnetCoroutine = null;
+            if (!m_OutcomeResolved)
+                SetLockInput(false);
         }
+    }
+
+    private void ResetMagnetDeferredState()
+    {
+        m_MagnetDeferSettlement = false;
+        m_MagnetSurvivor = null;
+        m_MagnetSurvivorClearKind = MergeClearKind.None;
+    }
+
+    private void ExecuteMagnetDeferredMergeChain(
+        IReadOnlyList<BlockManager> blocks,
+        bool hasDirectClear,
+        BlockManager directSource,
+        BlockManager directTarget,
+        BlockManager stepSource,
+        BlockManager stepTarget)
+    {
+        m_MagnetDeferSettlement = true;
+
+        try
+        {
+            if (hasDirectClear)
+            {
+                TriggerMagnetMerge(directSource, directTarget);
+            }
+            else
+            {
+                TriggerMagnetMerge(stepSource, stepTarget);
+
+                BlockManager third = FindThirdMagnetBlock(blocks, stepSource, stepTarget);
+                if (third != null && CanMergeBlocks(third, stepTarget))
+                    TriggerMagnetMerge(third, stepTarget);
+            }
+        }
+        finally
+        {
+            m_MagnetDeferSettlement = false;
+        }
+    }
+
+    private static List<BlockManager> BuildMagnetFlyBlocks(
+        IReadOnlyList<BlockManager> blocks,
+        bool hasDirectClear,
+        BlockManager directSource,
+        BlockManager directTarget)
+    {
+        var flyBlocks = new List<BlockManager>(3);
+
+        if (hasDirectClear)
+        {
+            if (directSource != null && !directSource.IsPendingDestroy)
+                flyBlocks.Add(directSource);
+
+            if (directTarget != null
+                && !directTarget.IsPendingDestroy
+                && directTarget != directSource)
+            {
+                flyBlocks.Add(directTarget);
+            }
+
+            return flyBlocks;
+        }
+
+        int count = blocks.Count;
+        for (int i = 0; i < count; i++)
+        {
+            BlockManager block = blocks[i];
+            if (block == null || block.IsPendingDestroy)
+                continue;
+
+            flyBlocks.Add(block);
+        }
+
+        return flyBlocks;
+    }
+
+    /// <summary>
+    /// Sau khi búa đập, destroy block survivor và mới bắt đầu gravity/settlement.
+    /// </summary>
+    private void CommitMagnetSurvivorClear()
+    {
+        if (m_PendingTier2TripleClearTarget != null)
+        {
+            CommitPendingTier2TripleClear();
+            ResetMagnetDeferredState();
+            return;
+        }
+
+        BlockManager survivor = m_MagnetSurvivor;
+        MergeClearKind clearKind = m_MagnetSurvivorClearKind;
+        ResetMagnetDeferredState();
+
+        if (survivor == null)
+        {
+            RequestGravityOnly();
+            return;
+        }
+
+        if (clearKind == MergeClearKind.NormalBurst)
+        {
+            ClearMergedBlock(survivor, isTier2TripleClear: false);
+            return;
+        }
+
+        RequestGravityOnly();
+    }
+
+    /// <summary>
+    /// Lấy tâm màn hình theo camera hiện tại, khớp hệ world-space của board (z = 0).
+    /// </summary>
+    private Vector3 ResolveMagnetScreenCenterWorldPos()
+    {
+        Camera cam = m_MainCamera != null ? m_MainCamera : Camera.main;
+        if (cam == null)
+            return Vector3.zero;
+
+        const float boardPlaneZ = 0f;
+        float planeDistance = Mathf.Abs(cam.transform.position.z - boardPlaneZ);
+        Vector3 viewportCenter = cam.ViewportToWorldPoint(new Vector3(0.5f, 0.5f, planeDistance));
+        return new Vector3(viewportCenter.x, viewportCenter.y, boardPlaneZ);
     }
     //trigger magnet merge
     private void TriggerMagnetMerge(BlockManager source, BlockManager target)
