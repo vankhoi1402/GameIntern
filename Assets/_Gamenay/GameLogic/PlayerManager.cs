@@ -6,11 +6,12 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.Rendering;
+using UnityEngine.UI;
 
 /// <summary>
 /// Trung tâm điều phối gameplay — input, merge, settlement, spawn refill.
 /// </summary>
-public class PlayManager : MonoBehaviour
+public class PlayManager : Singleton<PlayManager>
 {
     #region Constants
 
@@ -40,8 +41,8 @@ public class PlayManager : MonoBehaviour
     [SerializeField] private int m_StartLevelId = 1;
 
     [Header("UI")]
-    [SerializeField] private VictoryUIController m_VictoryUI;
-    [SerializeField] private DefeatUIController m_DefeatUI;
+    // [SerializeField] private VictoryUIController m_VictoryUI;
+    //[SerializeField] private DefeatUIController m_DefeatUI;
     [SerializeField] private TextMeshProUGUI m_TimeLimitText;
 
     [Header("Input")]
@@ -93,9 +94,11 @@ public class PlayManager : MonoBehaviour
     private readonly List<BlockManager> m_ShuffleBlocks = new List<BlockManager>(32);
 
     private bool m_IsTimerFrozen;
+
     private bool m_MagnetDeferSettlement;
     private BlockManager m_MagnetSurvivor;
     private MergeClearKind m_MagnetSurvivorClearKind;
+    private bool m_IsPaused;
 
     #endregion
 
@@ -108,6 +111,7 @@ public class PlayManager : MonoBehaviour
     public bool HasTimeLimit => m_TimeLimitSeconds > 0;
     public bool IsTimerExpired => HasTimeLimit && m_RemainingSeconds <= 0f;
     private bool m_IsFreezeAnimationPlaying;
+    private const int c_ContinueBonusSeconds = 30;
     public event Action OnTimerExpired;
 
     #endregion
@@ -118,6 +122,7 @@ public class PlayManager : MonoBehaviour
     public bool HasLevel => m_CurrentLevel != null;
     public int CurrentLevelId => m_CurrentLevel != null ? m_CurrentLevel.LevelId : m_StartLevelId;
     public bool IsOutcomeResolved => m_OutcomeResolved;
+    public bool IsPaused => m_IsPaused;
 
     #endregion
 
@@ -134,13 +139,11 @@ public class PlayManager : MonoBehaviour
 
     private void OnEnable()
     {
-        BindPopupEvents(true);
         OnSettlementCompleted += HandleSettlementCompleted;
     }
 
     private void OnDisable()
     {
-        BindPopupEvents(false);
         OnSettlementCompleted -= HandleSettlementCompleted;
         m_VisualBooster?.KillActiveVisual(false);
     }
@@ -153,12 +156,182 @@ public class PlayManager : MonoBehaviour
 
     #endregion
 
-    #region Level Management
+    #region Flow Game
 
-    private void Start()
+    public void OnPlayFromHome()
     {
-        LoadStartLevel();
+        UIManager.Ins.CloseUI<HomeUI>();
+        GameManager.Ins.OnPlayState();
     }
+
+    public void OnStartPlay()
+    {
+        m_IsPaused = false;
+        Time.timeScale = 1f;
+        GameManager.Ins.Block(false);
+
+        UIManager.Ins.CloseUI<WinUI>();
+        UIManager.Ins.CloseUI<LoseUI>();
+
+        GamePlayUI gameplayUI = UIManager.Ins.OpenUI<GamePlayUI>();
+        gameplayUI.Configure(CurrentLevelId, -1f);
+
+        LoadStartLevel();
+        EnsureGameplayFlowButtons();
+    }
+
+    public void OnQuitPlay()
+    {
+        SetLockInput(true);
+        UIManager.Ins.CloseUI<GamePlayUI>();
+        UIManager.Ins.CloseUI<WinUI>();
+        UIManager.Ins.CloseUI<LoseUI>();
+        m_CurrentLevel = null;
+
+        GameManager.Ins.OnHomeState();
+    }
+
+    public void OnCloseLevel()
+    {
+        m_IsPaused = false;
+        Time.timeScale = 1f;
+        GameManager.Ins.Block(false);
+
+        ClearActiveHint();
+        CancelActiveDrag();
+        CancelFreeze();
+        m_VisualBooster?.KillActiveVisual(false);
+        m_FrostAnimation?.OffFrostImageBG();
+        PrepareForLevelLoad();
+        StopTimer();
+
+        if (m_BoardManager != null)
+            m_BoardManager.ClearAllBlocks();
+
+        DestroyOrphanBlocks();
+    }
+
+    public void OnContinueWithBonusTime()
+    {
+        if (!m_OutcomeResolved || m_CurrentLevel == null)
+            return;
+
+        m_OutcomeResolved = false;
+        m_RemainingSeconds += c_ContinueBonusSeconds;
+
+        if (m_TimeLimitSeconds <= 0)
+            m_TimeLimitSeconds = m_CurrentLevel.TimeLimitSeconds;
+
+        m_IsTimerRunning = true;
+        SetLockInput(false);
+
+        UIManager.Ins.OpenUI<GamePlayUI>();
+        RefreshGameplayHUD();
+    }
+
+    public void OnPauseGame()
+    {
+        if (m_IsPaused)
+            return;
+
+        m_IsPaused = true;
+        Time.timeScale = 0f;
+        GameManager.Ins.Block(true);
+    }
+
+    public void OnResumeGame()
+    {
+        if (!m_IsPaused)
+            return;
+
+        m_IsPaused = false;
+        Time.timeScale = 1f;
+        GameManager.Ins.Block(false);
+    }
+
+    public void OnOpenSettings()
+    {
+        // UIManager.Ins.OpenUI<SettingsUI>();
+    }
+
+    public void OnWinContinue()
+    {
+        UIManager.Ins.CloseUI<WinUI>();
+
+        if (TryLoadNextLevel())
+            return;
+
+        OnQuitPlay();
+    }
+
+    public void OnLoseRetry()
+    {
+        UIManager.Ins.CloseUI<LoseUI>();
+        ReloadCurrentLevel();
+    }
+
+    public void OnLoseContinueTime()
+    {
+        UIManager.Ins.CloseUI<LoseUI>();
+        OnContinueWithBonusTime();
+    }
+
+    public void EnsureHomeFlowButtons()
+    {
+        if (!UIManager.Exists())
+            return;
+
+        HomeUI homeUI = UIManager.Ins.GetUI<HomeUI>();
+        EnsureButtonBound(homeUI.PlayButton, OnPlayFromHome);
+    }
+
+    public void EnsureGameplayFlowButtons()
+    {
+        if (!UIManager.Exists())
+            return;
+
+        GamePlayUI gameplayUI = UIManager.Ins.GetUI<GamePlayUI>();
+        EnsureButtonBound(gameplayUI.PauseButton, OnPauseGame);
+        EnsureButtonBound(gameplayUI.SettingsButton, OnOpenSettings);
+    }
+
+    public void EnsureWinFlowButtons()
+    {
+        if (!UIManager.Exists())
+            return;
+
+        WinUI winUI = UIManager.Ins.GetUI<WinUI>();
+        EnsureButtonBound(winUI.ContinueButton, OnWinContinue);
+    }
+
+    public void EnsureLoseFlowButtons()
+    {
+        if (!UIManager.Exists())
+            return;
+
+        LoseUI loseUI = UIManager.Ins.GetUI<LoseUI>();
+        EnsureButtonBound(loseUI.RetryButton, OnLoseRetry);
+        EnsureButtonBound(loseUI.AddTimeButton, OnLoseContinueTime);
+    }
+
+    private static void EnsureButtonBound(Button button, UnityEngine.Events.UnityAction handler)
+    {
+        if (button == null || handler == null)
+            return;
+
+        for (int i = 0; i < button.onClick.GetPersistentEventCount(); i++)
+        {
+            if (button.onClick.GetPersistentTarget(i) != null)
+                return;
+        }
+
+        button.onClick.RemoveListener(handler);
+        button.onClick.AddListener(handler);
+    }
+
+    #endregion
+
+    #region Level Management
 
     public void LoadStartLevel()
     {
@@ -251,6 +424,7 @@ public class PlayManager : MonoBehaviour
                       ? $" — time limit {m_CurrentLevel.TimeLimitSeconds}s"
                       : string.Empty));
 
+        ConfigureGameplayHUD();
         OnLevelLoaded?.Invoke(m_CurrentLevel);
     }
 
@@ -294,21 +468,42 @@ public class PlayManager : MonoBehaviour
 
     private void RefreshTimeLimitText()
     {
-        if (m_TimeLimitText == null)
-            return;
-
-        if (!HasTimeLimit)
+        if (m_TimeLimitText != null)
         {
-            m_TimeLimitText.gameObject.SetActive(false);
-            return;
+            if (!HasTimeLimit)
+            {
+                m_TimeLimitText.gameObject.SetActive(false);
+            }
+            else
+            {
+                m_TimeLimitText.gameObject.SetActive(true);
+
+                int totalSeconds = Mathf.CeilToInt(m_RemainingSeconds);
+                int minutes = totalSeconds / 60;
+                int seconds = totalSeconds % 60;
+                m_TimeLimitText.text = $"{minutes:00}:{seconds:00}";
+            }
         }
 
-        m_TimeLimitText.gameObject.SetActive(true);
+        RefreshGameplayHUD();
+    }
 
-        int totalSeconds = Mathf.CeilToInt(m_RemainingSeconds);
-        int minutes = totalSeconds / 60;
-        int seconds = totalSeconds % 60;
-        m_TimeLimitText.text = $"{minutes:00}:{seconds:00}";
+    private void RefreshGameplayHUD()
+    {
+        if (!UIManager.Exists() || !UIManager.Ins.IsOpened<GamePlayUI>())
+            return;
+
+        UIManager.Ins.GetUI<GamePlayUI>().UpdateTime(m_RemainingSeconds);
+    }
+
+    private void ConfigureGameplayHUD()
+    {
+        if (!UIManager.Exists() || !UIManager.Ins.IsOpened<GamePlayUI>())
+            return;
+
+        GamePlayUI gameplayUI = UIManager.Ins.GetUI<GamePlayUI>();
+        gameplayUI.Configure(CurrentLevelId, m_RemainingSeconds);
+        gameplayUI.UpdateTime(m_RemainingSeconds);
     }
 
     private bool IsTimerPaused()
@@ -349,21 +544,22 @@ public class PlayManager : MonoBehaviour
         StopTimer();
         CancelActiveDrag();
         SetLockInput(true);
-        m_DefeatUI?.Hide(animated: false);
 
-        int levelId = CurrentLevelId;
-        bool hasNext = HasNextLevel();
-        m_VictoryUI?.Show(levelId, hasNext);
+        WinUI winUI = UIManager.Ins.OpenUI<WinUI>();
+        winUI.Configure(CurrentLevelId, 0, _hasNextLevel: HasNextLevel());
+        EnsureWinFlowButtons();
     }
 
     private void EnterLose()
     {
         m_OutcomeResolved = true;
-        StopTimer();
+        m_IsTimerRunning = false;
         CancelActiveDrag();
         SetLockInput(true);
-        m_VictoryUI?.Hide(animated: false);
-        m_DefeatUI?.Show(CurrentLevelId);
+
+        LoseUI loseUI = UIManager.Ins.OpenUI<LoseUI>();
+        loseUI.Configure(CurrentLevelId, $"Continue +{c_ContinueBonusSeconds}s");
+        EnsureLoseFlowButtons();
     }
 
     #endregion
@@ -379,45 +575,14 @@ public class PlayManager : MonoBehaviour
     private void ResetOutcomeSession()
     {
         m_OutcomeResolved = false;
-        m_VictoryUI?.Hide(animated: false);
-        m_DefeatUI?.Hide(animated: false);
+        // m_VictoryUI?.Hide(animated: false);
+        // m_DefeatUI?.Hide(animated: false);
         SetLockInput(false);
     }
 
     private void HandleSettlementCompleted(bool _)
     {
         TryResolveOutcome();
-    }
-
-    private void HandleNextLevelClicked()
-    {
-        m_VictoryUI?.Hide(() =>
-        {
-            if (!TryLoadNextLevel())
-                ResetOutcomeSession();
-        });
-    }
-
-    private void HandleRetryClicked()
-    {
-        m_DefeatUI?.Hide(ReloadCurrentLevel);
-    }
-
-    private void BindPopupEvents(bool subscribe)
-    {
-        if (m_VictoryUI != null)
-        {
-            m_VictoryUI.OnNextClicked -= HandleNextLevelClicked;
-            if (subscribe)
-                m_VictoryUI.OnNextClicked += HandleNextLevelClicked;
-        }
-
-        if (m_DefeatUI != null)
-        {
-            m_DefeatUI.OnRetryClicked -= HandleRetryClicked;
-            if (subscribe)
-                m_DefeatUI.OnRetryClicked += HandleRetryClicked;
-        }
     }
 
     private void WarnIfLevelCsvNarrowerThanBoard(LevelData level)
@@ -1948,29 +2113,29 @@ public class PlayManager : MonoBehaviour
             list[j] = tmp;
         }
     }
-      /// <summary>
-        /// Thu toàn bộ block hợp lệ đang nằm trên board vào list cache.
-        /// Không tạo list mới để hạn chế GC Allocation trong gameplay.
-        /// </summary>
-        private void CollectShuffleBlocks(List<BlockManager> _result)
+    /// <summary>
+    /// Thu toàn bộ block hợp lệ đang nằm trên board vào list cache.
+    /// Không tạo list mới để hạn chế GC Allocation trong gameplay.
+    /// </summary>
+    private void CollectShuffleBlocks(List<BlockManager> _result)
+    {
+        _result.Clear();
+
+        if (m_BoardManager == null)
+            return;
+
+        for (int row = 0; row < m_BoardManager.Rows; row++)
         {
-            _result.Clear();
-
-            if (m_BoardManager == null)
-                return;
-
-            for (int row = 0; row < m_BoardManager.Rows; row++)
+            for (int col = 0; col < m_BoardManager.Columns; col++)
             {
-                for (int col = 0; col < m_BoardManager.Columns; col++)
-                {
-                    BlockManager block = m_BoardManager.GetBlock(row, col);
-                    if (block == null || block.IsPendingDestroy)
-                        continue;
+                BlockManager block = m_BoardManager.GetBlock(row, col);
+                if (block == null || block.IsPendingDestroy)
+                    continue;
 
-                    _result.Add(block);
-                }
+                _result.Add(block);
             }
         }
+    }
     /// <summary>
     /// Tự động gom đủ 3 block cùng TypeKey từ Board + Bin rồi merge bằng luật hiện có.
     /// </summary>
