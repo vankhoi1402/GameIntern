@@ -1,11 +1,9 @@
 fileFormatVersion: 2
 guid: 605d428ef71229a418fd40955bd10808
-timeCreated: 1782593861
-licenseType: Free
 TextureImporter:
-  serializedVersion: 13
   internalIDToNameTable: []
   externalObjects: {}
+  serializedVersion: 13
   mipmaps:
     mipMapMode: 0
     enableMipMap: 0
@@ -69,8 +67,34 @@ TextureImporter:
   swizzle: 50462976
   cookieLightType: 0
   platformSettings:
-  - serializedVersion: 4
+  - serializedVersion: 3
     buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 2
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 3
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 2
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 3
+    buildTarget: Android
     maxTextureSize: 2048
     resizeAlgorithm: 0
     textureFormat: -1
@@ -84,44 +108,1758 @@ TextureImporter:
     forceMaximumCompressionQuality_BC6H_BC7: 0
   spriteSheet:
     serializedVersion: 2
-    sprites: []
+    sprites:
+    - serializedVersion: 2
+      name: sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_0
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 1828
+        width: 1212
+        height: 204
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e3d95641938e14d44850e9cfacc89c69
+      internalID: -533954847
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_1
+      rect:
+        serializedVersion: 2
+        x: 36
+        y: 2025
+        width: 12
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 77bb3ed06f933a448a172226dd390ce7
+      internalID: -1554190624
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_2
+      rect:
+        serializedVersion: 2
+        x: 1145
+        y: 1939
+        width: 140
+        height: 54
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 3c9de887f63fe4341b3e39e61fb1fee4
+      internalID: 1584441460
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_3
+      rect:
+        serializedVersion: 2
+        x: 1286
+        y: 1940
+        width: 19
+        height: 51
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a5867c56193ccc24f984f36612a0b12e
+      internalID: 1566984441
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_4
+      rect:
+        serializedVersion: 2
+        x: 1307
+        y: 1931
+        width: 79
+        height: 49
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 28367139fe7cb0d479d58193efe53310
+      internalID: -1769135280
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_5
+      rect:
+        serializedVersion: 2
+        x: 1407
+        y: 1940
+        width: 45
+        height: 52
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8f8616bea2de12446915618fc653bf19
+      internalID: 1157492864
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_6
+      rect:
+        serializedVersion: 2
+        x: 1452
+        y: 1931
+        width: 552
+        height: 81
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 439bab9a051d4a949a458951c43a6ece
+      internalID: 651062437
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_7
+      rect:
+        serializedVersion: 2
+        x: 1161
+        y: 1865
+        width: 63
+        height: 47
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 600df84195941014badb05edf745a74a
+      internalID: 1786372735
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_8
+      rect:
+        serializedVersion: 2
+        x: 1196
+        y: 1904
+        width: 32
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a7236c90b83b54f4495988d18af29bc3
+      internalID: 552957333
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_9
+      rect:
+        serializedVersion: 2
+        x: 1456
+        y: 1854
+        width: 68
+        height: 66
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 47a23cdaac0f96f42aa916788e3d3eda
+      internalID: -1217800308
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_10
+      rect:
+        serializedVersion: 2
+        x: 1516
+        y: 1864
+        width: 32
+        height: 64
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 68b1a24e8e89e9e40a10dc0e20258c54
+      internalID: -96808972
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_11
+      rect:
+        serializedVersion: 2
+        x: 1544
+        y: 1860
+        width: 28
+        height: 59
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 908af36aa6ec4ea47a2cd2b652d0b593
+      internalID: 1137620609
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_12
+      rect:
+        serializedVersion: 2
+        x: 1553
+        y: 1852
+        width: 55
+        height: 56
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ff0619ea71f871d4e8809ba5716a8964
+      internalID: 64540613
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_13
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 1774
+        width: 478
+        height: 112
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 02985fe559dea904e8a1089f2f414eac
+      internalID: 2044343233
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_14
+      rect:
+        serializedVersion: 2
+        x: 1221
+        y: 1872
+        width: 11
+        height: 32
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b9014a6b9f273b547977b3f29588db81
+      internalID: -1440987524
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_15
+      rect:
+        serializedVersion: 2
+        x: 1564
+        y: 1740
+        width: 316
+        height: 156
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 97cad1a31fc087d4589f75d888733f66
+      internalID: -868633403
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_16
+      rect:
+        serializedVersion: 2
+        x: 809
+        y: 1724
+        width: 115
+        height: 125
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 4a30a275e0794a94eaa3f0a7c62c8632
+      internalID: -132939168
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_17
+      rect:
+        serializedVersion: 2
+        x: 1432
+        y: 1812
+        width: 68
+        height: 36
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 07d52e4006514ef44abef2faf0e165c9
+      internalID: -1157856085
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_18
+      rect:
+        serializedVersion: 2
+        x: 1444
+        y: 1842
+        width: 55
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2452932fbfc577f4ea78dbe1288efd2c
+      internalID: -850968795
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_19
+      rect:
+        serializedVersion: 2
+        x: 1852
+        y: 1704
+        width: 82
+        height: 144
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c623d68725c676c4e85c96bb5009df85
+      internalID: 2126307325
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_20
+      rect:
+        serializedVersion: 2
+        x: 680
+        y: 1808
+        width: 5
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 5167ea83676fe934ebad18474bd2f81d
+      internalID: -144236555
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_21
+      rect:
+        serializedVersion: 2
+        x: 687
+        y: 1821
+        width: 9
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 86401c19c173c4a42a346b009b0c205f
+      internalID: 835082007
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_22
+      rect:
+        serializedVersion: 2
+        x: 696
+        y: 1732
+        width: 90
+        height: 108
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9146dd3dfb96e3e4d8b9d05a20d3e2cb
+      internalID: 61339185
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_23
+      rect:
+        serializedVersion: 2
+        x: 932
+        y: 1752
+        width: 499
+        height: 84
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9173bc5dfaa4a074bb86609de3fc9f06
+      internalID: 2053132475
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_24
+      rect:
+        serializedVersion: 2
+        x: 680
+        y: 1784
+        width: 4
+        height: 4
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 11eb5a00d8164f043bfb4ec555d11dd0
+      internalID: -1451468014
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_25
+      rect:
+        serializedVersion: 2
+        x: 1444
+        y: 1740
+        width: 77
+        height: 78
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d80d04f2a5c53b845bea4a881f4ec2d7
+      internalID: 628468491
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_26
+      rect:
+        serializedVersion: 2
+        x: 1516
+        y: 1732
+        width: 32
+        height: 60
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f522f3fbcbf636b41a4fded0a9ecbdff
+      internalID: -980601472
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_27
+      rect:
+        serializedVersion: 2
+        x: 1545
+        y: 1740
+        width: 27
+        height: 60
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ca5d39ee87db5e6428bde21e90f80c56
+      internalID: 549489655
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_28
+      rect:
+        serializedVersion: 2
+        x: 1556
+        y: 1752
+        width: 67
+        height: 68
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d762caa94ee575f4dac6bd25a0389492
+      internalID: -1687660370
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_29
+      rect:
+        serializedVersion: 2
+        x: 608
+        y: 1772
+        width: 72
+        height: 4
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 31d843a3191165a4ebce28eee3fe8c8f
+      internalID: -1573736210
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_30
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 1678
+        width: 696
+        height: 90
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 143e7d0b609fb71428e8ad19ed1f8229
+      internalID: -1927386953
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_31
+      rect:
+        serializedVersion: 2
+        x: 690
+        y: 1700
+        width: 14
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: eee58b90b2828c84883cf85ca23c61d4
+      internalID: -407181449
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_32
+      rect:
+        serializedVersion: 2
+        x: 691
+        y: 1601
+        width: 100
+        height: 115
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9ff271ded094dd545b476491568b52c1
+      internalID: 230515580
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_33
+      rect:
+        serializedVersion: 2
+        x: 796
+        y: 1708
+        width: 8
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 553fa887a34937a45acf3f3e8ec16b5a
+      internalID: 335061930
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_34
+      rect:
+        serializedVersion: 2
+        x: 972
+        y: 1572
+        width: 126
+        height: 178
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8abbf9b579b9c8b47938552ae0ba6eae
+      internalID: 979898554
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_35
+      rect:
+        serializedVersion: 2
+        x: 1138
+        y: 1584
+        width: 130
+        height: 160
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: bca478692ec0ce8468479c17b2972cc2
+      internalID: 184516264
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_36
+      rect:
+        serializedVersion: 2
+        x: 1269
+        y: 1547
+        width: 215
+        height: 180
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 66f30a99eb3787547ae7ca5be95fa3bf
+      internalID: 814501781
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_37
+      rect:
+        serializedVersion: 2
+        x: 1634
+        y: 1545
+        width: 193
+        height: 194
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f62669f6254ca28449ffef4f043c1bd0
+      internalID: -980834475
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_38
+      rect:
+        serializedVersion: 2
+        x: 808
+        y: 1608
+        width: 140
+        height: 99
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 09a7163a71904954bace20b85ad0b599
+      internalID: 828301141
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_39
+      rect:
+        serializedVersion: 2
+        x: 1834
+        y: 1588
+        width: 108
+        height: 116
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6ae458b1a83bd67469d77eafef136ddd
+      internalID: 1113111268
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_40
+      rect:
+        serializedVersion: 2
+        x: 1944
+        y: 1681
+        width: 6
+        height: 5
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 03bdd0e54b5c7af4ab16eb2e03040672
+      internalID: -1681802554
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_41
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 1511
+        width: 715
+        height: 163
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b259d9303fc70de4d9a527de25889f86
+      internalID: 1600680623
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_42
+      rect:
+        serializedVersion: 2
+        x: 664
+        y: 1108
+        width: 554
+        height: 507
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7420787ecf1441e43b17638232c5d78e
+      internalID: -1208784693
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_43
+      rect:
+        serializedVersion: 2
+        x: 933
+        y: 1602
+        width: 31
+        height: 38
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 21f4d1d95a5b80d49a084e232d59c0ba
+      internalID: 2058929136
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_44
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 1104
+        width: 713
+        height: 479
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b9b9439ca28cf6141915c17ae64ff8d2
+      internalID: -376316914
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_45
+      rect:
+        serializedVersion: 2
+        x: 949
+        y: 1283
+        width: 275
+        height: 282
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8ac5b1afa0412f140a81e4f444a928d0
+      internalID: -563380042
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_46
+      rect:
+        serializedVersion: 2
+        x: 1792
+        y: 1552
+        width: 36
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6fd5939195412ae43bf1fd89532d71f4
+      internalID: -653010659
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_47
+      rect:
+        serializedVersion: 2
+        x: 1806
+        y: 1432
+        width: 174
+        height: 156
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a292f3f6c94a5834bbc80abbfc9f65de
+      internalID: 2029682998
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_48
+      rect:
+        serializedVersion: 2
+        x: 1228
+        y: 1464
+        width: 272
+        height: 75
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: cd2d3d0c5eb3f594ea56b3dba15931a5
+      internalID: 739936965
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_49
+      rect:
+        serializedVersion: 2
+        x: 1516
+        y: 1464
+        width: 280
+        height: 78
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 631d12ab9bf226348a0ad74a317d5c88
+      internalID: -1848517564
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_50
+      rect:
+        serializedVersion: 2
+        x: 1228
+        y: 1368
+        width: 509
+        height: 94
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c6f014f181bab774586c374ab16f4415
+      internalID: -472301370
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_51
+      rect:
+        serializedVersion: 2
+        x: 1743
+        y: 1382
+        width: 52
+        height: 52
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b127950b7d3d04e4a8bbebd4c91c0f67
+      internalID: -1914582810
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_52
+      rect:
+        serializedVersion: 2
+        x: 1806
+        y: 1385
+        width: 48
+        height: 47
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2d99077890208714ba5131dc41653188
+      internalID: 737358440
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_53
+      rect:
+        serializedVersion: 2
+        x: 1874
+        y: 1386
+        width: 52
+        height: 54
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6e4c5ab3f6e2254419868b7f6ad23f66
+      internalID: -447410294
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_54
+      rect:
+        serializedVersion: 2
+        x: 1896
+        y: 1368
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 253fda47c14de6445b6a2c35443f351c
+      internalID: -790850741
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_55
+      rect:
+        serializedVersion: 2
+        x: 1230
+        y: 1144
+        width: 632
+        height: 218
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ad19509aa37ffeb4498c04ca95643623
+      internalID: 2115670453
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_56
+      rect:
+        serializedVersion: 2
+        x: 1740
+        y: 1319
+        width: 49
+        height: 45
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d40adf3e1f4a0e54d976fd8958d5408c
+      internalID: -1820162076
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_57
+      rect:
+        serializedVersion: 2
+        x: 1870
+        y: 1320
+        width: 53
+        height: 46
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d495da4bdf069544eae34418e7dd6ffa
+      internalID: -1946633892
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_58
+      rect:
+        serializedVersion: 2
+        x: 1203
+        y: 1160
+        width: 5
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d9c0c5eff84e9db419ff35e9e149f4bc
+      internalID: 419233213
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_59
+      rect:
+        serializedVersion: 2
+        x: 1348
+        y: 1136
+        width: 19
+        height: 52
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: aac2d2a70faaf354dba6dabd23b58dc4
+      internalID: -1741763815
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_60
+      rect:
+        serializedVersion: 2
+        x: 1356
+        y: 594
+        width: 618
+        height: 662
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 0d7e35a2f1eab3c44bf22887dfa50868
+      internalID: -208966282
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_61
+      rect:
+        serializedVersion: 2
+        x: 1869
+        y: 1124
+        width: 104
+        height: 103
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f5db652eca9a1034fb74d7b830726141
+      internalID: -1018270625
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_62
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 896
+        width: 700
+        height: 236
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ebddbaf4f054b0a4c8d7969be1e687ae
+      internalID: -1815764901
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_63
+      rect:
+        serializedVersion: 2
+        x: 700
+        y: 897
+        width: 681
+        height: 191
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f5516a96bcf5de74da9d6859bdcb119e
+      internalID: 729074506
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_64
+      rect:
+        serializedVersion: 2
+        x: 1877
+        y: 1005
+        width: 107
+        height: 151
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6ed73fc880dd26f45b5d385e9febae1e
+      internalID: 1447676262
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_65
+      rect:
+        serializedVersion: 2
+        x: 1980
+        y: 1012
+        width: 4
+        height: 5
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 966f7010bd11e6840ab4237d760f1670
+      internalID: -435497095
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_66
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 584
+        width: 1680
+        height: 332
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 517a3908d93d52e4f9fca8cf4b0bfd04
+      internalID: -1719843565
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_67
+      rect:
+        serializedVersion: 2
+        x: 1924
+        y: 630
+        width: 112
+        height: 105
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7ce6f41477860214cad1852136a040a5
+      internalID: 1795613811
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_68
+      rect:
+        serializedVersion: 2
+        x: 1928
+        y: 480
+        width: 76
+        height: 141
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d38d21937d5a5b8469d2a9097664942c
+      internalID: -242038649
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_69
+      rect:
+        serializedVersion: 2
+        x: 2032
+        y: 620
+        width: 8
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 5e34379793907194b8cd3204ff4f54a1
+      internalID: 1983271272
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_70
+      rect:
+        serializedVersion: 2
+        x: 604
+        y: 2
+        width: 548
+        height: 586
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: deb50d8a00840a04db495c59951c576a
+      internalID: -716049039
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_71
+      rect:
+        serializedVersion: 2
+        x: 1148
+        y: 580
+        width: 4
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a9ef7494fb19b234599089e7ff0351e7
+      internalID: 1350010899
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_72
+      rect:
+        serializedVersion: 2
+        x: 1158
+        y: 289
+        width: 630
+        height: 312
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 4419adaf942c00d4e83d3914fa9c3584
+      internalID: -1322927868
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_73
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 608
+        height: 574
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6feeeb7435191b14dad20b861a094589
+      internalID: 896398773
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_74
+      rect:
+        serializedVersion: 2
+        x: 1789
+        y: 288
+        width: 223
+        height: 192
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2771d2cb2dae54f4abcc03540a5e9c5b
+      internalID: 1266989626
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_75
+      rect:
+        serializedVersion: 2
+        x: 1158
+        y: 0
+        width: 730
+        height: 285
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ee8d523701fd4db449b523d2ffdf024d
+      internalID: -1165933587
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_76
+      rect:
+        serializedVersion: 2
+        x: 1884
+        y: 2
+        width: 95
+        height: 120
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7c62876d1444cd84bb05b05687b3b604
+      internalID: 1748282733
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_77
+      rect:
+        serializedVersion: 2
+        x: 1980
+        y: 98
+        width: 6
+        height: 4
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2fe097a94b5871745bfd879fd51023a4
+      internalID: 1671100394
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_78
+      rect:
+        serializedVersion: 2
+        x: 608
+        y: 0
+        width: 4
+        height: 4
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ab7d35b5ac44f294a9c57dd881e6ade5
+      internalID: 797054658
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
     outline: []
-    customData:
     physicsShape: []
     bones: []
-    spriteID:
+    spriteID: c26b89bb3eced594fa14cd8f447447ae
     internalID: 0
     vertices: []
-    indices:
+    indices: 
     edges: []
     weights: []
     secondaryTextures: []
-    spriteCustomMetadata:
-      entries: []
-    nameFileIdTable: {}
-  mipmapLimitGroupName:
-  output:
-    textureImportInstructions:
-      compressedFormat: 0
-      uncompressedFormat: 0
-      desiredFormat: 0
-      usageMode: 0
-      colorSpace: 0
-      width: 0
-      height: 0
-      depth: 0
-      cubeIntermediateSize: 0
-      cubeMode: 0
-      cubeLayout: 0
-      compressionQuality: 0
-      vtOnly: 0
-    sourceTextureInformation:
-      width: 0
-      height: 0
-      doesTextureContainAlpha: 0
-      sourceWasHDR: 0
-    importInspectorWarnings:
+    nameFileIdTable:
+      sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_0: -533954847
+      sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_1: -1554190624
+      sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_10: -96808972
+      sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_11: 1137620609
+      sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_12: 64540613
+      sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_13: 2044343233
+      sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_14: -1440987524
+      sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_15: -868633403
+      sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_16: -132939168
+      sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_17: -1157856085
+      sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_18: -850968795
+      sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_19: 2126307325
+      sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_2: 1584441460
+      sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_20: -144236555
+      sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_21: 835082007
+      sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_22: 61339185
+      sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_23: 2053132475
+      sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_24: -1451468014
+      sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_25: 628468491
+      sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_26: -980601472
+      sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_27: 549489655
+      sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_28: -1687660370
+      sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_29: -1573736210
+      sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_3: 1566984441
+      sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_30: -1927386953
+      sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_31: -407181449
+      sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_32: 230515580
+      sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_33: 335061930
+      sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_34: 979898554
+      sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_35: 184516264
+      sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_36: 814501781
+      sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_37: -980834475
+      sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_38: 828301141
+      sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_39: 1113111268
+      sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_4: -1769135280
+      sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_40: -1681802554
+      sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_41: 1600680623
+      sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_42: -1208784693
+      sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_43: 2058929136
+      sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_44: -376316914
+      sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_45: -563380042
+      sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_46: -653010659
+      sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_47: 2029682998
+      sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_48: 739936965
+      sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_49: -1848517564
+      sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_5: 1157492864
+      sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_50: -472301370
+      sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_51: -1914582810
+      sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_52: 737358440
+      sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_53: -447410294
+      sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_54: -790850741
+      sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_55: 2115670453
+      sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_56: -1820162076
+      sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_57: -1946633892
+      sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_58: 419233213
+      sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_59: -1741763815
+      sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_6: 651062437
+      sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_60: -208966282
+      sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_61: -1018270625
+      sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_62: -1815764901
+      sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_63: 729074506
+      sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_64: 1447676262
+      sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_65: -435497095
+      sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_66: -1719843565
+      sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_67: 1795613811
+      sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_68: -242038649
+      sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_69: 1983271272
+      sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_7: 1786372735
+      sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_70: -716049039
+      sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_71: 1350010899
+      sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_72: -1322927868
+      sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_73: 896398773
+      sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_74: 1266989626
+      sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_75: -1165933587
+      sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_76: 1748282733
+      sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_77: 1671100394
+      sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_78: 797054658
+      sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_8: 552957333
+      sactx-1-2048x2048-ASTC 6x6-PACK_STAGE-04524d2d_9: -1217800308
+  mipmapLimitGroupName: 
   pSDRemoveMatte: 0
-  userData:
-  assetBundleName:
-  assetBundleVariant:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
