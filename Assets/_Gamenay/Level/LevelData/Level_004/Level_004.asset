@@ -13,12 +13,12 @@ MonoBehaviour:
   m_Name: Level_004
   m_EditorClassIdentifier: 
   LevelId: 4
-  VisibleRows: 7
+  VisibleRows: 0
   Rows:
   - Row: 0
     ColBlockTypes:
     - 2
-    - 11
+    - 10
     - 24
     - 9
     - 4
@@ -26,61 +26,61 @@ MonoBehaviour:
     ColBlockTypes:
     - 15
     - 25
-    - 13
-    - 2
+    - 12
+    - 5
     - 11
   - Row: 2
     ColBlockTypes:
     - 13
-    - 1
-    - 25
+    - 3
+    - 14
     - 11
     - 1
   - Row: 3
     ColBlockTypes:
-    - 15
+    - 10
     - 2
     - 20
-    - 9
+    - 8
     - 24
   - Row: 4
     ColBlockTypes:
-    - 2
+    - 5
     - 11
-    - 25
+    - 14
     - 13
-    - 1
+    - 3
   - Row: 5
     ColBlockTypes:
     - 1
     - 2
-    - 2
+    - 8
     - 9
     - 24
   - Row: 6
     ColBlockTypes:
     - 24
-    - 9
+    - 8
     - 15
-    - 2
-    - 25
+    - 5
+    - 14
   - Row: 7
     ColBlockTypes:
-    - 13
+    - 12
     - 25
-    - 13
+    - 12
     - 1
-    - 11
+    - 10
   - Row: 8
     ColBlockTypes:
     - 9
     - 20
-    - 1
+    - 3
     - 24
-    - 13
+    - 12
   - Row: 9
     ColBlockTypes:
-    - 25
+    - 14
     - 15
     - 1
     - 4
@@ -88,72 +88,43 @@ MonoBehaviour:
   - Row: 10
     ColBlockTypes:
     - 24
-    - 11
+    - 3
     - 15
-    - 1
-    - 11
+    - 3
+    - 
   - Row: 11
     ColBlockTypes:
     - 4
     - 13
-    - 13
+    - 5
     - 25
     - 2
   - Row: 12
     ColBlockTypes:
     - 1
-    - 2
+    - 5
     - 15
-    - 2
-    - 24
+    - 8
+    - 1
   - Row: 13
     ColBlockTypes:
-    - 9
+    - 12
+    - 14
+    - 14
+    - 3
     - 25
-    - 15
-    - 9
-    - 4
   - Row: 14
     ColBlockTypes:
-    - 13
     - 25
-    - 20
+    - 25
     - 2
-    - 1
+    - 5
+    - 8
   - Row: 15
     ColBlockTypes:
-    - 13
-    - 2
+    - 12
+    - 8
     - 15
     - 2
-    - 20
-  - Row: 16
-    ColBlockTypes:
-    - 25
-    - 11
-    - 1
-    - 25
-    - 9
-  - Row: 17
-    ColBlockTypes:
-    - 9
-    - 13
-    - 2
-    - 25
-    - 13
-  - Row: 18
-    ColBlockTypes:
-    - 1
-    - 20
-    - 24
-    - 4
-    - 2
-  - Row: 19
-    ColBlockTypes:
-    - 4
     - 
-    - 24
-    - 11
-    - 15
-  TimeLimitSeconds: 200
-  SkillLoadout: []
+  TimeLimitSeconds: 180

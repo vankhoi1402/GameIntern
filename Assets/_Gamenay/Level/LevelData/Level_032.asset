@@ -1,0 +1,165 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6, type: 3}
+  m_Name: Level_032
+  m_EditorClassIdentifier: 
+  LevelId: 32
+  VisibleRows: 0
+  Rows:
+  - Row: 0
+    ColBlockTypes:
+    - 2
+    - 15
+    - 47
+    - 9
+    - 21
+  - Row: 1
+    ColBlockTypes:
+    - 19
+    - 38
+    - 14
+    - 46
+    - 22
+  - Row: 2
+    ColBlockTypes:
+    - 26
+    - 14
+    - 49
+    - 39
+    - 29
+  - Row: 3
+    ColBlockTypes:
+    - 38
+    - 48
+    - 29
+    - 48
+    - 38
+  - Row: 4
+    ColBlockTypes:
+    - 5
+    - 49
+    - 26
+    - 22
+    - 5
+  - Row: 5
+    ColBlockTypes:
+    - 11
+    - 38
+    - 38
+    - 5
+    - 46
+  - Row: 6
+    ColBlockTypes:
+    - 48
+    - 49
+    - 38
+    - 46
+    - 14
+  - Row: 7
+    ColBlockTypes:
+    - 49
+    - 39
+    - 39
+    - 34
+    - 11
+  - Row: 8
+    ColBlockTypes:
+    - 22
+    - 29
+    - 5
+    - 19
+    - 32
+  - Row: 9
+    ColBlockTypes:
+    - 49
+    - 32
+    - 12
+    - 34
+    - 12
+  - Row: 10
+    ColBlockTypes:
+    - 32
+    - 34
+    - 46
+    - 29
+    - 11
+  - Row: 11
+    ColBlockTypes:
+    - 29
+    - 19
+    - 39
+    - 22
+    - 14
+  - Row: 12
+    ColBlockTypes:
+    - 39
+    - 11
+    - 48
+    - 26
+    - 48
+  - Row: 13
+    ColBlockTypes:
+    - 11
+    - 12
+    - 14
+    - 48
+    - 34
+  - Row: 14
+    ColBlockTypes:
+    - 34
+    - 46
+    - 22
+    - 26
+    - 11
+  - Row: 15
+    ColBlockTypes:
+    - 19
+    - 29
+    - 26
+    - 12
+    - 19
+  - Row: 16
+    ColBlockTypes:
+    - 32
+    - 32
+    - 14
+    - 22
+    - 49
+  - Row: 17
+    ColBlockTypes:
+    - 19
+    - 34
+    - 5
+    - 32
+    - 47
+  - Row: 18
+    ColBlockTypes:
+    - 21
+    - 12
+    - 47
+    - 46
+    - 5
+  - Row: 19
+    ColBlockTypes:
+    - 12
+    - 9
+    - 9
+    - 2
+    - 2
+  - Row: 20
+    ColBlockTypes:
+    - 39
+    - 15
+    - 15
+    - 21
+    - 26
+  TimeLimitSeconds: 260

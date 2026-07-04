@@ -1,0 +1,228 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6, type: 3}
+  m_Name: Level_039
+  m_EditorClassIdentifier: 
+  LevelId: 39
+  VisibleRows: 0
+  Rows:
+  - Row: 0
+    ColBlockTypes:
+    - 16
+    - 20
+    - 4
+    - 17
+    - 13
+  - Row: 1
+    ColBlockTypes:
+    - 12
+    - 9
+    - 2
+    - 11
+    - 14
+  - Row: 2
+    ColBlockTypes:
+    - 20
+    - 30
+    - 7
+    - 27
+    - 12
+  - Row: 3
+    ColBlockTypes:
+    - 19
+    - 9
+    - 18
+    - 5
+    - 11
+  - Row: 4
+    ColBlockTypes:
+    - 18
+    - 5
+    - 27
+    - 30
+    - 6
+  - Row: 5
+    ColBlockTypes:
+    - 4
+    - 13
+    - 3
+    - 21
+    - 14
+  - Row: 6
+    ColBlockTypes:
+    - 22
+    - 17
+    - 14
+    - 20
+    - 25
+  - Row: 7
+    ColBlockTypes:
+    - 3
+    - 4
+    - 1
+    - 15
+    - 28
+  - Row: 8
+    ColBlockTypes:
+    - 2
+    - 22
+    - 14
+    - 10
+    - 23
+  - Row: 9
+    ColBlockTypes:
+    - 1
+    - 10
+    - 8
+    - 5
+    - 20
+  - Row: 10
+    ColBlockTypes:
+    - 15
+    - 24
+    - 7
+    - 16
+    - 11
+  - Row: 11
+    ColBlockTypes:
+    - 13
+    - 5
+    - 3
+    - 6
+    - 14
+  - Row: 12
+    ColBlockTypes:
+    - 8
+    - 25
+    - 19
+    - 7
+    - 22
+  - Row: 13
+    ColBlockTypes:
+    - 18
+    - 9
+    - 12
+    - 1
+    - 8
+  - Row: 14
+    ColBlockTypes:
+    - 16
+    - 24
+    - 15
+    - 26
+    - 4
+  - Row: 15
+    ColBlockTypes:
+    - 18
+    - 13
+    - 7
+    - 10
+    - 15
+  - Row: 16
+    ColBlockTypes:
+    - 16
+    - 19
+    - 8
+    - 6
+    - 12
+  - Row: 17
+    ColBlockTypes:
+    - 23
+    - 9
+    - 16
+    - 26
+    - 17
+  - Row: 18
+    ColBlockTypes:
+    - 21
+    - 18
+    - 24
+    - 2
+    - 19
+  - Row: 19
+    ColBlockTypes:
+    - 15
+    - 29
+    - 23
+    - 5
+    - 2
+  - Row: 20
+    ColBlockTypes:
+    - 6
+    - 4
+    - 10
+    - 28
+    - 12
+  - Row: 21
+    ColBlockTypes:
+    - 1
+    - 29
+    - 11
+    - 17
+    - 2
+  - Row: 22
+    ColBlockTypes:
+    - 29
+    - 9
+    - 3
+    - 17
+    - 19
+  - Row: 23
+    ColBlockTypes:
+    - 8
+    - 2
+    - 4
+    - 27
+    - 13
+  - Row: 24
+    ColBlockTypes:
+    - 20
+    - 10
+    - 9
+    - 3
+    - 5
+  - Row: 25
+    ColBlockTypes:
+    - 7
+    - 6
+    - 25
+    - 10
+    - 14
+  - Row: 26
+    ColBlockTypes:
+    - 13
+    - 21
+    - 16
+    - 18
+    - 17
+  - Row: 27
+    ColBlockTypes:
+    - 15
+    - 19
+    - 20
+    - 11
+    - 1
+  - Row: 28
+    ColBlockTypes:
+    - 12
+    - 6
+    - 26
+    - 30
+    - 3
+  - Row: 29
+    ColBlockTypes:
+    - 1
+    - 7
+    - 28
+    - 8
+    - 11
+  TimeLimitSeconds: 265

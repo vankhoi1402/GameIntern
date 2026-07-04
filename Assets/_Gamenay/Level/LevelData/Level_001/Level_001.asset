@@ -13,91 +13,41 @@ MonoBehaviour:
   m_Name: Level_001
   m_EditorClassIdentifier: 
   LevelId: 1
-  VisibleRows: 7
+  VisibleRows: 0
   Rows:
   - Row: 0
     ColBlockTypes:
+    - 
+    - 
+    - 
+    - 
     - 3
-    - 2
-    - 4
-    - 1
-    - 1
   - Row: 1
     ColBlockTypes:
-    - 2
-    - 2
-    - 3
-    - 1
+    - 
+    - 
+    - 
+    - 6
     - 4
   - Row: 2
     ColBlockTypes:
+    - 
+    - 
+    - 1
+    - 2
     - 3
-    - 1
-    - 1
-    - 4
-    - 1
   - Row: 3
     ColBlockTypes:
-    - 4
-    - 3
+    - 
     - 1
-    - 2
     - 4
+    - 2
+    - 6
   - Row: 4
     ColBlockTypes:
-    - 1
-    - 2
-    - 4
-    - 3
-    - 3
-  - Row: 5
-    ColBlockTypes:
-    - 4
-    - 1
+    - 6
     - 2
     - 3
-    - 2
-  - Row: 6
-    ColBlockTypes:
-    - 2
-    - 4
-    - 3
-    - 1
-    - 2
-  - Row: 7
-    ColBlockTypes:
-    - 1
-    - 1
-    - 1
-    - 4
-    - 3
-  - Row: 8
-    ColBlockTypes:
-    - 2
-    - 3
-    - 1
-    - 4
-    - 4
-  - Row: 9
-    ColBlockTypes:
-    - 3
-    - 4
-    - 3
-    - 1
-    - 1
-  - Row: 10
-    ColBlockTypes:
-    - 3
-    - 3
-    - 2
-    - 1
-    - 4
-  - Row: 11
-    ColBlockTypes:
     - 4
     - 1
-    - 3
-    - 2
-    - 4
-  TimeLimitSeconds: 200
-  SkillLoadout: []
+  TimeLimitSeconds: 120

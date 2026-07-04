@@ -6,9 +6,9 @@ using UnityEngine;
 /// <summary>Đường dẫn mặc định + helper validate level.csv trong Editor.</summary>
 public static class LevelCsvEditorPaths
 {
-    public const string LevelsFolder = "Assets/Data/Levels";
+    public const string LevelsFolder = "Assets/_Gamenay/Level/LevelData";
     public const string CatalogAssetPath = LevelsFolder + "/LevelCatalog.asset";
-    public const string BlockDatabasePath = "Assets/Data/Block/BlockDatabase.asset";
+    public const string BlockDatabasePath = "Assets/_Gamenay/Block/Blockdata/BlockDatabase.asset";
 
     private static readonly Regex s_LevelFolderPattern = new Regex(@"Level_(\d+)", RegexOptions.Compiled);
 

@@ -16,6 +16,7 @@ public class BoosterManager : Singleton<BoosterManager>
     public int LevelUnlockBoosterHint;
     public int LevelUnlockBoosterReveal;
     public int LevelUnlockBoosterFrostTime;
+    public int LevelUnlockBoosterHammer;
     public int BoosterFree = 2;
 
     public void Initialized()
@@ -39,8 +40,9 @@ public class BoosterManager : Singleton<BoosterManager>
         }
 
         LevelUnlockBoosterHint = Boosters.Find(b => b.BoosterType == BoosterType.Hint).BoosterLevelUnlock;
-        LevelUnlockBoosterReveal = Boosters.Find(b => b.BoosterType == BoosterType.Reveal).BoosterLevelUnlock;
+        LevelUnlockBoosterReveal = Boosters.Find(b => b.BoosterType == BoosterType.Shuffle).BoosterLevelUnlock;
         LevelUnlockBoosterFrostTime = Boosters.Find(b => b.BoosterType == BoosterType.FrostTime).BoosterLevelUnlock;
+        LevelUnlockBoosterHammer = Boosters.Find(b => b.BoosterType == BoosterType.Hammer).BoosterLevelUnlock;
         BoosterFree = PlayerPrefs.GetInt("BoosterFree", defaultValue: 2);
     }
     public void UnlockBooster(BoosterType boosterType)
@@ -131,9 +133,11 @@ public class BoosterManager : Singleton<BoosterManager>
                     {
                         case BoosterType.Hint:
                             break;
-                        case BoosterType.Reveal:
+                        case BoosterType.Shuffle:
                             break;
                         case BoosterType.FrostTime:
+                            break;
+                        case BoosterType.Hammer:
                             break;
                     }
                 }
@@ -284,9 +288,10 @@ public struct BoosterDataBase
 
 public enum BoosterType
 {
-    Hint, // Name : "Hint", Description : "Gợi ý 2 lá bài trên board có cùng topic", Icon : BoosterHintIcon
-    Reveal, // Name : "Reveal", Description : "Hiển thị tên 1 topic có trong board", Icon : BoosterRevealIcon
+    Hint, // Name : "Hint", Description : "Gợi ý 3 block trên board có cùng topic", Icon : BoosterHintIcon
+    Shuffle, // Name : "Shuffle", Description : "Xếp lại các lá bài trên board", Icon : BoosterShuffleIcon
     FrostTime, // Name : "FrostTime", Description : "Đóng băng thời gian", Icon : BoosterFrostTimeIcon
+    Hammer, // Name : "Hammer", Description : "Đập hạ bài", Icon : BoosterHammerIcon
     None
 }
 

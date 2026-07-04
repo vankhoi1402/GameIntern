@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Level_010
   m_EditorClassIdentifier: 
   LevelId: 10
-  VisibleRows: 7
+  VisibleRows: 0
   Rows:
   - Row: 0
     ColBlockTypes:
@@ -99,5 +99,4 @@ MonoBehaviour:
     - 5
     - 6
     - 11
-  TimeLimitSeconds: 30
-  SkillLoadout: []
+  TimeLimitSeconds: 80

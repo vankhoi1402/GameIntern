@@ -13,126 +13,125 @@ MonoBehaviour:
   m_Name: Level_009
   m_EditorClassIdentifier: 
   LevelId: 9
-  VisibleRows: 7
+  VisibleRows: 0
   Rows:
   - Row: 0
     ColBlockTypes:
-    - 1
-    - 2
     - 3
+    - 10
     - 4
-    - 5
+    - 10
+    - 3
   - Row: 1
     ColBlockTypes:
-    - 16
-    - 21
-    - 7
-    - 22
+    - 11
+    - 1
+    - 4
+    - 11
     - 10
   - Row: 2
     ColBlockTypes:
-    - 15
-    - 15
+    - 1
     - 11
-    - 17
-    - 16
+    - 3
+    - 10
+    - 1
   - Row: 3
     ColBlockTypes:
+    - 10
+    - 2
+    - 10
+    - 5
     - 4
-    - 11
-    - 6
-    - 12
-    - 8
   - Row: 4
     ColBlockTypes:
-    - 23
-    - 0
-    - 0
+    - 5
     - 2
-    - 24
+    - 11
+    - 5
+    - 2
   - Row: 5
     ColBlockTypes:
-    - 11
+    - 6
     - 7
-    - 1
+    - 8
+    - 12
     - 14
-    - 7
   - Row: 6
     ColBlockTypes:
-    - 17
     - 6
-    - 5
-    - 15
-    - 18
+    - 13
+    - 12
+    - 13
+    - 11
   - Row: 7
     ColBlockTypes:
     - 6
+    - 11
     - 13
     - 8
-    - 9
-    - 10
+    - 13
   - Row: 8
     ColBlockTypes:
-    - 20
-    - 17
+    - 7
+    - 14
+    - 8
+    - 13
     - 12
-    - 18
-    - 24
   - Row: 9
     ColBlockTypes:
-    - 5
-    - 18
-    - 19
-    - 26
-    - 3
+    - 12
+    - 7
+    - 12
+    - 13
+    - 12
   - Row: 10
     ColBlockTypes:
-    - 3
+    - 15
+    - 14
+    - 15
     - 16
-    - 24
-    - 13
-    - 22
+    - 14
   - Row: 11
     ColBlockTypes:
-    - 25
+    - 9
     - 14
-    - 2
-    - 19
-    - 14
+    - 15
+    - 16
+    - 16
   - Row: 12
     ColBlockTypes:
-    - 10
-    - 23
-    - 12
+    - 0
+    - 0
     - 9
-    - 4
+    - 15
+    - 0
   - Row: 13
     ColBlockTypes:
-    - 21
-    - 8
-    - 26
-    - 25
-    - 25
+    - 0
+    - 16
+    - 14
+    - 15
+    - 9
   - Row: 14
     ColBlockTypes:
-    - 9
-    - 22
-    - 13
     - 0
-    - 26
+    - 16
+    - 15
+    - 0
+    - 16
   - Row: 15
     ColBlockTypes:
-    - 23
-    - 19
-    - 20
-    - 20
-    - 21
+    - 17
+    - 17
+    - 17
+    - 17
+    - 17
   - Row: 16
     ColBlockTypes:
-    - 1
+    - 17
     - 
     - 
     - 
     - 
-  TimeLimitSeconds: 140
-  SkillLoadout: []
+  TimeLimitSeconds: 200

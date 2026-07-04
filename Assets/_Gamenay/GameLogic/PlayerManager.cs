@@ -1,3 +1,4 @@
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -7,12 +8,20 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.Rendering;
 using UnityEngine.UI;
+using Sirenix.OdinInspector;
+using Lean.Pool;
+using UnityEngine.Pool;
+
 
 /// <summary>
 /// Trung tâm điều phối gameplay — input, merge, settlement, spawn refill.
 /// </summary>
 public class PlayManager : Singleton<PlayManager>
 {
+    [Header("Block Pool vfx")]
+    [SerializeField] private LeanGameObjectPool m_BlockPool;
+    private GameObject m_CurrentBlockVfx;
+
     #region Constants
 
     private const float c_GravityAnimTimeout = 5f;
@@ -823,36 +832,14 @@ public class PlayManager : Singleton<PlayManager>
         int col = targetSlot.Col;
 
         m_BoardManager.ClearSlot(row, col);
+        Vector3 vfxPos = targetBlock.transform.position;
+        SpawnVfxBlock(vfxPos);
 
-        if (isTier2TripleClear)
-        {
-            targetBlock.PlayBurstExplodeThenFall(
-                Vector3.up * 0.3f,
-                m_MainCamera,
-                c_Tier2ExplodeDuration,
-                c_Tier2FallDuration,
-                c_ClearFallDistance,
-                0f,
-                null,
-                () =>
-                {
-                    if (targetBlock != null)
-                        Destroy(targetBlock.gameObject);
-                    RequestGravityOnly();
-                });
-            return;
-        }
+        Destroy(targetBlock.gameObject);
+        RequestGravityOnly();
+        AudioManager.Ins.PlaySFX(AudioManager.BlockMergeSuccess);
 
-        targetBlock.PlayFallOffScreen(
-            m_MainCamera,
-            c_ClearFallDistance,
-            c_ClearFallDuration,
-            () =>
-            {
-                if (targetBlock != null)
-                    Destroy(targetBlock.gameObject);
-                RequestGravityOnly();
-            });
+        
     }
 
     private void RequestGravityOnly()
@@ -989,13 +976,15 @@ public class PlayManager : Singleton<PlayManager>
             if (gridRow.Row >= boardRows || gridRow.ColBlockTypes == null)
                 continue;
 
+            int mappedRow = (boardRows - 1) - gridRow.Row;
+
             int colCount = Mathf.Min(boardCols, gridRow.ColBlockTypes.Length);
             for (int col = 0; col < colCount; col++)
             {
                 if (!m_LevelLoader.TryParseCell(gridRow.ColBlockTypes[col], out string typeKey, out int stack))
                     continue;
 
-                SpawnBlockAt(gridRow.Row, col, typeKey, stack);
+                SpawnBlockAt(mappedRow, col, typeKey, stack);
             }
         }
     }
@@ -1261,6 +1250,7 @@ public class PlayManager : Singleton<PlayManager>
         }
 
         target.PlayMergeImpact(AfterImpact);
+        AudioManager.Ins.PlaySFX(AudioManager.BlockMerge);
     }
 
     //snap target to current slot
@@ -2776,7 +2766,26 @@ public class PlayManager : Singleton<PlayManager>
         return null;
     }
     #endregion Boosters
+    [Button("Spawn Vfx Block")]
+    public void SpawnVfxBlock(Vector3 position)
+    {
+        m_CurrentBlockVfx = m_BlockPool.Spawn(
+            position,
+            Quaternion.identity,
+            m_BlockPool.transform
+        );
+        m_BlockPool.Despawn(m_CurrentBlockVfx, 1f);
+    }
 
+    [Button("Despawn Vfx Block")]
+    public void DespawnVfxBlock()
+    {
+        if (m_CurrentBlockVfx != null)
+        {
+            m_BlockPool.Despawn(m_CurrentBlockVfx);
+            m_CurrentBlockVfx = null;
+        }
+    }
 }
 
 #region Settlement Structs
