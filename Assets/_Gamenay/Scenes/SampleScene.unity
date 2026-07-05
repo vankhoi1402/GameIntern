@@ -151,7 +151,39 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5a288c1b3ded63c408d9b790dc336e9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  dataList: []
+  dataList:
+  - BoosterType: 0
+    BoosterPlace: 0
+    BoosterIcon: {fileID: 21300000, guid: 8d7081e9523b4e149880d66407d18268, type: 2}
+    BoosterDescriptionUnlock: 
+    BoosterPrice: 0
+    BoosterLevelUnlock: 0
+    BoosterName: 
+    BoosterDescription: 
+  - BoosterType: 1
+    BoosterPlace: 0
+    BoosterIcon: {fileID: 21300000, guid: e6aa02b2056f3f14c82400b69f880a18, type: 2}
+    BoosterDescriptionUnlock: 
+    BoosterPrice: 0
+    BoosterLevelUnlock: 2
+    BoosterName: 
+    BoosterDescription: 
+  - BoosterType: 3
+    BoosterPlace: 0
+    BoosterIcon: {fileID: 21300000, guid: 938c4d8d81c5b1642909df8cc2ba6259, type: 2}
+    BoosterDescriptionUnlock: 
+    BoosterPrice: 0
+    BoosterLevelUnlock: 3
+    BoosterName: 
+    BoosterDescription: 
+  - BoosterType: 2
+    BoosterPlace: 0
+    BoosterIcon: {fileID: 21300000, guid: eca6a18fb31993e4698338c3799667b8, type: 2}
+    BoosterDescriptionUnlock: 
+    BoosterPrice: 0
+    BoosterLevelUnlock: 4
+    BoosterName: 
+    BoosterDescription: 
   LevelUnlockBoosterHint: 0
   LevelUnlockBoosterReveal: 0
   LevelUnlockBoosterFrostTime: 0

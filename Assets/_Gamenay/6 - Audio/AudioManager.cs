@@ -58,8 +58,9 @@ public class AudioManager : Singleton<AudioManager>
 
     public float MaxVolume = 1f;
 
-    void Awake()
+    protected override void Awake()
     {
+        base.Awake();
         Initialize();
     }
 

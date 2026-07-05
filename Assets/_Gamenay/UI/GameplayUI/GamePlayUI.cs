@@ -49,6 +49,7 @@ public class GamePlayUI : UICanvas
     public override void Open()
     {
         base.Open();
+        RefreshBoosterUI();
 
         if (m_CanvasGroup != null)
         {
@@ -97,6 +98,15 @@ public class GamePlayUI : UICanvas
 
         if (m_TimeText != null)
             m_TimeText.text = _timeLimit > 0f ? FormatTime(_timeLimit) : "--:--";
+
+        RefreshBoosterUI();
+    }
+
+    public void RefreshBoosterUI()
+    {
+        InBoosterContainer[] containers = GetComponentsInChildren<InBoosterContainer>(true);
+        for (int i = 0; i < containers.Length; i++)
+            containers[i].BindFromManager();
     }
 
     public void UpdateTime(float _remainingTime)
@@ -163,20 +173,8 @@ public class GamePlayUI : UICanvas
 
     private void RegisterBoosterButtonListeners()
     {
-        if (m_HintButton != null)
-            m_HintButton.onClick.AddListener(OnHintButtonClicked);
-
         if (m_SkipButton != null)
             m_SkipButton.onClick.AddListener(OnSkipButtonClicked);
-
-        if (m_MagnetButton != null)
-            m_MagnetButton.onClick.AddListener(OnMagnetButtonClicked);
-
-        if (m_ShuffleButton != null)
-            m_ShuffleButton.onClick.AddListener(OnShuffleButtonClicked);
-
-        if (m_FreezeButton != null)
-            m_FreezeButton.onClick.AddListener(OnFreezeButtonClicked);
     }
 
     private void RefreshHUD()

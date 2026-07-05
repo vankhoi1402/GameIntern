@@ -21,6 +21,8 @@ public class BoosterManager : Singleton<BoosterManager>
 
     public void Initialized()
     {
+        Boosters.Clear();
+
         for (int i = 0; i < dataList.Length; i++)
         {
             Booster booster = new Booster();
@@ -44,7 +46,53 @@ public class BoosterManager : Singleton<BoosterManager>
         LevelUnlockBoosterFrostTime = Boosters.Find(b => b.BoosterType == BoosterType.FrostTime).BoosterLevelUnlock;
         LevelUnlockBoosterHammer = Boosters.Find(b => b.BoosterType == BoosterType.Hammer).BoosterLevelUnlock;
         BoosterFree = PlayerPrefs.GetInt("BoosterFree", defaultValue: 2);
+
+        for (int i = 0; i < Boosters.Count; i++)
+        {
+            if (Boosters[i].BoosterLevelUnlock <= 0 && !Boosters[i].Unlock)
+                UnlockBooster(Boosters[i].BoosterType);
+        }
+
+        CheckUnlockByLevel(SaveManager.CurrentLevel);
     }
+
+    public void CheckUnlockByLevel(int completedLevelId)
+    {
+        for (int i = 0; i < Boosters.Count; i++)
+        {
+            Booster booster = Boosters[i];
+            if (booster.Unlock || booster.BoosterLevelUnlock <= 0)
+                continue;
+
+            if (completedLevelId >= booster.BoosterLevelUnlock)
+                UnlockBooster(booster.BoosterType);
+        }
+    }
+
+    public bool CanUseBooster(Booster booster)
+    {
+        if (booster == null || !booster.Unlock)
+            return false;
+
+        if (booster.FirstUse)
+            return true;
+
+        return booster.Amount > 0;
+    }
+
+    public bool TryUseBooster(BoosterType boosterType, Func<bool> useAction)
+    {
+        Booster booster = GetBooster(boosterType);
+        if (!CanUseBooster(booster))
+            return false;
+
+        if (useAction == null || !useAction())
+            return false;
+
+        DirectPayBooster(booster);
+        return true;
+    }
+
     public void UnlockBooster(BoosterType boosterType)
     {
         for (int i = 0; i < Boosters.Count; i++)
@@ -67,8 +115,8 @@ public class BoosterManager : Singleton<BoosterManager>
         {
             if (booster.BoosterType == Boosters[i].BoosterType)
             {
-                booster.Amount += amount;
-                Save(booster);
+                Boosters[i].Amount += amount;
+                Save(Boosters[i]);
                 break;
             }
         }
@@ -180,14 +228,13 @@ public class BoosterManager : Singleton<BoosterManager>
 
     private void Save(Booster booster)
     {
-        switch (booster.BoosterType)
-        {
-            case BoosterType.FrostTime:
-                PlayerPrefs.SetInt("Unlock_" + booster.BoosterType, booster.Unlock ? 1 : 0);
-                PlayerPrefs.SetInt("Amount_" + booster.BoosterType, booster.Amount);
-                PlayerPrefs.SetInt("FirstUse_" + booster.BoosterType, booster.FirstUse ? 1 : 0);
-                break;
-        }
+        if (booster == null || booster.BoosterType == BoosterType.None)
+            return;
+
+        PlayerPrefs.SetInt("Unlock_" + booster.BoosterType, booster.Unlock ? 1 : 0);
+        PlayerPrefs.SetInt("Amount_" + booster.BoosterType, booster.Amount);
+        PlayerPrefs.SetInt("FirstUse_" + booster.BoosterType, booster.FirstUse ? 1 : 0);
+        PlayerPrefs.Save();
     }
 
     public Booster GetBooster(BoosterType boosterType)

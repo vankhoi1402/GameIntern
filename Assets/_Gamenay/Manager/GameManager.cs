@@ -30,6 +30,9 @@ public class GameManager : Singleton<GameManager>
         Screen.sleepTimeout = SleepTimeout.NeverSleep;
 
         Block(false);
+
+        BoosterManager.Ins.Initialized();
+
         OnHomeState();
     }
 

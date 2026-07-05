@@ -129,7 +129,7 @@ public class PlayManager : Singleton<PlayManager>
 
     public LevelData CurrentLevel => m_CurrentLevel;
     public bool HasLevel => m_CurrentLevel != null;
-    public int CurrentLevelId => m_CurrentLevel != null ? m_CurrentLevel.LevelId : m_StartLevelId;
+    public int CurrentLevelId => m_CurrentLevel != null ? m_CurrentLevel.LevelId : SaveManager.CurrentLevel;
     public bool IsOutcomeResolved => m_OutcomeResolved;
     public bool IsPaused => m_IsPaused;
 
@@ -350,12 +350,20 @@ public class PlayManager : Singleton<PlayManager>
             return;
         }
 
-        LevelCatalogEntry entry = m_Catalog.FindById(m_StartLevelId);
+        int levelId = SaveManager.CurrentLevel;
+        LevelCatalogEntry entry = m_Catalog.FindById(levelId);
+
+        if (entry.LevelAsset == null)
+        {
+            levelId = m_StartLevelId;
+            entry = m_Catalog.FindById(levelId);
+        }
+
         LevelData level = m_LevelLoader.LoadFromEntry(entry, m_BlockDatabase);
 
         if (level == null)
         {
-            Debug.LogError($"[PlayManager] Level {m_StartLevelId} chưa có dữ liệu. Chạy Import CSV trước.");
+            Debug.LogError($"[PlayManager] Level {levelId} chưa có dữ liệu. Chạy Import CSV trước.");
             return;
         }
 
@@ -553,6 +561,12 @@ public class PlayManager : Singleton<PlayManager>
         StopTimer();
         CancelActiveDrag();
         SetLockInput(true);
+
+        if (HasNextLevel())
+            SaveManager.CompleteLevel(CurrentLevelId);
+
+        if (BoosterManager.Exists())
+            BoosterManager.Ins.CheckUnlockByLevel(CurrentLevelId);
 
         WinUI winUI = UIManager.Ins.OpenUI<WinUI>();
         winUI.Configure(CurrentLevelId, 0, _hasNextLevel: HasNextLevel());
@@ -839,7 +853,7 @@ public class PlayManager : Singleton<PlayManager>
         RequestGravityOnly();
         AudioManager.Ins.PlaySFX(AudioManager.BlockMergeSuccess);
 
-        
+
     }
 
     private void RequestGravityOnly()
@@ -1780,23 +1794,29 @@ public class PlayManager : Singleton<PlayManager>
     #region Boosters
 
     //sử dụng hint booster
-    public void hintBooster()
+    public bool TryHintBooster()
     {
         if (m_BoardManager == null || !m_BoardManager.IsGridReady || IsInputBlocked())
-            return;
+            return false;
 
         ClearActiveHint();
 
         if (!TryFindHintBlocks(m_ActiveHintBlocks))
         {
             Debug.Log("[PlayManager] Không tìm thấy gợi ý.");
-            return;
+            return false;
         }
 
         foreach (BlockManager block in m_ActiveHintBlocks)
             block?.PlayHintHighlight(c_HintDuration);
 
         m_HintCoroutine = StartCoroutine(HintTimeoutRoutine());
+        return true;
+    }
+
+    public void hintBooster()
+    {
+        TryHintBooster();
     }
 
     //timeout hint
@@ -1950,22 +1970,22 @@ public class PlayManager : Singleton<PlayManager>
     /// <summary>
     /// Freeze the timer for 10 seconds and show the frost animation
     /// </summary>
-    public void FreezeTimer()
+    public bool TryFreezeTimer()
     {
         if (!HasTimeLimit || !m_IsTimerRunning || m_IsTimerFrozen || m_OutcomeResolved)
-            return;
+            return false;
 
         if (m_FreezeCoroutine != null)
-            return;
+            return false;
 
         if (m_IsFreezeAnimationPlaying)
-            return;
+            return false;
 
         if (m_FrostAnimation == null)
         {
             Debug.LogWarning("[PlayManager] Chưa gán FrostAnimation.");
             StartFreezeDuration();
-            return;
+            return true;
         }
 
         m_IsFreezeAnimationPlaying = true;
@@ -1978,6 +1998,13 @@ public class PlayManager : Singleton<PlayManager>
                 m_IsFreezeAnimationPlaying = false;
                 StartFreezeDuration();
             });
+
+        return true;
+    }
+
+    public void FreezeTimer()
+    {
+        TryFreezeTimer();
     }
 
     private void StartFreezeDuration()
@@ -2013,32 +2040,38 @@ public class PlayManager : Singleton<PlayManager>
         m_FrostAnimation?.OffFrostImageBG();
         m_FrostAnimation?.ResetAnimation();
     }
-    /// <summary>Xáo trộn toàn bộ block trên board và bin còn lại.</summary>
-    public void ShuffleBoard()
+    public bool TryShuffleBoard()
     {
         if (m_BoardManager == null || !m_BoardManager.IsGridReady || m_BlockDatabase == null)
-            return;
+            return false;
 
         if (IsInputBlocked() || m_IsDragging)
-            return;
+            return false;
 
         ClearActiveHint();
 
         if (m_VisualBooster == null)
         {
             ExecuteShuffleBoardCore();
-            return;
+            return true;
         }
 
         CollectShuffleBlocks(m_ShuffleBlocks);
         if (m_ShuffleBlocks.Count < 2)
-            return;
+            return false;
 
         SetLockInput(true);
         m_VisualBooster.PlayShuffle(
             ExecuteShuffleBoardCore,
             HandleShuffleVisualCompleted,
             m_ShuffleBlocks);
+        return true;
+    }
+
+    /// <summary>Xáo trộn toàn bộ block trên board và bin còn lại.</summary>
+    public void ShuffleBoard()
+    {
+        TryShuffleBoard();
     }
 
     /// <summary>
@@ -2131,13 +2164,13 @@ public class PlayManager : Singleton<PlayManager>
     /// </summary>
 
     //tự động gom đủ 3 block cùng TypeKey từ Board + Bin rồi merge bằng luật hiện có.
-    public void MagnetBooster()
+    public bool TryMagnetBooster()
     {
         if (m_BoardManager == null || !m_BoardManager.IsGridReady || m_BlockDatabase == null)
-            return;
+            return false;
 
         if (IsInputBlocked() || m_IsDragging || m_MagnetCoroutine != null)
-            return;
+            return false;
 
         ClearActiveHint();
 
@@ -2147,58 +2180,52 @@ public class PlayManager : Singleton<PlayManager>
                 out int needFromBin))
         {
             Debug.Log("[PlayManager] Magnet: không tìm thấy merge khả thi.");
-            return;
+            return false;
         }
 
         var trio = new List<BlockManager>(boardBlocks);
 
         if (needFromBin > 0)
         {
-            // Lấy danh sách ô trống hiện tại
             IReadOnlyList<Vector2Int> emptySlots = m_BoardManager.GetEmptySlots();
 
             var takenFromBin = new List<BlockState>();
             int takenCount = m_RefillState.TryTakeMatchingType(typeKey, needFromBin, takenFromBin);
             if (takenCount < needFromBin)
-                return;
+                return false;
 
             for (int i = 0; i < takenFromBin.Count; i++)
             {
                 BlockManager spawned = SpawnBlockFromState(takenFromBin[i]);
                 if (spawned == null)
-                    return;
+                    return false;
 
-                // ================= LOGIC SỬA ĐỔI Ô TRỐNG THÔNG MINH =================
                 if (emptySlots != null && i < emptySlots.Count)
                 {
-                    // Nếu bàn CÒN ô trống, đặt khối vào ô trống như bình thường
                     Vector2Int slot = emptySlots[i];
                     m_BoardManager.PlaceBlock(spawned, slot.x, slot.y);
                 }
                 else
                 {
-                    // NẾU BÀN ĐẦY KÍN (0 ô trống): 
-                    // Đặt tạm vị trí khối này trùng với viên khối đầu tiên trên Board 
-                    // để tí nữa hàm MagnetMergeRoutine hút tụi nó nhập vào nhau tạo hiệu ứng nổ.
                     if (boardBlocks.Count > 0 && boardBlocks[0] != null)
-                    {
                         spawned.transform.position = boardBlocks[0].transform.position;
-                    }
-
-                    // Chú ý: Không gọi PlaceBlock vì bàn đầy, khối này sẽ tồn tại ở trạng thái tự do 
-                    // và được nạp ngay vào danh sách trio để chuẩn bị biến mất lập tức khi gộp.
                 }
-                // ===================================================================
 
                 trio.Add(spawned);
             }
         }
 
         if (trio.Count < 3)
-            return;
+            return false;
 
         SetLockInput(true);
         m_MagnetCoroutine = StartCoroutine(MagnetMergeRoutine(trio));
+        return true;
+    }
+
+    public void MagnetBooster()
+    {
+        TryMagnetBooster();
     }
     //tìm kiếm các block cùng TypeKey từ Board + Bin
     private bool TryResolveMagnetPlan(
@@ -2785,6 +2812,18 @@ public class PlayManager : Singleton<PlayManager>
             m_BlockPool.Despawn(m_CurrentBlockVfx);
             m_CurrentBlockVfx = null;
         }
+    }
+    [Button("Reset Save")]
+    public void OnResetSaveClicked()
+    {
+        SaveManager.DeleteAll(); // hoặc DeleteAll()
+
+        if (BoosterManager.Exists())
+            BoosterManager.Ins.Initialized(); // load lại booster từ PlayerPrefs mới (rỗng)
+
+        // Tuỳ chọn: refresh UI nếu đang mở GamePlayUI
+        if (UIManager.Ins.IsOpened<GamePlayUI>())
+            UIManager.Ins.GetUI<GamePlayUI>().RefreshBoosterUI();
     }
 }
 
