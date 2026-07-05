@@ -190,4 +190,11 @@ MonoBehaviour:
     - 20
     - 13
     - 8
+  - Row: 25
+    ColBlockTypes:
+    - 
+    - 
+    - 7
+    - 
+    - 
   TimeLimitSeconds: 220

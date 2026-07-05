@@ -76,19 +76,19 @@ public class LevelLoader
                 continue;
 
             string[] cols = SplitCsvLine(line);
-            if (cols.Length < GridColumnCount + 1)
-            {
-                Debug.LogWarning($"[LevelLoader] Bỏ qua dòng thiếu cột: {line}");
+            if (cols.Length < 1)
                 continue;
-            }
 
             if (!int.TryParse(cols[0].Trim(), out int row))
                 continue;
 
+            if (cols.Length < GridColumnCount + 1)
+                Debug.LogWarning($"[LevelLoader] Dòng row {row} thiếu cột — pad ô trống: {line}");
+
             var blockTypes = new string[GridColumnCount];
             for (int c = 0; c < GridColumnCount; c++)
             {
-                string type = cols[c + 1].Trim();
+                string type = c + 1 < cols.Length ? cols[c + 1].Trim() : string.Empty;
                 blockTypes[c] = string.IsNullOrEmpty(type) ? string.Empty : type;
             }
 

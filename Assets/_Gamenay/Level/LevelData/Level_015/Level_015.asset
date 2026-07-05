@@ -127,4 +127,11 @@ MonoBehaviour:
     - 15
     - 20
     - 11
+  - Row: 16
+    ColBlockTypes:
+    - 16
+    - 
+    - 
+    - 
+    - 
   TimeLimitSeconds: 190

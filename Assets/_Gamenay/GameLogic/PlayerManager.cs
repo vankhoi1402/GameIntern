@@ -390,6 +390,7 @@ public class PlayManager : Singleton<PlayManager>
         PrepareForLevelLoad();
         m_BoardManager.RefreshScreenLayout();
         SpawnBoardLayout(level, OnBoardLayoutReady);
+        
     }
 
     public void ReloadCurrentLevel()
@@ -414,6 +415,7 @@ public class PlayManager : Singleton<PlayManager>
     public void LoadNextLevel()
     {
         TryLoadNextLevel();
+
     }
 
     public bool HasNextLevel()
@@ -440,6 +442,10 @@ public class PlayManager : Singleton<PlayManager>
                   (m_CurrentLevel.TimeLimitSeconds > 0
                       ? $" — time limit {m_CurrentLevel.TimeLimitSeconds}s"
                       : string.Empty));
+
+        if (BoosterManager.Exists())
+            BoosterManager.Ins.CheckUnlockByLevel(CurrentLevelId);
+
 
         ConfigureGameplayHUD();
         OnLevelLoaded?.Invoke(m_CurrentLevel);
@@ -565,8 +571,7 @@ public class PlayManager : Singleton<PlayManager>
         if (HasNextLevel())
             SaveManager.CompleteLevel(CurrentLevelId);
 
-        if (BoosterManager.Exists())
-            BoosterManager.Ins.CheckUnlockByLevel(CurrentLevelId);
+
 
         WinUI winUI = UIManager.Ins.OpenUI<WinUI>();
         winUI.Configure(CurrentLevelId, 0, _hasNextLevel: HasNextLevel());
