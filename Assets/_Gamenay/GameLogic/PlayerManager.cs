@@ -58,7 +58,7 @@ public class PlayManager : Singleton<PlayManager>
     [Header("Input")]
     [SerializeField] private Camera m_MainCamera;
     [SerializeField] private LayerMask m_BlockLayer;
-    [SerializeField, Range(0.05f, 0.35f)] private float m_SameTypeOverlapThreshold = 0.12f;
+    [SerializeField, Range(0.05f, 0.35f)] private float m_SameTypeOverlapThreshold = 0.20f;
 
     [Header("Refill Animation")]
     [SerializeField] private float m_RefillRiseDuration = 0.16f;
