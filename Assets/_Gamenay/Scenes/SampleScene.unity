@@ -188,7 +188,7 @@ MonoBehaviour:
   LevelUnlockBoosterReveal: 0
   LevelUnlockBoosterFrostTime: 0
   LevelUnlockBoosterHammer: 0
-  BoosterFree: 2
+  BoosterFree: 100
 --- !u!4 &150699561
 Transform:
   m_ObjectHideFlags: 0
@@ -500,7 +500,7 @@ MonoBehaviour:
   m_UiScaleMode: 1
   m_ReferencePixelsPerUnit: 100
   m_ScaleFactor: 1
-  m_ReferenceResolution: {x: 800, y: 600}
+  m_ReferenceResolution: {x: 1080, y: 1920}
   m_ScreenMatchMode: 0
   m_MatchWidthOrHeight: 0
   m_PhysicalUnit: 3
@@ -541,7 +541,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 53032250370307621, guid: fd8c404e5973df441b1b35845453a685, type: 3}
       propertyPath: m_SortingOrder
-      value: 1100
+      value: 1300
       objectReference: {fileID: 0}
     - target: {fileID: 4118717825009220255, guid: fd8c404e5973df441b1b35845453a685, type: 3}
       propertyPath: m_LocalPosition.x
@@ -830,7 +830,6 @@ MonoBehaviour:
   targetCamera: {fileID: 0}
   cameraCenterOffset: {x: 0, y: 0}
   cameraPaddingX: 0.1
-  cameraPaddingY: 1
   m_GravityDurationPerSqrtCell: 0.17
   m_GravityRowStagger: 0.035
   m_GravityEase: 3
@@ -912,6 +911,7 @@ MonoBehaviour:
   m_MagnetFlyDuration: 0.22
   m_MagnetFlyEase: 6
   m_MagnetMergeHoldDuration: 0.12
+  m_MagnetFlyScaleMultiplier: 1.12
 --- !u!1 &1395167522
 GameObject:
   m_ObjectHideFlags: 0
@@ -960,7 +960,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   uiResources:
-  - {fileID: 4503145780431903604, guid: ccbdde4592275d94c802b677e3217084, type: 3}
+  - {fileID: 8402410642069419245, guid: ccbdde4592275d94c802b677e3217084, type: 3}
   - {fileID: 7031200769342223990, guid: d1e7a8a35e78e9e41b0389ccb90c8e4f, type: 3}
   - {fileID: 1699113874285114961, guid: 0e012bcd81f9069498f844e5636f926c, type: 3}
   - {fileID: 8445767134105796611, guid: 39c08a553245a6949ac529f2190cb9b4, type: 3}
@@ -1018,6 +1018,7 @@ MonoBehaviour:
   m_BlockLayer:
     serializedVersion: 2
     m_Bits: 64
+  m_SameTypeOverlapThreshold: 0.12
   m_RefillRiseDuration: 0.16
   m_RefillPushDuration: 0.15
   m_RefillPushEase: 3
@@ -1069,8 +1070,8 @@ RectTransform:
   m_LocalScale: {x: 0, y: 0, z: 0}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 288537284}
   - {fileID: 1046575356}
+  - {fileID: 288537284}
   m_Father: {fileID: 1395167523}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -1110,7 +1111,7 @@ MonoBehaviour:
   m_UiScaleMode: 1
   m_ReferencePixelsPerUnit: 100
   m_ScaleFactor: 1
-  m_ReferenceResolution: {x: 800, y: 600}
+  m_ReferenceResolution: {x: 1080, y: 1920}
   m_ScreenMatchMode: 0
   m_MatchWidthOrHeight: 0
   m_PhysicalUnit: 3
@@ -1258,7 +1259,7 @@ MonoBehaviour:
   m_UiScaleMode: 1
   m_ReferencePixelsPerUnit: 100
   m_ScaleFactor: 1
-  m_ReferenceResolution: {x: 800, y: 600}
+  m_ReferenceResolution: {x: 1080, y: 1920}
   m_ScreenMatchMode: 0
   m_MatchWidthOrHeight: 0
   m_PhysicalUnit: 3
@@ -1347,11 +1348,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4425592333266401518, guid: 961a79d7b2fe0ab40b69264ca67a3689, type: 3}
       propertyPath: startPos.x
-      value: -1.25
+      value: 2.5
       objectReference: {fileID: 0}
     - target: {fileID: 4425592333266401518, guid: 961a79d7b2fe0ab40b69264ca67a3689, type: 3}
       propertyPath: startPos.y
-      value: -5
+      value: -5.3
       objectReference: {fileID: 0}
     - target: {fileID: 6327101241854635553, guid: 961a79d7b2fe0ab40b69264ca67a3689, type: 3}
       propertyPath: m_Camera
@@ -1423,9 +1424,53 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 2034053652171775968, guid: 5ab9b13297abeac45af2518d8d49825d, type: 3}
+      propertyPath: sfxClips.Array.size
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2034053652171775968, guid: 5ab9b13297abeac45af2518d8d49825d, type: 3}
+      propertyPath: sfxClips.Array.data[0]
+      value: 
+      objectReference: {fileID: 8300000, guid: a02cad69d17ad934488b0d031ebadb54, type: 3}
+    - target: {fileID: 2034053652171775968, guid: 5ab9b13297abeac45af2518d8d49825d, type: 3}
+      propertyPath: sfxClips.Array.data[1]
+      value: 
+      objectReference: {fileID: 8300000, guid: fa95156f368bed242a7f686c6c7d3f0c, type: 3}
+    - target: {fileID: 2034053652171775968, guid: 5ab9b13297abeac45af2518d8d49825d, type: 3}
+      propertyPath: sfxClips.Array.data[2]
+      value: 
+      objectReference: {fileID: 8300000, guid: 06727acd307b5094ab533b59e2efb745, type: 3}
+    - target: {fileID: 2034053652171775968, guid: 5ab9b13297abeac45af2518d8d49825d, type: 3}
+      propertyPath: sfxClips.Array.data[3]
+      value: 
+      objectReference: {fileID: 8300000, guid: a3fb1c6c8b0c0dd4f8169b3f8f2460f0, type: 3}
+    - target: {fileID: 2034053652171775968, guid: 5ab9b13297abeac45af2518d8d49825d, type: 3}
+      propertyPath: sfxClips.Array.data[4]
+      value: 
+      objectReference: {fileID: 8300000, guid: 94c3126ddf54a814f887bd20859fd279, type: 3}
+    - target: {fileID: 2034053652171775968, guid: 5ab9b13297abeac45af2518d8d49825d, type: 3}
+      propertyPath: sfxClips.Array.data[5]
+      value: 
+      objectReference: {fileID: 8300000, guid: abae9f1eb95dc2a4d8922e596230a184, type: 3}
+    - target: {fileID: 2034053652171775968, guid: 5ab9b13297abeac45af2518d8d49825d, type: 3}
+      propertyPath: sfxClips.Array.data[6]
+      value: 
+      objectReference: {fileID: 8300000, guid: e3bf1c1dd9863d44597122c28bf63e7a, type: 3}
+    - target: {fileID: 2034053652171775968, guid: 5ab9b13297abeac45af2518d8d49825d, type: 3}
+      propertyPath: sfxClips.Array.data[7]
+      value: 
+      objectReference: {fileID: 8300000, guid: 56cd5549b4b16344a97d5ec11969b3ca, type: 3}
+    - target: {fileID: 2034053652171775968, guid: 5ab9b13297abeac45af2518d8d49825d, type: 3}
+      propertyPath: sfxClips.Array.data[8]
+      value: 
+      objectReference: {fileID: 8300000, guid: 049a36b9630e47d44a787a4daef78191, type: 3}
     - target: {fileID: 3753401156164969526, guid: 5ab9b13297abeac45af2518d8d49825d, type: 3}
       propertyPath: m_Name
       value: AudioManager
+      objectReference: {fileID: 0}
+    - target: {fileID: 4652914310192945389, guid: 5ab9b13297abeac45af2518d8d49825d, type: 3}
+      propertyPath: m_Volume
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6532959466801661407, guid: 5ab9b13297abeac45af2518d8d49825d, type: 3}
       propertyPath: m_LocalPosition.x

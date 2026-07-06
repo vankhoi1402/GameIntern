@@ -17,7 +17,7 @@ public class BoosterManager : Singleton<BoosterManager>
     public int LevelUnlockBoosterReveal;
     public int LevelUnlockBoosterFrostTime;
     public int LevelUnlockBoosterHammer;
-    public int BoosterFree = 2;
+    public int BoosterFree = 100;
 
     public void Initialized()
     {
@@ -45,7 +45,7 @@ public class BoosterManager : Singleton<BoosterManager>
         LevelUnlockBoosterReveal = Boosters.Find(b => b.BoosterType == BoosterType.Shuffle).BoosterLevelUnlock;
         LevelUnlockBoosterFrostTime = Boosters.Find(b => b.BoosterType == BoosterType.FrostTime).BoosterLevelUnlock;
         LevelUnlockBoosterHammer = Boosters.Find(b => b.BoosterType == BoosterType.Hammer).BoosterLevelUnlock;
-        BoosterFree = PlayerPrefs.GetInt("BoosterFree", defaultValue: 2);
+        BoosterFree = PlayerPrefs.GetInt("BoosterFree", defaultValue: 100);
 
         for (int i = 0; i < Boosters.Count; i++)
         {

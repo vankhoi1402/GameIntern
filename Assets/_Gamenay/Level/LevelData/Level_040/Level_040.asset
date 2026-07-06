@@ -112,10 +112,10 @@ MonoBehaviour:
     - 11
     - 4
     - 14
-    - 14
+    - 3
   - Row: 14
     ColBlockTypes:
-    - 14
+    - 3
     - 23
     - 10
     - 38
@@ -126,12 +126,5 @@ MonoBehaviour:
     - 2
     - 
     - 2
-    - 
-  - Row: 16
-    ColBlockTypes:
-    - 
-    - 14
-    - 
-    - 
     - 
   TimeLimitSeconds: 142

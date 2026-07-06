@@ -40,9 +40,12 @@ public class BlockManager : MonoBehaviour
 
     private bool m_IsDragging;
     public const int HoverMergeTargetSortingOrder = DragSortingOrder - 50; // 1050 — trên block đang kéo (1000)
+    public const int MagnetFlySortingOrder = 1200;
 
     private int m_SavedHoverSortingOrder;
     private bool m_HasHoverSortingBoost;
+    private int m_SavedMagnetFlySortingOrder;
+    private bool m_HasMagnetFlySortingBoost;
 
     #endregion
 
@@ -349,6 +352,36 @@ public class BlockManager : MonoBehaviour
             ApplyGridSorting(CurrentSlot.Row);
         else
             m_SortingGroup.sortingOrder = m_SavedHoverSortingOrder;
+    }
+
+    /// <summary>Magnet fly — vẽ block trên board/VFX trong lúc bay về giữa.</summary>
+    public void BeginMagnetFlyVisual()
+    {
+        if (m_SortingGroup == null)
+            return;
+
+        if (!m_HasMagnetFlySortingBoost)
+        {
+            m_SavedMagnetFlySortingOrder = m_SortingGroup.sortingOrder;
+            m_HasMagnetFlySortingBoost = true;
+        }
+
+        m_SortingGroup.sortingOrder = MagnetFlySortingOrder;
+        transform.SetAsLastSibling();
+    }
+
+    /// <summary>Trả sorting order sau magnet fly (nếu block còn trên board).</summary>
+    public void EndMagnetFlyVisual()
+    {
+        if (m_SortingGroup == null || !m_HasMagnetFlySortingBoost)
+            return;
+
+        m_HasMagnetFlySortingBoost = false;
+
+        if (CurrentSlot != null)
+            ApplyGridSorting(CurrentSlot.Row);
+        else
+            m_SortingGroup.sortingOrder = m_SavedMagnetFlySortingOrder;
     }
     #endregion
 

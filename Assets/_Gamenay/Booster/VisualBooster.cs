@@ -279,6 +279,8 @@ public class VisualBooster : MonoBehaviour
                 continue;
 
             block.transform.DOKill(false);
+            block.ResetVisualState();
+            block.EndMagnetFlyVisual();
         }
 
         m_MagnetBlocks.Clear();
@@ -355,6 +357,7 @@ public class VisualBooster : MonoBehaviour
     [SerializeField] private float m_MagnetFlyDuration = 0.22f;
     [SerializeField] private Ease m_MagnetFlyEase = Ease.OutQuad;
     [SerializeField] private float m_MagnetMergeHoldDuration = 0.12f;
+    [SerializeField] private float m_MagnetFlyScaleMultiplier = 1.12f;
 
     /// <summary>
     /// Cho các block bay về giữa màn hình, gọi onFlyArrived khi chạm giữa, rồi búa đập (onHammerHit) và onFinished.
@@ -390,11 +393,18 @@ public class VisualBooster : MonoBehaviour
             if (block == null)
                 continue;
 
+            block.BeginMagnetFlyVisual();
+
             Transform blockTransform = block.transform;
             blockTransform.DOKill(false);
 
+            Vector3 flyScale = blockTransform.localScale * m_MagnetFlyScaleMultiplier;
+
             m_MagnetSequence.Join(
                 blockTransform.DOMove(centerWorldPos, m_MagnetFlyDuration)
+                    .SetEase(m_MagnetFlyEase));
+            m_MagnetSequence.Join(
+                blockTransform.DOScale(flyScale, m_MagnetFlyDuration)
                     .SetEase(m_MagnetFlyEase));
         }
 

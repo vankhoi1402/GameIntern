@@ -68,7 +68,7 @@ MonoBehaviour:
     LevelCsv: {fileID: 4900000, guid: 02e9ad8fedab3da478d7b8e8445fe9c3, type: 3}
     LevelAsset: {fileID: 11400000, guid: 8d0d14f64cd745129d18c2117023485b, type: 2}
   - LevelId: 19
-    LevelCsv: {fileID: 4900000, guid: 844308fa6328bbb49828d1d8d8d5e70d, type: 3}
+    LevelCsv: {fileID: 4900000, guid: 198183af62cb38643a84285b8c63a181, type: 3}
     LevelAsset: {fileID: 11400000, guid: 1ade4bf7eefc46bfb20aa5cc837b898e, type: 2}
   - LevelId: 20
     LevelCsv: {fileID: 4900000, guid: 3b975cbd44038f94ba0d56d34e6f9213, type: 3}
@@ -131,5 +131,5 @@ MonoBehaviour:
     LevelCsv: {fileID: 4900000, guid: 9929fb9c7f3c20f4998d811bcf745b27, type: 3}
     LevelAsset: {fileID: 11400000, guid: 1498816c5e1c46d4ae947f4fa9131cf8, type: 2}
   - LevelId: 40
-    LevelCsv: {fileID: 4900000, guid: f7b35ac8f17428a4187905e8792ac5a0, type: 3}
+    LevelCsv: {fileID: 4900000, guid: d0fef244388bfb94c8798ce126a70ce7, type: 3}
     LevelAsset: {fileID: 11400000, guid: cf40ebb7840e474095f1a14289e08acd, type: 2}

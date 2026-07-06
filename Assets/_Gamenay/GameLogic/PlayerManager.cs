@@ -32,6 +32,7 @@ public class PlayManager : Singleton<PlayManager>
     private const float c_Tier2FallDuration = 0.4f;
     private const float c_HintDuration = 3f;
     private const float c_FreezeDuration = 10f;
+    private const int c_DragOverlapBufferSize = 16;
 
     #endregion
 
@@ -57,6 +58,7 @@ public class PlayManager : Singleton<PlayManager>
     [Header("Input")]
     [SerializeField] private Camera m_MainCamera;
     [SerializeField] private LayerMask m_BlockLayer;
+    [SerializeField, Range(0.05f, 0.35f)] private float m_SameTypeOverlapThreshold = 0.12f;
 
     [Header("Refill Animation")]
     [SerializeField] private float m_RefillRiseDuration = 0.16f;
@@ -107,7 +109,13 @@ public class PlayManager : Singleton<PlayManager>
     private bool m_MagnetDeferSettlement;
     private BlockManager m_MagnetSurvivor;
     private MergeClearKind m_MagnetSurvivorClearKind;
+
+    private bool m_MagnetIsPairMode;
     private bool m_IsPaused;
+
+    private const float c_ComboVoiceWindow = 3f;
+    private int m_ClearStreakCount;
+    private float m_LastClearTime;
 
     #endregion
 
@@ -390,7 +398,7 @@ public class PlayManager : Singleton<PlayManager>
         PrepareForLevelLoad();
         m_BoardManager.RefreshScreenLayout();
         SpawnBoardLayout(level, OnBoardLayoutReady);
-        
+
     }
 
     public void ReloadCurrentLevel()
@@ -563,6 +571,7 @@ public class PlayManager : Singleton<PlayManager>
 
     private void EnterWin()
     {
+        AudioManager.Ins.PlaySFX(AudioManager.Win);
         m_OutcomeResolved = true;
         StopTimer();
         CancelActiveDrag();
@@ -834,6 +843,39 @@ public class PlayManager : Singleton<PlayManager>
         ClearMergedBlock(target, isTier2TripleClear: true);
     }
 
+    private void TryPlayComboVoice(bool isTier2TripleClear)
+    {
+        float now = Time.time;
+
+        if (isTier2TripleClear)
+        {
+            m_ClearStreakCount = 2;
+            m_LastClearTime = now;
+            AudioManager.Ins.PlaySFX(AudioManager.SoundGood);
+            return;
+        }
+
+        if (m_ClearStreakCount > 0 && now - m_LastClearTime > c_ComboVoiceWindow)
+            m_ClearStreakCount = 0;
+
+        m_ClearStreakCount++;
+        m_LastClearTime = now;
+
+        if (m_ClearStreakCount < 2)
+            return;
+
+        string sfx = m_ClearStreakCount switch
+        {
+            2 => AudioManager.SoundGood,
+            3 => AudioManager.SoundGreat,
+            4 => AudioManager.SoundExcellent,
+            5 => AudioManager.SoundAmazing,
+            _ => AudioManager.SoundUnbelievable
+        };
+
+        AudioManager.Ins.PlaySFX(sfx);
+    }
+
     private void ClearMergedBlock(BlockManager targetBlock, bool isTier2TripleClear)
     {
         Slot targetSlot = targetBlock?.CurrentSlot;
@@ -857,8 +899,7 @@ public class PlayManager : Singleton<PlayManager>
         Destroy(targetBlock.gameObject);
         RequestGravityOnly();
         AudioManager.Ins.PlaySFX(AudioManager.BlockMergeSuccess);
-
-
+        TryPlayComboVoice(isTier2TripleClear);
     }
 
     private void RequestGravityOnly()
@@ -971,6 +1012,8 @@ public class PlayManager : Singleton<PlayManager>
         m_IsTurnProcessing = false;
         m_PendingTier2TripleClearTarget = null;
         m_PendingGravityAfterSettlement = false;
+        m_ClearStreakCount = 0;
+        m_LastClearTime = 0f;
         ResetMagnetDeferredState();
     }
 
@@ -1161,6 +1204,7 @@ public class PlayManager : Singleton<PlayManager>
     {
         if (m_BoardManager == null || !m_BoardManager.IsGridReady)
             return;
+        AudioManager.Ins.PlaySFX(AudioManager.Refill);
 
         foreach (ColumnRefillPacket packet in wave)
         {
@@ -1368,24 +1412,94 @@ public class PlayManager : Singleton<PlayManager>
 
     private Slot ResolveDropTargetSlot()
     {
+        BlockManager target = ResolveHoverTarget(GetMouseWorldPosition());
+        return target != null ? target.CurrentSlot : null;
+    }
+
+    /// <summary>
+    /// Mặc định: block ở ô grid dưới chuột. Ghi đè: block cùng loại khi box overlap đủ ngưỡng.
+    /// </summary>
+    private BlockManager ResolveHoverTarget(Vector3 mouseWorldPos)
+    {
+        BlockManager defaultTarget = GetBlockUnderMouseGrid(mouseWorldPos);
+        if (m_DraggedBlock == null)
+            return defaultTarget;
+
+        BlockManager sameTypeTarget = TryGetSameTypeOverlapOverride();
+        return sameTypeTarget != null ? sameTypeTarget : defaultTarget;
+    }
+
+    private BlockManager GetBlockUnderMouseGrid(Vector3 mouseWorldPos)
+    {
         if (m_BoardManager == null || !m_BoardManager.IsGridReady)
             return null;
 
-        Vector2Int grid = m_BoardManager.WorldToGrid(GetMouseWorldPosition());
-        return m_BoardManager.GetSlot(grid.x, grid.y);
+        Vector2Int grid = m_BoardManager.WorldToGrid(mouseWorldPos);
+        Slot slot = m_BoardManager.GetSlot(grid.x, grid.y);
+        if (slot == null || slot == m_SourceSlot || !slot.HasBlock)
+            return null;
+
+        return slot.CurrentBlock;
+    }
+
+    private BlockManager TryGetSameTypeOverlapOverride()
+    {
+        if (m_DraggedBlock == null || !m_DraggedBlock.TryGetComponent(out Collider2D draggedCollider))
+            return null;
+
+        Bounds draggedBounds = draggedCollider.bounds;
+        float draggedArea = draggedBounds.size.x * draggedBounds.size.y;
+        if (draggedArea <= Mathf.Epsilon)
+            return null;
+
+        var filter = new ContactFilter2D();
+        filter.useLayerMask = true;
+        filter.SetLayerMask(m_BlockLayer);
+        filter.useTriggers = true;
+
+        Collider2D[] hits = new Collider2D[c_DragOverlapBufferSize];
+        int count = draggedCollider.OverlapCollider(filter, hits);
+
+        BlockManager best = null;
+        float bestOverlapRatio = 0f;
+
+        for (int i = 0; i < count; i++)
+        {
+            Collider2D hit = hits[i];
+            if (hit == null || hit == draggedCollider)
+                continue;
+
+            if (!hit.TryGetComponent(out BlockManager candidate))
+                continue;
+
+            if (candidate == m_DraggedBlock || candidate.CurrentSlot == m_SourceSlot)
+                continue;
+
+            if (!m_DraggedBlock.IsSameTypeAs(candidate))
+                continue;
+
+            float overlapArea = GetBoundsOverlapArea(draggedBounds, hit.bounds);
+            float overlapRatio = overlapArea / draggedArea;
+            if (overlapRatio < m_SameTypeOverlapThreshold || overlapRatio <= bestOverlapRatio)
+                continue;
+
+            bestOverlapRatio = overlapRatio;
+            best = candidate;
+        }
+
+        return best;
+    }
+
+    private static float GetBoundsOverlapArea(Bounds a, Bounds b)
+    {
+        float overlapX = Mathf.Max(0f, Mathf.Min(a.max.x, b.max.x) - Mathf.Max(a.min.x, b.min.x));
+        float overlapY = Mathf.Max(0f, Mathf.Min(a.max.y, b.max.y) - Mathf.Max(a.min.y, b.min.y));
+        return overlapX * overlapY;
     }
 
     private void UpdateHoverTarget(Vector3 mouseWorldPos)
     {
-        BlockManager next = null;
-
-        if (m_BoardManager != null && m_BoardManager.IsGridReady)
-        {
-            Vector2Int grid = m_BoardManager.WorldToGrid(mouseWorldPos);
-            Slot slot = m_BoardManager.GetSlot(grid.x, grid.y);
-            if (slot != null && slot != m_SourceSlot && slot.HasBlock)
-                next = slot.CurrentBlock;
-        }
+        BlockManager next = ResolveHoverTarget(mouseWorldPos);
 
         if (next == m_HoverTargetBlock)
             return;
@@ -1545,7 +1659,7 @@ public class PlayManager : Singleton<PlayManager>
         // 1. Kiểm tra cơ bản
         if (!CanMergeBlocks(source, target))
             return MergeResult.Invalid;
-        Debug.Log($"Source: {source.StackCount}, Target: {target.StackCount}");
+        // Debug.Log($"Source: {source.StackCount}, Target: {target.StackCount}");
 
         // 3. Logic xử lý cho Stack 2 + Stack 2 cũ của bạn
         bool isTier2Pair = source.StackCount == 2 && target.StackCount == 2;
@@ -1780,6 +1894,41 @@ public class PlayManager : Singleton<PlayManager>
                 {
                     BlockState state = queue.Dequeue();
                     if (found < count && state.TypeKey == typeKey)
+                    {
+                        taken.Add(state);
+                        found++;
+                    }
+                    else
+                    {
+                        kept.Enqueue(state);
+                    }
+                }
+
+                m_RuntimeQueues[col] = kept;
+            }
+
+            return found;
+        }
+        public int TryTakeMatchingTypeWithStack(
+                                       string typeKey,
+                                       int count,
+                                       int requiredStack,
+                                       List<BlockState> taken)
+        {
+            int found = 0;
+            for (int col = 0; col < m_ColumnCount && found < count; col++)
+            {
+                Queue<BlockState> queue = m_RuntimeQueues[col];
+                if (queue == null || queue.Count == 0)
+                    continue;
+
+                var kept = new Queue<BlockState>();
+                while (queue.Count > 0)
+                {
+                    BlockState state = queue.Dequeue();
+                    if (found < count
+                        && state.TypeKey == typeKey
+                        && state.Stack == requiredStack)
                     {
                         taken.Add(state);
                         found++;
@@ -2182,12 +2331,15 @@ public class PlayManager : Singleton<PlayManager>
         if (!TryResolveMagnetPlan(
                 out string typeKey,
                 out List<BlockManager> boardBlocks,
-                out int needFromBin))
+                out int needFromBin,
+                out int requiredBinStack,
+                out bool isPairMode))
         {
             Debug.Log("[PlayManager] Magnet: không tìm thấy merge khả thi.");
             return false;
         }
 
+        m_MagnetIsPairMode = isPairMode;
         var trio = new List<BlockManager>(boardBlocks);
 
         if (needFromBin > 0)
@@ -2195,7 +2347,9 @@ public class PlayManager : Singleton<PlayManager>
             IReadOnlyList<Vector2Int> emptySlots = m_BoardManager.GetEmptySlots();
 
             var takenFromBin = new List<BlockState>();
-            int takenCount = m_RefillState.TryTakeMatchingType(typeKey, needFromBin, takenFromBin);
+            int takenCount = requiredBinStack >= 0
+                ? m_RefillState.TryTakeMatchingTypeWithStack(typeKey, needFromBin, requiredBinStack, takenFromBin)
+                : m_RefillState.TryTakeMatchingType(typeKey, needFromBin, takenFromBin);
             if (takenCount < needFromBin)
                 return false;
 
@@ -2220,7 +2374,8 @@ public class PlayManager : Singleton<PlayManager>
             }
         }
 
-        if (trio.Count < 3)
+        int requiredCount = isPairMode ? 2 : 3;
+        if (trio.Count < requiredCount)
             return false;
 
         SetLockInput(true);
@@ -2236,12 +2391,16 @@ public class PlayManager : Singleton<PlayManager>
     private bool TryResolveMagnetPlan(
         out string typeKey,
         out List<BlockManager> boardBlocks,
-        out int needFromBin)
+        out int needFromBin,
+        out int requiredBinStack,
+        out bool isPairMode)
     {
         // 1. KHỞI TẠO CÁC GIÁ TRỊ ĐẦU RA MẶC ĐỊNH
         typeKey = null;
         boardBlocks = new List<BlockManager>();
         needFromBin = 0;
+        requiredBinStack = -1;
+        isPairMode = false;
 
         var totalCounts = new Dictionary<string, int>();
         var binCounts = new Dictionary<string, int>();
@@ -2329,12 +2488,190 @@ public class PlayManager : Singleton<PlayManager>
             needFromBin = candidateNeedFromBin;
         }
 
-        // 3. KẾT LUẬN LUỒNG CHẠY
+        if (bestKey != null)
+        {
+            typeKey = bestKey;
+            return true;
+        }
+
+        if (HasAnyTypeCountAtLeast(totalCounts, 3))
+            return false;
+
+        return TryResolveMagnetPairPlan(
+            binPool,
+            out typeKey,
+            out boardBlocks,
+            out needFromBin,
+            out requiredBinStack,
+            out isPairMode);
+    }
+
+    private static bool HasAnyTypeCountAtLeast(Dictionary<string, int> counts, int min)
+    {
+        foreach (KeyValuePair<string, int> pair in counts)
+        {
+            if (pair.Value >= min)
+                return true;
+        }
+
+        return false;
+    }
+
+    private bool TryResolveMagnetPairPlan(
+        IReadOnlyList<BlockState> binPool,
+        out string typeKey,
+        out List<BlockManager> boardBlocks,
+        out int needFromBin,
+        out int requiredBinStack,
+        out bool isPairMode)
+    {
+        typeKey = null;
+        boardBlocks = new List<BlockManager>();
+        needFromBin = 0;
+        requiredBinStack = -1;
+        isPairMode = false;
+
+        string bestKey = null;
+        int bestOnBoard = -1;
+        List<BlockManager> bestBoardBlocks = null;
+        int bestNeedFromBin = 0;
+        int bestRequiredBinStack = -1;
+
+        var typeKeys = new HashSet<string>();
+        for (int r = 0; r < m_BoardManager.Rows; r++)
+        {
+            for (int c = 0; c < m_BoardManager.Columns; c++)
+            {
+                BlockManager block = m_BoardManager.GetBlock(r, c);
+                if (block == null || block.IsPendingDestroy || string.IsNullOrEmpty(block.TypeKey))
+                    continue;
+
+                typeKeys.Add(block.TypeKey);
+            }
+        }
+
+        foreach (BlockState state in binPool)
+        {
+            if (!string.IsNullOrEmpty(state.TypeKey))
+                typeKeys.Add(state.TypeKey);
+        }
+
+        foreach (string key in typeKeys)
+        {
+            BlockManager boardStack2 = null;
+            BlockManager boardStack1 = null;
+            int onBoard = 0;
+
+            for (int r = 0; r < m_BoardManager.Rows; r++)
+            {
+                for (int c = 0; c < m_BoardManager.Columns; c++)
+                {
+                    BlockManager block = m_BoardManager.GetBlock(r, c);
+                    if (block == null || block.IsPendingDestroy || block.TypeKey != key)
+                        continue;
+
+                    onBoard++;
+
+                    if (block.StackCount == 2 && block.Tier2MergeStage == 1)
+                        boardStack2 = block;
+                    else if (block.StackCount == 1)
+                        boardStack1 = block;
+                }
+            }
+
+            bool binHasStack1 = false;
+            bool binHasStack2 = false;
+            foreach (BlockState state in binPool)
+            {
+                if (state.TypeKey != key)
+                    continue;
+
+                if (state.Stack == 1)
+                    binHasStack1 = true;
+                else if (state.Stack == 2)
+                    binHasStack2 = true;
+            }
+
+            if (boardStack2 != null && boardStack1 != null
+                && CanPairDirectClear(boardStack2, boardStack1))
+            {
+                if (onBoard <= bestOnBoard)
+                    continue;
+
+                bestKey = key;
+                bestOnBoard = onBoard;
+                bestBoardBlocks = new List<BlockManager> { boardStack2, boardStack1 };
+                bestNeedFromBin = 0;
+                bestRequiredBinStack = -1;
+                continue;
+            }
+
+            if (boardStack2 != null && boardStack1 == null && binHasStack1
+                && CanPairDirectClearSim(
+                    BlockState.FromBoard(boardStack2),
+                    new BlockState { TypeKey = key, Stack = 1, Tier2MergeStage = 0 }))
+            {
+                if (onBoard <= bestOnBoard)
+                    continue;
+
+                bestKey = key;
+                bestOnBoard = onBoard;
+                bestBoardBlocks = new List<BlockManager> { boardStack2 };
+                bestNeedFromBin = 1;
+                bestRequiredBinStack = 1;
+                continue;
+            }
+
+            if (boardStack1 != null && boardStack2 == null && binHasStack2
+                && CanPairDirectClearSim(
+                    new BlockState { TypeKey = key, Stack = 2, Tier2MergeStage = 1 },
+                    BlockState.FromBoard(boardStack1)))
+            {
+                if (onBoard <= bestOnBoard)
+                    continue;
+
+                bestKey = key;
+                bestOnBoard = onBoard;
+                bestBoardBlocks = new List<BlockManager> { boardStack1 };
+                bestNeedFromBin = 1;
+                bestRequiredBinStack = 2;
+            }
+        }
+
         if (bestKey == null)
             return false;
 
         typeKey = bestKey;
+        boardBlocks = bestBoardBlocks;
+        needFromBin = bestNeedFromBin;
+        requiredBinStack = bestRequiredBinStack;
+        isPairMode = true;
         return true;
+    }
+
+    private bool CanPairDirectClear(BlockManager stack2, BlockManager stack1)
+    {
+        if (stack2 == null || stack1 == null)
+            return false;
+
+        if (stack2.StackCount != 2 || stack1.StackCount != 1)
+            return false;
+
+        if (stack2.Tier2MergeStage != 1)
+            return false;
+
+        return CanMergeBlocks(stack1, stack2) && ResolveMerge(stack1, stack2).ShouldClear;
+    }
+
+    private static bool CanPairDirectClearSim(BlockState stack2, BlockState stack1)
+    {
+        if (stack2.Stack != 2 || stack1.Stack != 1)
+            return false;
+
+        if (stack2.Tier2MergeStage != 1)
+            return false;
+
+        return CanMergeSim(stack1, stack2) && ResolveMergeSimClears(stack1, stack2);
     }
 
     private List<BlockManager> CollectBoardBlocksByTypeKey(string typeKey, int maxCount)
@@ -2681,14 +3018,14 @@ public class PlayManager : Singleton<PlayManager>
         Vector3 viewportCenter = cam.ViewportToWorldPoint(new Vector3(0.5f, 0.5f, planeDistance));
         return new Vector3(viewportCenter.x, viewportCenter.y, boardPlaneZ);
     }
-    //trigger magnet merge
+    // Nên đổi thành — merge trực tiếp
     private void TriggerMagnetMerge(BlockManager source, BlockManager target)
     {
-        m_SourceSlot = source.CurrentSlot;
-        m_HoverSlot = target.CurrentSlot;
-        ProcessTurn();
+        if (source == null || target == null) return;
+        if (!CanMergeBlocks(source, target)) return;
+        m_IsTurnProcessing = true;
+        ExecuteMerge(source, target);
     }
-
     private IEnumerator WaitGameplayIdle()
     {
         while (m_IsTurnProcessing || m_IsSettlementRunning)

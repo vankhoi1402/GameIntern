@@ -14,6 +14,13 @@ public class AudioManager : Singleton<AudioManager>
     public static string BlockMerge = "BlockMerge";
     public static string BlockMergeFail = "BlockMergeFail";
     public static string BlockMergeSuccess = "BlockMergeSuccess";
+    public static string Refill = "Refill";
+    [Header("Sound speaking")]
+    public static string SoundGood = "SoundGood";
+    public static string SoundGreat = "SoundGreat";
+    public static string SoundExcellent = "SoundExcellent";
+    public static string SoundAmazing = "SoundAmazing";
+    public static string SoundUnbelievable = "SoundUnbelievable";
     public static string Pop = "Pop";
     public static string Ting = "Ting";
     public static string CoinPay = "CoinPay";
@@ -57,6 +64,7 @@ public class AudioManager : Singleton<AudioManager>
     [HideInInspector] public bool IsHaptic;
 
     public float MaxVolume = 1f;
+    public float MinVolume = 0.1f;
 
     protected override void Awake()
     {
@@ -142,7 +150,7 @@ public class AudioManager : Singleton<AudioManager>
         }
     }
 
-    public void ChangeMusicState() => musicSource.volume = IsPlayMusic ? MaxVolume : 0f;
+    public void ChangeMusicState() => musicSource.volume = IsPlayMusic ? MinVolume : 0f;
 
     private void OnApplicationPause(bool pause)
     {

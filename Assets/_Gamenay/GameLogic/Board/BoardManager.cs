@@ -39,7 +39,7 @@ public class BoardManager : MonoBehaviour
     [SerializeField] private Vector2 cameraCenterOffset;
     [FormerlySerializedAs("screenPaddingX")]
     [SerializeField] private float cameraPaddingX = 0f;
-    [SerializeField] private float cameraPaddingY = 0f;
+    
 
     [Header("Gravity Animation")]
     [SerializeField] private float m_GravityDurationPerSqrtCell = 0.17f;
