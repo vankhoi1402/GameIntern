@@ -58,7 +58,7 @@ public class PlayManager : Singleton<PlayManager>
     [Header("Input")]
     [SerializeField] private Camera m_MainCamera;
     [SerializeField] private LayerMask m_BlockLayer;
-    [SerializeField, Range(0.05f, 0.35f)] private float m_SameTypeOverlapThreshold = 0.20f;
+    [SerializeField] private float m_SameTypeOverlapThreshold = 0.50f;
 
     [Header("Refill Animation")]
     [SerializeField] private float m_RefillRiseDuration = 0.16f;
@@ -180,6 +180,11 @@ public class PlayManager : Singleton<PlayManager>
         UIManager.Ins.CloseUI<HomeUI>();
         GameManager.Ins.OnPlayState();
     }
+    public void OnHome()
+    {
+        UIManager.Ins.CloseUI<SettingUI>();
+        GameManager.Ins.OnHomeState();
+    }
 
     public void OnStartPlay()
     {
@@ -206,6 +211,11 @@ public class PlayManager : Singleton<PlayManager>
         m_CurrentLevel = null;
 
         GameManager.Ins.OnHomeState();
+    }
+    public void OnCloseSetting()
+    {
+        UIManager.Ins.CloseUI<SettingUI>();
+        OnResumeGame();
     }
 
     public void OnCloseLevel()
@@ -268,7 +278,8 @@ public class PlayManager : Singleton<PlayManager>
 
     public void OnOpenSettings()
     {
-        // UIManager.Ins.OpenUI<SettingsUI>();
+         UIManager.Ins.OpenUI<SettingUI>();
+         OnPauseGame();
     }
 
     public void OnWinContinue()
@@ -539,7 +550,7 @@ public class PlayManager : Singleton<PlayManager>
 
     private bool IsTimerPaused()
     {
-        return m_IsInputLocked || m_IsSettlementRunning || m_IsTimerFrozen;
+        return  m_IsSettlementRunning || m_IsTimerFrozen;
     }
 
     #endregion
@@ -661,6 +672,8 @@ public class PlayManager : Singleton<PlayManager>
     }
 
     public bool IsInputLocked => m_IsInputLocked;
+
+    public bool IsHintActive => m_HintCoroutine != null;
 
     public void CancelActiveDrag()
     {
@@ -1352,6 +1365,7 @@ public class PlayManager : Singleton<PlayManager>
 
     #endregion
 
+    
     #region Utilities
 
     private bool IsInputBlocked()
@@ -1944,6 +1958,26 @@ public class PlayManager : Singleton<PlayManager>
 
             return found;
         }
+
+        // Trả các state đã lấy ra ngược lại Bin (đưa lên đầu hàng đợi cột 0 để lấy lại trước).
+        public void ReturnStates(List<BlockState> states)
+        {
+            if (states == null || states.Count == 0 || m_ColumnCount <= 0)
+                return;
+
+            var rebuilt = new Queue<BlockState>();
+            for (int i = 0; i < states.Count; i++)
+                rebuilt.Enqueue(states[i]);
+
+            Queue<BlockState> existing = m_RuntimeQueues[0];
+            if (existing != null)
+            {
+                foreach (BlockState state in existing)
+                    rebuilt.Enqueue(state);
+            }
+
+            m_RuntimeQueues[0] = rebuilt;
+        }
     }
     #region Boosters
 
@@ -1953,7 +1987,8 @@ public class PlayManager : Singleton<PlayManager>
         if (m_BoardManager == null || !m_BoardManager.IsGridReady || IsInputBlocked())
             return false;
 
-        ClearActiveHint();
+        if (m_HintCoroutine != null)
+            return false;
 
         if (!TryFindHintBlocks(m_ActiveHintBlocks))
         {
@@ -2344,38 +2379,48 @@ public class PlayManager : Singleton<PlayManager>
 
         if (needFromBin > 0)
         {
+            // Yêu cầu đủ ô trống: không sinh block "nửa vời" khi board đã đầy.
             IReadOnlyList<Vector2Int> emptySlots = m_BoardManager.GetEmptySlots();
+            if (emptySlots == null || emptySlots.Count < needFromBin)
+                return false;
 
             var takenFromBin = new List<BlockState>();
             int takenCount = requiredBinStack >= 0
                 ? m_RefillState.TryTakeMatchingTypeWithStack(typeKey, needFromBin, requiredBinStack, takenFromBin)
                 : m_RefillState.TryTakeMatchingType(typeKey, needFromBin, takenFromBin);
             if (takenCount < needFromBin)
+            {
+                m_RefillState.ReturnStates(takenFromBin);
                 return false;
+            }
 
+            var spawnedBlocks = new List<BlockManager>(takenFromBin.Count);
             for (int i = 0; i < takenFromBin.Count; i++)
             {
                 BlockManager spawned = SpawnBlockFromState(takenFromBin[i]);
                 if (spawned == null)
+                {
+                    RollbackMagnetSpawn(spawnedBlocks, takenFromBin);
                     return false;
-
-                if (emptySlots != null && i < emptySlots.Count)
-                {
-                    Vector2Int slot = emptySlots[i];
-                    m_BoardManager.PlaceBlock(spawned, slot.x, slot.y);
-                }
-                else
-                {
-                    if (boardBlocks.Count > 0 && boardBlocks[0] != null)
-                        spawned.transform.position = boardBlocks[0].transform.position;
                 }
 
+                Vector2Int slot = emptySlots[i];
+                m_BoardManager.PlaceBlock(spawned, slot.x, slot.y);
+
+                spawnedBlocks.Add(spawned);
                 trio.Add(spawned);
+            }
+
+            // GẮN CHẶT: nếu chuỗi gộp thực tế không dùng HẾT block vừa sinh, hủy toàn
+            // bộ và trả block về Bin — tuyệt đối không để block thừa nằm lại trên board.
+            if (!MagnetSelectionConsumesAll(trio, spawnedBlocks))
+            {
+                RollbackMagnetSpawn(spawnedBlocks, takenFromBin);
+                return false;
             }
         }
 
-        int requiredCount = isPairMode ? 2 : 3;
-        if (trio.Count < requiredCount)
+        if (trio.Count < 2)
             return false;
 
         SetLockInput(true);
@@ -2447,45 +2492,39 @@ public class PlayManager : Singleton<PlayManager>
                 continue;
 
             List<BlockManager> candidateBoard = CollectBoardBlocksByTypeKey(pair.Key, 3);
-            int candidateNeedFromBin = Mathf.Max(0, 3 - candidateBoard.Count);
 
-            // Kiểm tra trong Bin có đủ số lượng viên đang thiếu hay không
-            if (GetTypeKeyCount(binCounts, pair.Key) < candidateNeedFromBin)
-                continue;
+            var boardStates = new List<BlockState>(candidateBoard.Count);
+            for (int i = 0; i < candidateBoard.Count; i++)
+                boardStates.Add(BlockState.FromBoard(candidateBoard[i]));
 
-            // ======================================================================
-            // ĐÃ GỠ BỎ HOÀN TOÀN ĐOẠN CODE KIỂM TRA Ô TRỐNG (GetEmptySlots) Ở ĐÂY!
-            // ======================================================================
+            int binAvailable = GetTypeKeyCount(binCounts, pair.Key);
 
-            // Tiến hành đóng gói dữ liệu nạp từ Bin
-            var candidateBinStates = new List<BlockState>();
-            int collected = 0;
-            foreach (BlockState state in binPool)
+            // Tìm số block Bin TỐI THIỂU sao cho chuỗi merge vẫn nổ và MỌI block
+            // lấy từ Bin đều được dùng — tránh sinh dư rồi để lại trên board.
+            int chosenNeedFromBin = -1;
+            for (int take = 0; take <= binAvailable; take++)
             {
-                if (state.TypeKey != pair.Key)
+                if (boardStates.Count + take < 2)
                     continue;
 
-                candidateBinStates.Add(state);
-                collected++;
-                if (collected >= candidateNeedFromBin)
-                    break;
+                var trialStates = new List<BlockState>(boardStates);
+                trialStates.AddRange(CollectBinStatesByTypeKey(binPool, pair.Key, take));
+
+                if (!MagnetSimClearsAndUsesAllBin(trialStates, boardStates.Count))
+                    continue;
+
+                chosenNeedFromBin = take;
+                break;
             }
 
-            // Gom đủ 3 khối (Board + Bin) vào danh sách giả lập ảo
-            var planStates = new List<BlockState>(3);
-            for (int i = 0; i < candidateBoard.Count; i++)
-                planStates.Add(BlockState.FromBoard(candidateBoard[i]));
-            planStates.AddRange(candidateBinStates);
-
-            // Chạy qua phòng thí nghiệm ảo CanSimulateMagnetMerge (Bắt buộc gộp phải nổ)
-            if (planStates.Count < 3 || !CanSimulateMagnetMerge(planStates))
+            if (chosenNeedFromBin < 0)
                 continue;
 
-            // Nếu vượt qua tất cả các bộ lọc logic gộp, ghi nhận kế hoạch thành công
+            // Ghi nhận kế hoạch thành công (đã đảm bảo bin block sẽ được dùng hết)
             bestKey = pair.Key;
             bestBoardCount = onBoard;
             boardBlocks = candidateBoard;
-            needFromBin = candidateNeedFromBin;
+            needFromBin = chosenNeedFromBin;
         }
 
         if (bestKey != null)
@@ -2809,6 +2848,204 @@ public class PlayManager : Singleton<PlayManager>
 
         BlockState merged = ApplyMergeSim(source, target);
         return merged.Stack >= 3;
+    }
+
+    // Lấy tối đa "count" block trong Bin theo TypeKey (giữ đúng thứ tự duyệt Bin).
+    private static List<BlockState> CollectBinStatesByTypeKey(
+        IReadOnlyList<BlockState> binPool,
+        string typeKey,
+        int count)
+    {
+        var result = new List<BlockState>();
+        if (count <= 0 || binPool == null)
+            return result;
+
+        for (int i = 0; i < binPool.Count; i++)
+        {
+            if (binPool[i].TypeKey != typeKey)
+                continue;
+
+            result.Add(binPool[i]);
+            if (result.Count >= count)
+                break;
+        }
+
+        return result;
+    }
+
+    // Mô phỏng ĐÚNG cách MagnetMergeRoutine chọn block để gộp: ưu tiên direct-clear
+    // (2 block), nếu không thì two-step (tối đa 3 block). Trả về tập index được dùng.
+    private static bool TrySimulateMagnetSelection(
+        IReadOnlyList<BlockState> states,
+        List<int> consumedIndices,
+        out bool clears)
+    {
+        consumedIndices.Clear();
+        clears = false;
+
+        if (states == null || states.Count < 2)
+            return false;
+
+        // Direct clear: cặp gộp đầu tiên đã nổ ngay.
+        for (int i = 0; i < states.Count; i++)
+        {
+            for (int j = 0; j < states.Count; j++)
+            {
+                if (i == j)
+                    continue;
+                if (!CanMergeSim(states[i], states[j]))
+                    continue;
+                if (!ResolveMergeSimClears(states[i], states[j]))
+                    continue;
+
+                consumedIndices.Add(i);
+                consumedIndices.Add(j);
+                clears = true;
+                return true;
+            }
+        }
+
+        // Two-step: chọn cặp gộp đầu tiên (ưu tiên 1+1), rồi tới block thứ ba.
+        int srcIdx = -1;
+        int tgtIdx = -1;
+        int fallbackSrc = -1;
+        int fallbackTgt = -1;
+
+        for (int i = 0; i < states.Count && srcIdx < 0; i++)
+        {
+            for (int j = 0; j < states.Count; j++)
+            {
+                if (i == j)
+                    continue;
+                if (!CanMergeSim(states[i], states[j]))
+                    continue;
+
+                if (states[i].Stack == 1 && states[j].Stack == 1)
+                {
+                    srcIdx = i;
+                    tgtIdx = j;
+                    break;
+                }
+
+                if (fallbackSrc < 0)
+                {
+                    fallbackSrc = i;
+                    fallbackTgt = j;
+                }
+            }
+        }
+
+        if (srcIdx < 0)
+        {
+            srcIdx = fallbackSrc;
+            tgtIdx = fallbackTgt;
+        }
+
+        if (srcIdx < 0)
+            return false;
+
+        consumedIndices.Add(srcIdx);
+        consumedIndices.Add(tgtIdx);
+
+        BlockState merged = ApplyMergeSim(states[srcIdx], states[tgtIdx]);
+
+        // Runtime lấy block "thứ ba" là block ĐẦU TIÊN khác src/tgt, rồi mới kiểm tra gộp.
+        for (int k = 0; k < states.Count; k++)
+        {
+            if (k == srcIdx || k == tgtIdx)
+                continue;
+
+            if (CanMergeSim(states[k], merged))
+            {
+                consumedIndices.Add(k);
+                clears = ResolveMergeSimClears(states[k], merged);
+            }
+
+            break;
+        }
+
+        return true;
+    }
+
+    // Plan hợp lệ khi: chuỗi gộp nổ VÀ mọi block lấy từ Bin (index >= boardCount) đều được dùng.
+    private static bool MagnetSimClearsAndUsesAllBin(IReadOnlyList<BlockState> states, int boardCount)
+    {
+        var consumed = new List<int>();
+        if (!TrySimulateMagnetSelection(states, consumed, out bool clears))
+            return false;
+
+        if (!clears)
+            return false;
+
+        for (int idx = boardCount; idx < states.Count; idx++)
+        {
+            if (!consumed.Contains(idx))
+                return false;
+        }
+
+        return true;
+    }
+
+    // Đảm bảo TẤT CẢ block sinh thêm sẽ được chuỗi gộp thực tế dùng tới, dựa trên
+    // đúng logic chọn cặp của MagnetMergeRoutine — nếu không thì từ chối chạy.
+    private bool MagnetSelectionConsumesAll(
+        List<BlockManager> trio,
+        List<BlockManager> mustConsume)
+    {
+        if (mustConsume == null || mustConsume.Count == 0)
+            return true;
+
+        var consumed = new HashSet<BlockManager>();
+
+        if (TryFindDirectClearPair(trio, out BlockManager directSource, out BlockManager directTarget))
+        {
+            consumed.Add(directSource);
+            consumed.Add(directTarget);
+        }
+        else if (TryFindFirstMergePair(trio, out BlockManager stepSource, out BlockManager stepTarget))
+        {
+            consumed.Add(stepSource);
+            consumed.Add(stepTarget);
+
+            BlockManager third = FindThirdMagnetBlock(trio, stepSource, stepTarget);
+            if (third != null && CanMergeBlocks(third, stepTarget))
+                consumed.Add(third);
+        }
+        else
+        {
+            return false;
+        }
+
+        for (int i = 0; i < mustConsume.Count; i++)
+        {
+            if (!consumed.Contains(mustConsume[i]))
+                return false;
+        }
+
+        return true;
+    }
+
+    // Hủy block đã sinh dở + trả state đã lấy về Bin khi kế hoạch Magnet bị hủy.
+    private void RollbackMagnetSpawn(List<BlockManager> spawnedBlocks, List<BlockState> takenFromBin)
+    {
+        if (spawnedBlocks != null)
+        {
+            for (int i = 0; i < spawnedBlocks.Count; i++)
+            {
+                BlockManager block = spawnedBlocks[i];
+                if (block == null)
+                    continue;
+
+                Slot slot = block.CurrentSlot;
+                if (slot != null)
+                    m_BoardManager.ClearSlot(slot.Row, slot.Col);
+
+                Destroy(block.gameObject);
+            }
+        }
+
+        if (takenFromBin != null)
+            m_RefillState.ReturnStates(takenFromBin);
     }
     //tự động gom đủ 3 block cùng TypeKey từ Board + Bin rồi merge bằng luật hiện có.
     private IEnumerator MagnetMergeRoutine(List<BlockManager> blocks)

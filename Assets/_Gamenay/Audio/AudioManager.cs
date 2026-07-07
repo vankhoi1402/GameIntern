@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Xml.Linq;
 using UnityEngine;
+using UnityEngine.Audio;
 
 public class AudioManager : Singleton<AudioManager>
 {
@@ -55,6 +56,9 @@ public class AudioManager : Singleton<AudioManager>
 
     public AudioSource musicSource;
     public AudioSource sfxSource;
+    [Header("Audio Mixer")]
+    [SerializeField] private AudioMixer audioMixer;
+
 
     public List<AudioClip> sfxClips;
     public List<AudioClip> musicClips;
@@ -150,7 +154,7 @@ public class AudioManager : Singleton<AudioManager>
         }
     }
 
-    public void ChangeMusicState() => musicSource.volume = IsPlayMusic ? MinVolume : 0f;
+    public void ChangeMusicState() => musicSource.volume = IsPlayMusic ? SaveManager.MusicVolume : 0f;
 
     private void OnApplicationPause(bool pause)
     {
@@ -168,6 +172,29 @@ public class AudioManager : Singleton<AudioManager>
         // ES3.Save(Constain.IsPlaySFX, IsPlaySFX);
         //ES3.Save(Constain.IsHaptic, IsHaptic);
     }
+    #region Audio Mixer
+    public void SetMusicVolume(float volume)
+    {
+        SaveManager.MusicVolume = volume;
+
+        float db = volume > 0.001f
+            ? Mathf.Log10(volume) * 20f
+            : -80f;
+
+        audioMixer.SetFloat("Music", db);
+    }
+
+    public void SetSfxVolume(float volume)
+    {
+        SaveManager.SfxVolume = volume;
+
+        float db = volume > 0.001f
+            ? Mathf.Log10(volume) * 20f
+            : -80f;
+
+        audioMixer.SetFloat("SFX", db);
+    }
+    #endregion
 
 
 }

@@ -117,8 +117,8 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 3140118043383461514}
-  - {fileID: 1497435669896177427}
   - {fileID: 8573398889477803335}
+  - {fileID: 1497435669896177427}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!61 &9158341781287074525
@@ -195,7 +195,9 @@ MonoBehaviour:
   m_SelectedRenderer: {fileID: 4994565975647431950}
   m_Stack1BgColor: {r: 1, g: 1, b: 1, a: 1}
   m_Stack2BgColor: {r: 0.9895365, g: 1, b: 0, a: 1}
+  m_Stack2PairBgColor: {r: 1, g: 0.39811313, b: 0.8475164, a: 1}
   m_BurstFallBgColor: {r: 1, g: 1, b: 1, a: 1}
+  s_HintBgColor: {r: 1, g: 0.4284399, b: 0.34901965, a: 1}
 --- !u!1 &4884009005215509979
 GameObject:
   m_ObjectHideFlags: 0
@@ -212,7 +214,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &8573398889477803335
 Transform:
   m_ObjectHideFlags: 0
@@ -222,7 +224,7 @@ Transform:
   m_GameObject: {fileID: 4884009005215509979}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.211, z: 0}
+  m_LocalPosition: {x: 0, y: 0.26, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

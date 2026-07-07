@@ -10,7 +10,7 @@ public class BlockManager : MonoBehaviour
 {
     #region Constants
 
-    private const float c_PickupScaleMultiplier = 1.12f;
+    private const float c_PickupScaleMultiplier = 1.05f;
     private const float c_PickupRotateZ = -8f;
     private const float c_PickupDuration = 0.15f;
     private const float c_ReleaseDuration = 0.18f;
@@ -20,7 +20,7 @@ public class BlockManager : MonoBehaviour
     private const float c_RejectShakeDuration = 0.28f;
     private const float c_RejectShakeRotation = 10f;
     private const float c_RejectShakePosition = 0.06f;
-    private const float c_HoverTargetScale = 1.2f;
+    private const float c_HoverTargetScale = 0.95f;
     private const float c_HoverTargetDuration = 0.12f;
     private const float c_HoverFlashDuration = 0.06f;
     private const float c_HoverHoldDuration = 0.1f;
@@ -116,6 +116,7 @@ public class BlockManager : MonoBehaviour
     [Header("Stack Background Colors")]
     [SerializeField] private Color m_Stack1BgColor = Color.white;
     [SerializeField] private Color m_Stack2BgColor = new Color(1f, 0.85f, 0.4f);
+    [SerializeField] private Color m_Stack2PairBgColor = new Color(1f, 0.6f, 0.2f);
     [SerializeField] private Color m_BurstFallBgColor = Color.white;
 
     private SortingGroup m_SortingGroup;
@@ -127,7 +128,7 @@ public class BlockManager : MonoBehaviour
     private Tween m_HoverColorTween;
     private Tween m_HintTween;
     private Tween m_SelectedRotateTween;
-    private static readonly Color s_HintBgColor = new Color(1f, 0.92f, 0.35f);
+    [SerializeField]private Color s_HintBgColor = new Color(1f, 0.92f, 0.35f);
     private float m_BaseSelectedRotationZ;
 
     #endregion
@@ -208,27 +209,30 @@ public class BlockManager : MonoBehaviour
     /// <summary>Đổi nền stack + overlay Selected khi 2+2 (stage ≥ 2).</summary>
     public void UpdateTier2StageVisual(int stackCount, int tier2MergeStage)
     {
-        UpdateStackVisual(stackCount);
+        UpdateStackVisual(stackCount, tier2MergeStage);
         ApplyTier2PairOverlay(stackCount, tier2MergeStage);
     }
 
-    /// <summary>Đổi màu nền theo stack — giữ nguyên sprite trên m_BgRenderer.</summary>
-    public void UpdateStackVisual(int stackCount)
+    /// <summary>Đổi màu nền theo stack + stage — giữ nguyên sprite trên m_BgRenderer.</summary>
+    public void UpdateStackVisual(int stackCount, int tier2MergeStage)
     {
         if (m_BgRenderer == null)
             return;
 
         KillHoverColorTween();
 
-        Color bgColor = ResolveStackBgColor(stackCount);
+        Color bgColor = ResolveStackBgColor(stackCount, tier2MergeStage);
         m_BgRenderer.color = bgColor;
         m_BaseBgColor = bgColor;
     }
 
-    private Color ResolveStackBgColor(int stackCount)
+    private Color ResolveStackBgColor(int stackCount, int tier2MergeStage)
     {
         if (stackCount == c_BurstFallVisualStack)
             return m_BurstFallBgColor;
+
+        if (stackCount == 2 && tier2MergeStage >= c_Tier2PairOverlayMinStage)
+            return m_Stack2PairBgColor;
 
         if (stackCount == 2)
             return m_Stack2BgColor;
@@ -410,11 +414,11 @@ public class BlockManager : MonoBehaviour
     /// <summary>Thả không hợp lệ — lắc rồi tween về ô gốc.</summary>
     public void EndDragReturnTo(Vector3 worldPos, int row, bool shakeReject, Action onComplete = null)
     {
-        if (shakeReject)
-        {
-            PlayRejectShake(() => PlayReturnToGridTween(worldPos, row, onComplete));
-            return;
-        }
+        // if (shakeReject)
+        // {
+        //     PlayRejectShake(() => PlayReturnToGridTween(worldPos, row, onComplete));
+        //     return;
+        // }
 
         PlayReturnToGridTween(worldPos, row, onComplete);
     }
@@ -447,24 +451,31 @@ public class BlockManager : MonoBehaviour
         transform.DORotate(new Vector3(0f, 0f, m_BaseRotationZ), c_ReleaseDuration).SetEase(Ease.OutQuad);
     }
 
+    // private void PlayRejectShake(Action onComplete = null)
+    // {
+    //     KillPickupTweens();
+
+    //     Sequence seq = DOTween.Sequence();
+    //     // seq.Append(transform.DOPunchRotation(
+    //     //     new Vector3(0f, 0f, c_RejectShakeRotation),
+    //     //     c_RejectShakeDuration,
+    //     //     14,
+    //     //     0.55f));
+    //     seq.Join(transform.DOPunchPosition(
+    //         new Vector3(c_RejectShakePosition, 0f, 0f),
+    //         c_RejectShakeDuration,
+    //         12,
+    //         0.45f).SetRelative(true));
+    //     seq.OnComplete(() => onComplete?.Invoke());
+    // }
     private void PlayRejectShake(Action onComplete = null)
     {
         KillPickupTweens();
 
-        Sequence seq = DOTween.Sequence();
-        seq.Append(transform.DOPunchRotation(
-            new Vector3(0f, 0f, c_RejectShakeRotation),
-            c_RejectShakeDuration,
-            14,
-            0.55f));
-        seq.Join(transform.DOPunchPosition(
-            new Vector3(c_RejectShakePosition, 0f, 0f),
-            c_RejectShakeDuration,
-            12,
-            0.45f).SetRelative(true));
-        seq.OnComplete(() => onComplete?.Invoke());
+        transform.DOLocalMove(transform.localPosition + new Vector3(c_RejectShakePosition, 0f, 0f), c_RejectShakeDuration)
+            .SetEase(Ease.OutCubic)
+            .OnComplete(() => onComplete?.Invoke());
     }
-
     #endregion
 
     #region Hover
