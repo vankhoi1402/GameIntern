@@ -143,7 +143,8 @@ public class GamePlayUI : UICanvas
     }
 
     public void OnHintButtonClicked()
-    {
+    {  
+        Debug.Log("[Hint] Nút được bấm!");
         PlayManager.Ins.hintBooster();
     }
 
@@ -153,17 +154,20 @@ public class GamePlayUI : UICanvas
     }
 
     public void OnMagnetButtonClicked()
-    {
+    {   
+        Debug.Log("[magnet] Nút được bấm!");
         PlayManager.Ins.MagnetBooster();
     }
 
     public void OnShuffleButtonClicked()
-    {
+    {   
+        Debug.Log("[shuffle] Nút được bấm!");
         PlayManager.Ins.ShuffleBoard();
     }
 
     public void OnFreezeButtonClicked()
     {
+        Debug.Log("[freeze] Nút được bấm!");
         PlayManager.Ins.FreezeTimer();
     }
 

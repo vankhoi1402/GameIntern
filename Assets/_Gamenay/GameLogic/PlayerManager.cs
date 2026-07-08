@@ -83,6 +83,9 @@ public class PlayManager : Singleton<PlayManager>
     private int m_TimeLimitSeconds;
     private bool m_IsTimerRunning;
 
+    private float m_TimeForHint;
+    private float m_TimeForHintValue = 10f;
+
     private BlockManager m_DraggedBlock;
     private BlockManager m_HoverTargetBlock;
     private Slot m_SourceSlot;
@@ -169,6 +172,7 @@ public class PlayManager : Singleton<PlayManager>
     {
         HandleInput();
         TickTimer();
+        UpdateTimeForHint();
     }
 
     #endregion
@@ -278,8 +282,8 @@ public class PlayManager : Singleton<PlayManager>
 
     public void OnOpenSettings()
     {
-         UIManager.Ins.OpenUI<SettingUI>();
-         OnPauseGame();
+        UIManager.Ins.OpenUI<SettingUI>();
+        OnPauseGame();
     }
 
     public void OnWinContinue()
@@ -490,6 +494,11 @@ public class PlayManager : Singleton<PlayManager>
         m_TimeLimitSeconds = 0;
         RefreshTimeLimitText();
     }
+    private void ResetHintTimer()
+    {
+        m_TimeForHint = m_TimeForHintValue;
+        //ClearActiveHint(); // nếu đang hiện hint mà người chơi chạm thì tắt luôn (tùy chọn)
+    }
 
     private void TickTimer()
     {
@@ -550,7 +559,19 @@ public class PlayManager : Singleton<PlayManager>
 
     private bool IsTimerPaused()
     {
-        return  m_IsSettlementRunning || m_IsTimerFrozen;
+        return m_IsSettlementRunning || m_IsTimerFrozen;
+    }
+    private void UpdateTimeForHint()
+    {
+        // Không đếm khi đang kéo block
+        if (m_IsDragging)
+            return;
+        m_TimeForHint -= Time.deltaTime;
+        if (m_TimeForHint <= 0f)
+        {
+            m_TimeForHint = m_TimeForHintValue;
+            hintBooster();
+        }
     }
 
     #endregion
@@ -695,6 +716,9 @@ public class PlayManager : Singleton<PlayManager>
             return;
 
         Vector3 mouseWorldPos = GetMouseWorldPosition();
+        // Bất kỳ khi nào có tương tác chuột/chạm -> reset timer
+        if (Input.GetMouseButton(0) || Input.GetMouseButtonDown(0) || Input.GetMouseButtonUp(0))
+            ResetHintTimer();
 
         if (Input.GetMouseButtonDown(0))
         {
@@ -1365,7 +1389,7 @@ public class PlayManager : Singleton<PlayManager>
 
     #endregion
 
-    
+
     #region Utilities
 
     private bool IsInputBlocked()
@@ -1985,10 +2009,15 @@ public class PlayManager : Singleton<PlayManager>
     public bool TryHintBooster()
     {
         if (m_BoardManager == null || !m_BoardManager.IsGridReady || IsInputBlocked())
+        {
+            Debug.Log($"[Hint] Bị chặn: board={m_BoardManager != null}, ready={m_BoardManager?.IsGridReady}, inputBlocked={IsInputBlocked()}");
             return false;
-
+        }
         if (m_HintCoroutine != null)
+        {
+            Debug.Log("[Hint] Bị chặn: đang có hint chạy (m_HintCoroutine != null)");
             return false;
+        }
 
         if (!TryFindHintBlocks(m_ActiveHintBlocks))
         {

@@ -559,8 +559,8 @@ public class BlockManager : MonoBehaviour
         if (m_MainRenderer == null)
             return;
 
-        Color pulseMain = Color.Lerp(m_BaseMainColor, Color.white, 0.4f);
-        Color pulseBg = Color.Lerp(m_BaseBgColor, s_HintBgColor, 0.7f);
+        Color pulseMain = Color.white;
+        Color pulseBg = s_HintBgColor;
         int loops = Mathf.Max(2, Mathf.CeilToInt(duration / (c_HintPulseHalfDuration * 2f)));
 
         Sequence seq = DOTween.Sequence();
