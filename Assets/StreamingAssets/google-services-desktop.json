@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "723529007914",
+    "project_id": "tilematch-1264f",
+    "storage_bucket": "tilematch-1264f.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:723529007914:android:bb1a7ec86a7f3406699453",
+        "android_client_info": {
+          "package_name": "com.piti.tile.match"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAd2y1ZZCXydU6qEfMhxkC5kQQCqCB6Y8Q"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

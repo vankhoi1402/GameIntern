@@ -167,6 +167,11 @@ public class PlayManager : Singleton<PlayManager>
         OnSettlementCompleted -= HandleSettlementCompleted;
         m_VisualBooster?.KillActiveVisual(false);
     }
+    private void Start()
+    {
+
+        AnalyticManager.Ins.Initialize();
+    }
 
     private void Update()
     {
@@ -204,6 +209,7 @@ public class PlayManager : Singleton<PlayManager>
 
         LoadStartLevel();
         EnsureGameplayFlowButtons();
+        AnalyticManager.Ins.LogEvent("game_start");
     }
 
     public void OnQuitPlay()
@@ -389,6 +395,15 @@ public class PlayManager : Singleton<PlayManager>
             Debug.LogError($"[PlayManager] Level {levelId} chưa có dữ liệu. Chạy Import CSV trước.");
             return;
         }
+        // ========================================================
+        // ĐOẠN THÊM VÀO: Bắn event khi người chơi BẮT ĐẦU bấm vào màn
+        // Dùng cách tạo mảng tham số truyền số màn chơi thực tế (levelId)
+        AnalyticParameter[] startParameters = new AnalyticParameter[]
+        {
+        new AnalyticParameter("level_id", levelId)
+        };
+        AnalyticManager.Ins.LogEvent("level_start", startParameters);
+        // ========================================================
 
         LoadLevel(level);
     }
@@ -413,6 +428,7 @@ public class PlayManager : Singleton<PlayManager>
         PrepareForLevelLoad();
         m_BoardManager.RefreshScreenLayout();
         SpawnBoardLayout(level, OnBoardLayoutReady);
+        
 
     }
 
@@ -617,6 +633,7 @@ public class PlayManager : Singleton<PlayManager>
         WinUI winUI = UIManager.Ins.OpenUI<WinUI>();
         winUI.Configure(CurrentLevelId, 0, _hasNextLevel: HasNextLevel());
         EnsureWinFlowButtons();
+        AnalyticManager.Ins.LogEvent("game_win");
     }
 
     private void EnterLose()
@@ -629,6 +646,7 @@ public class PlayManager : Singleton<PlayManager>
         LoseUI loseUI = UIManager.Ins.OpenUI<LoseUI>();
         loseUI.Configure(CurrentLevelId, $"Continue +{c_ContinueBonusSeconds}s");
         EnsureLoseFlowButtons();
+        AnalyticManager.Ins.LogEvent("game_lose");
     }
 
     #endregion

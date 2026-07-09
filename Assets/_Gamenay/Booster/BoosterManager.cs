@@ -1,17 +1,19 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using DG.Tweening;
 using Sirenix.OdinInspector;
 using UnityEngine;
 using Random = UnityEngine.Random;
+using TMPro;
 
 public class BoosterManager : Singleton<BoosterManager>
 {
     [SerializeField] private BoosterDataBase[] dataList;
 
     [ShowInInspector] public List<Booster> Boosters { get; private set; } = new List<Booster>();
+
+    [SerializeField] private TextMeshProUGUI boosterFreeText;
 
     public int LevelUnlockBoosterHint;
     public int LevelUnlockBoosterReveal;
@@ -45,7 +47,7 @@ public class BoosterManager : Singleton<BoosterManager>
         LevelUnlockBoosterReveal = Boosters.Find(b => b.BoosterType == BoosterType.Shuffle).BoosterLevelUnlock;
         LevelUnlockBoosterFrostTime = Boosters.Find(b => b.BoosterType == BoosterType.FrostTime).BoosterLevelUnlock;
         LevelUnlockBoosterHammer = Boosters.Find(b => b.BoosterType == BoosterType.Hammer).BoosterLevelUnlock;
-        BoosterFree = PlayerPrefs.GetInt("BoosterFree", defaultValue: 100);
+        BindRemoteConfig();
 
         for (int i = 0; i < Boosters.Count; i++)
         {
@@ -54,6 +56,48 @@ public class BoosterManager : Singleton<BoosterManager>
         }
 
         CheckUnlockByLevel(SaveManager.CurrentLevel);
+    }
+
+    private void OnDisable()
+    {
+        UnbindRemoteConfig();
+    }
+
+    private void BindRemoteConfig()
+    {
+        if (FirebaseManager.Ins == null)
+            return;
+
+        FirebaseManager.Ins.OnRemoteConfigReady -= HandleRemoteConfigReady;
+        FirebaseManager.Ins.OnRemoteConfigReady += HandleRemoteConfigReady;
+
+        if (FirebaseManager.Ins.DoneRemoteConfig)
+            HandleRemoteConfigReady();
+        else
+            BoosterFree = FirebaseManager.Ins.BoosterFree;
+    }
+
+    private void UnbindRemoteConfig()
+    {
+        if (FirebaseManager.Ins == null)
+            return;
+
+        FirebaseManager.Ins.OnRemoteConfigReady -= HandleRemoteConfigReady;
+    }
+
+    private void HandleRemoteConfigReady()
+    {
+        BoosterFree = FirebaseManager.Ins.BoosterFree;
+        Debug.Log($"[Booster] BoosterFree updated from Remote Config: {BoosterFree}");
+    }
+
+    private void Update()
+    {
+        UpdateBoosterFreeText();
+    }
+    public void UpdateBoosterFreeText()
+    {
+        boosterFreeText.text = BoosterFree.ToString();
     }
 
     public void CheckUnlockByLevel(int completedLevelId)
