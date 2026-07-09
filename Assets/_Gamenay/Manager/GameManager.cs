@@ -20,6 +20,8 @@ public class GameManager : Singleton<GameManager>
     [SerializeField] private GameObject m_GameplayBg;
 
     public GameState GameState { get; private set; }
+    public bool IsCheat { get; set; }
+    public bool RemoveAds { get; set; }
 
     private IEnumerator Start()
     {
@@ -34,6 +36,13 @@ public class GameManager : Singleton<GameManager>
         BoosterManager.Ins.Initialized();
 
         OnHomeState();
+        // Ví dụ trong GameManager.Start() hoặc script bootstrap
+        AdsManager.Ins.Initialize(() =>
+        {
+            Debug.Log("Ads ready");
+            // Có thể show banner ở đây
+            AdsManager.Ins.ShowBanner();
+        });
     }
 
     public void Block(bool _active)

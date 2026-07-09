@@ -310,8 +310,26 @@ public class PlayManager : Singleton<PlayManager>
 
     public void OnLoseContinueTime()
     {
-        UIManager.Ins.CloseUI<LoseUI>();
-        OnContinueWithBonusTime();
+        Debug.Log("Người chơi bấm nút +giây. Đang chuẩn bị gọi quảng cáo...");
+
+        // 1. Gọi hàm hiển thị quảng cáo Reward từ AdsManager
+        AdsManager.Ins.ShowRewardAds(() =>
+        {
+            // ==========================================================
+            // KHU VỰC ĐÓN XỬ LÝ: CHỈ CHẠY KHI NGƯỜI CHƠI XEM HẾT SẠCH 30S
+            // ==========================================================
+            Debug.Log("Google xác nhận xem hết! Tiến hành cộng giây và cho chơi tiếp.");
+
+            // 2. Gọi hàm thực hiện cộng thêm thời gian bonus của bạn
+            OnContinueWithBonusTime();
+
+            // 3. Nếu game của bạn đang bị Pause (Time.timeScale = 0), hãy cho nó chạy lại
+            //Time.timeScale = 1f;
+
+            // 4. Đóng bảng LoseUI hoặc bảng thông báo hết giờ (nếu có)
+            UIManager.Ins.CloseUI<LoseUI>();
+        });
+
     }
 
     public void EnsureHomeFlowButtons()
@@ -428,7 +446,7 @@ public class PlayManager : Singleton<PlayManager>
         PrepareForLevelLoad();
         m_BoardManager.RefreshScreenLayout();
         SpawnBoardLayout(level, OnBoardLayoutReady);
-        
+
 
     }
 
@@ -453,7 +471,9 @@ public class PlayManager : Singleton<PlayManager>
 
     public void LoadNextLevel()
     {
+
         TryLoadNextLevel();
+        // AdsManager.Ins.TryShowInter();
 
     }
 
@@ -3451,6 +3471,81 @@ public class PlayManager : Singleton<PlayManager>
         if (UIManager.Ins.IsOpened<GamePlayUI>())
             UIManager.Ins.GetUI<GamePlayUI>().RefreshBoosterUI();
     }
+    #region Cheat
+
+    public void CheatGoToLevel(int levelId)
+    {
+        if (m_Catalog == null)
+        {
+            Debug.LogWarning("[Cheat] Chưa có LevelCatalog.");
+            return;
+        }
+
+        LevelCatalogEntry entry = m_Catalog.FindById(levelId);
+        if (entry.LevelAsset == null)
+        {
+            Debug.LogWarning($"[Cheat] Level {levelId} không tồn tại.");
+            return;
+        }
+
+        SaveManager.CurrentLevel = levelId;
+
+        UIManager.Ins.CloseUI<WinUI>();
+        UIManager.Ins.CloseUI<LoseUI>();
+
+        LevelData level = m_LevelLoader.LoadFromEntry(entry, m_BlockDatabase);
+        if (level != null)
+            LoadLevel(level);
+
+
+    }
+
+    public void CheatSetTime(int seconds)
+    {
+        seconds = Mathf.Max(0, seconds);
+        m_RemainingSeconds = seconds;
+
+        if (m_TimeLimitSeconds <= 0 && seconds > 0)
+            m_TimeLimitSeconds = seconds;
+
+        m_IsTimerRunning = seconds > 0 && !m_OutcomeResolved;
+        RefreshTimeLimitText();
+    }
+
+    public void CheatWin()
+    {
+        if (m_OutcomeResolved || m_CurrentLevel == null)
+            return;
+
+        EnterWin();
+    }
+
+    public void CheatLose()
+    {
+        if (m_OutcomeResolved || m_CurrentLevel == null)
+            return;
+
+        EnterLose();
+    }
+
+    public void CheatAddBoosters()
+    {
+        if (!BoosterManager.Exists())
+            return;
+
+        BoosterManager.Ins.CheatAddBooster();
+
+        if (UIManager.Ins.IsOpened<GamePlayUI>())
+            UIManager.Ins.GetUI<GamePlayUI>().RefreshBoosterUI();
+    }
+
+    public void CheatResetSave()
+    {
+        OnResetSaveClicked();
+        SaveManager.ResetLevel();
+    }
+
+    #endregion
 }
 
 #region Settlement Structs

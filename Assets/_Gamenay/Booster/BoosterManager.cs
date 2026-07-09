@@ -88,17 +88,9 @@ public class BoosterManager : Singleton<BoosterManager>
     private void HandleRemoteConfigReady()
     {
         BoosterFree = FirebaseManager.Ins.BoosterFree;
-        Debug.Log($"[Booster] BoosterFree updated from Remote Config: {BoosterFree}");
+        //Debug.Log($"[Booster] BoosterFree updated from Remote Config: {BoosterFree}");
     }
 
-    private void Update()
-    {
-        UpdateBoosterFreeText();
-    }
-    public void UpdateBoosterFreeText()
-    {
-        boosterFreeText.text = BoosterFree.ToString();
-    }
 
     public void CheckUnlockByLevel(int completedLevelId)
     {

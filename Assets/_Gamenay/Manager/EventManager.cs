@@ -55,8 +55,28 @@ public static class EventManager
     }
 }
 
+public class OnWatchAds : GameEvent { }
 
+public class OnNotice : GameEvent
+{
+    public string Content;
+}
 
+public class SendInterData : GameEvent
+{
+    public string interPlacement;
+    public string levelInter;
+}
+
+public class SendRewardData : GameEvent
+{
+    public string rewardPlacement;
+    public string button_name;
+    public string reward_name;
+    public string reward_type;
+    public int value;
+    public string levelReward;
+}
 
 
 

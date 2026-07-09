@@ -26,7 +26,7 @@ public class FirebaseManager : Singleton<FirebaseManager>
         {
             if (task.IsFaulted)
             {
-                Debug.LogError($"[Firebase] Dependency error: {task.Exception}");
+               // Debug.LogError($"[Firebase] Dependency error: {task.Exception}");
                 return;
             }
 
@@ -40,7 +40,7 @@ public class FirebaseManager : Singleton<FirebaseManager>
             }
             else
             {
-                Debug.LogError($"Could not resolve all Firebase dependencies: {dependencyStatus}");
+                //Debug.LogError($"Could not resolve all Firebase dependencies: {dependencyStatus}");
             }
         });
     }

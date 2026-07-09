@@ -82,7 +82,7 @@ public class AudioManager : Singleton<AudioManager>
         IsPlaySFX = true;
         IsPlayMusic = true;
         // = ES3.Load<bool>(Constain.IsHaptic, defaultValue: true);
-        Debug.Log("Initialize audio manager");
+       // Debug.Log("Initialize audio manager");
         ChangeMusicState();
         PlayMusic(MainSong);
     }

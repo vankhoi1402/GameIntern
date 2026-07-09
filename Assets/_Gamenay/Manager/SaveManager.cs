@@ -29,6 +29,7 @@ public static class SaveManager
     public static void CompleteLevel(int completedLevelId)
     {
         CurrentLevel = completedLevelId + 1;
+        
         Save();
     }
 
