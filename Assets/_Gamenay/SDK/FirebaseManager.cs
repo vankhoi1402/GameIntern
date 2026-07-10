@@ -13,7 +13,7 @@ public class FirebaseManager : Singleton<FirebaseManager>
     public float CappingInter = 30;
     public float CappingReward = 30;
     public int LevelShowInter = 7;
-    public int BoosterFree = 2;
+    public int BoosterFree = 3;
 
     public bool DoneInitFirebase { get; private set; } = false;
     public bool DoneRemoteConfig { get; private set; } = false;

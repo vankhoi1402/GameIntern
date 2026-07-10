@@ -2081,10 +2081,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 405520c1613a8ab46b4e46131ac2deec, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  CappingInter: 1
-  CappingReward: 1
-  LevelShowInter: 1
-  BoosterFree: 222
+  CappingInter: 0
+  CappingReward: 0
+  LevelShowInter: 0
+  BoosterFree: 3
 --- !u!4 &2117595230
 Transform:
   m_ObjectHideFlags: 0

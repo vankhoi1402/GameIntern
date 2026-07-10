@@ -654,6 +654,7 @@ public class PlayManager : Singleton<PlayManager>
         winUI.Configure(CurrentLevelId, 0, _hasNextLevel: HasNextLevel());
         EnsureWinFlowButtons();
         AnalyticManager.Ins.LogEvent("game_win");
+        AdsManager.Ins.ShowInterAds();
     }
 
     private void EnterLose()
