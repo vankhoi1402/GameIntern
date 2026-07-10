@@ -49,8 +49,10 @@ public class AdsManager : Singleton<AdsManager>
         // }
         // else if (AdsType == AdsType.Google)
         //// {
-            AdsMobManager.Ins.LoadBannerAd();
+            
         //}
+        if (AdsType == AdsType.None) return;
+        AdsMobManager.Ins.LoadBannerAd();
     }
 
     public void HindBanner()
@@ -59,10 +61,12 @@ public class AdsManager : Singleton<AdsManager>
         {
             //MaxManager.Ins.HindBanner();
         }
+        AdsMobManager.Ins.DestroyBannerAds();
     }
 
     public void ShowInterAds()
     {
+        if (AdsType == AdsType.None) return;
         if (GameManager.Ins.IsCheat)
         {
             EventManager.Trigger(new OnWatchAds());

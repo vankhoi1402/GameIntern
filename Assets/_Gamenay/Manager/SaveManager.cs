@@ -12,6 +12,9 @@ public static class SaveManager
     private const string MusicEnableKey = "MusicEnable";
     private const string SfxEnableKey = "SfxEnable";
 
+    private const string RemoveAdsKey = "RemoveAds";
+    private const string BoughtBeginnerPackKey = "BoughtBeginnerPack";
+
     private const int DefaultLevel = 1;
 
     #endregion
@@ -82,6 +85,30 @@ public static class SaveManager
     {
         get => PlayerPrefs.GetInt(SfxEnableKey, 1) == 1;
         set => PlayerPrefs.SetInt(SfxEnableKey, value ? 1 : 0);
+    }
+
+    #endregion
+
+    #region IAP
+
+    public static bool RemoveAds
+    {
+        get => PlayerPrefs.GetInt(RemoveAdsKey, 0) == 1;
+        set
+        {
+            PlayerPrefs.SetInt(RemoveAdsKey, value ? 1 : 0);
+            Save();
+        }
+    }
+
+    public static bool BoughtBeginnerPack
+    {
+        get => PlayerPrefs.GetInt(BoughtBeginnerPackKey, 0) == 1;
+        set
+        {
+            PlayerPrefs.SetInt(BoughtBeginnerPackKey, value ? 1 : 0);
+            Save();
+        }
     }
 
     #endregion

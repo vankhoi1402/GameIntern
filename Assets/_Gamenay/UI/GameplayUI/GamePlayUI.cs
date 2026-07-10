@@ -150,7 +150,8 @@ public class GamePlayUI : UICanvas
 
     public void OnSkipButtonClicked()
     {
-        PlayManager.Ins.LoadNextLevel();
+      UIManager.Ins.OpenUI<ShopUI>();
+      PlayManager.Ins.OnPauseGame();
     }
 
     public void OnMagnetButtonClicked()
@@ -180,10 +181,16 @@ public class GamePlayUI : UICanvas
         if (m_SkipButton != null)
             m_SkipButton.onClick.AddListener(OnSkipButtonClicked);
     }
-
+    public void Configure2()
+    {
+        RefreshHUD();
+        
+    }
     private void RefreshHUD()
     {
+        Configure(m_CurrentLevelId);
     }
+
 
     private static string FormatTime(float _seconds)
     {

@@ -1049,6 +1049,7 @@ MonoBehaviour:
   - {fileID: 8445767134105796611, guid: 39c08a553245a6949ac529f2190cb9b4, type: 3}
   - {fileID: 6277253538813789926, guid: 1036a1191482c45b1869094fa234411e, type: 3}
   - {fileID: 57955586041687263, guid: acaab1b2f717ef6419d5072a168144c0, type: 3}
+  - {fileID: 3438323539128264397, guid: a6651bb40b1ff47d1b2c817e49053e43, type: 3}
   canvasParentTF: {fileID: 1693444876}
   IsBlockRay: 0
 --- !u!114 &1485203293 stripped
@@ -1260,10 +1261,10 @@ RectTransform:
   - {fileID: 1698427154}
   m_Father: {fileID: 646688789}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 26, y: 881}
-  m_SizeDelta: {x: 300, y: 120}
+  m_AnchorMin: {x: 0.5, y: 1}
+  m_AnchorMax: {x: 0.5, y: 1}
+  m_AnchoredPosition: {x: 0, y: -79}
+  m_SizeDelta: {x: 300, y: 150}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1602261934
 MonoBehaviour:
@@ -1737,6 +1738,56 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 961a79d7b2fe0ab40b69264ca67a3689, type: 3}
+--- !u!1 &1977239825
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1977239826}
+  - component: {fileID: 1977239827}
+  m_Layer: 0
+  m_Name: IAPManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1977239826
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1977239825}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.0317064, y: -0.44172376, z: 90}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1977239827
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1977239825}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e55b57be410146745b36c98823f94cff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  <RemoveAds>k__BackingField: 0
+  <BoughtBeginnerPack>k__BackingField: 0
+  celebrateVFXs: []
+  level: 0
+  pack_id: 
+  placement: 
 --- !u!1001 &1981224875
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2117,3 +2168,4 @@ SceneRoots:
   - {fileID: 150699561}
   - {fileID: 2117595230}
   - {fileID: 488488902}
+  - {fileID: 1977239826}

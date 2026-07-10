@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-
+using UnityEngine.Purchasing;
 public class GameEvent { }
 
 public static class EventManager
@@ -76,6 +76,15 @@ public class SendRewardData : GameEvent
     public string reward_type;
     public int value;
     public string levelReward;
+}
+
+public class OnIAPPurchase : GameEvent
+{
+    public Product Product;
+    public int Level;
+    public string Pack_id;
+    public string Pack_name;
+    public string Placement;
 }
 
 

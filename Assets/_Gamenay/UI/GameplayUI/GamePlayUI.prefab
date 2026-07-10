@@ -282,7 +282,7 @@ MonoBehaviour:
   m_BoosterTutorialBG: {fileID: 0}
   m_BoosterTutorialIcon: {fileID: 0}
   m_HintButton: {fileID: 6498455590071721284}
-  m_SkipButton: {fileID: 0}
+  m_SkipButton: {fileID: 2729810493860882036}
   m_MagnetButton: {fileID: 741065718738320552}
   m_ShuffleButton: {fileID: 2743884954174163512}
   m_FreezeButton: {fileID: 1732808117510206910}
