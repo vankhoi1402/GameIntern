@@ -1312,7 +1312,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 57955586041687263, guid: acaab1b2f717ef6419d5072a168144c0, type: 3}
         m_TargetAssemblyTypeName: CheatUI, Assembly-CSharp
-        m_MethodName: Open
+        m_MethodName: OpenCheatUI
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}

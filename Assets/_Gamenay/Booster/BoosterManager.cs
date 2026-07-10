@@ -65,7 +65,7 @@ public class BoosterManager : Singleton<BoosterManager>
 
     private void BindRemoteConfig()
     {
-        if (FirebaseManager.Ins == null)
+        if (!FirebaseManager.Exists())
             return;
 
         FirebaseManager.Ins.OnRemoteConfigReady -= HandleRemoteConfigReady;
@@ -79,7 +79,7 @@ public class BoosterManager : Singleton<BoosterManager>
 
     private void UnbindRemoteConfig()
     {
-        if (FirebaseManager.Ins == null)
+        if (!FirebaseManager.Exists())
             return;
 
         FirebaseManager.Ins.OnRemoteConfigReady -= HandleRemoteConfigReady;

@@ -45,6 +45,10 @@ public class CheatUI : UICanvas
 
         if (PlayManager.Exists() && !PlayManager.Ins.IsPaused)
             PlayManager.Ins.OnPauseGame();
+        
+    }
+    public void OpenCheatUI()
+    {
         UIManager.Ins.OpenUI<CheatUI>();
     }
 

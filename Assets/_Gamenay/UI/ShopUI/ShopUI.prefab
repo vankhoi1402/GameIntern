@@ -1136,7 +1136,7 @@ MonoBehaviour:
   canvasGroup: {fileID: 0}
   btn: {fileID: 2339096715251487397}
   priceText: {fileID: 7029495868423551464}
-  realPriceText: {fileID: 0}
+  realPriceText: {fileID: 7029495868423551464}
   isCoinPack: 0
   coinNumber: 0
   coinNameText: {fileID: 0}
@@ -1326,7 +1326,7 @@ MonoBehaviour:
   canvasGroup: {fileID: 0}
   btn: {fileID: 4072957162492882298}
   priceText: {fileID: 7029495870106504912}
-  realPriceText: {fileID: 0}
+  realPriceText: {fileID: 7029495870106504912}
   isCoinPack: 0
   coinNumber: 0
   coinNameText: {fileID: 0}
@@ -2611,7 +2611,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Claim
+  m_text: 0
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -4551,7 +4551,7 @@ MonoBehaviour:
   canvasGroup: {fileID: 0}
   btn: {fileID: 2700722219617154020}
   priceText: {fileID: 7029495869046212643}
-  realPriceText: {fileID: 0}
+  realPriceText: {fileID: 7029495869046212643}
   isCoinPack: 0
   coinNumber: 0
   coinNameText: {fileID: 0}
@@ -4763,7 +4763,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Claim
+  m_text: 0
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}

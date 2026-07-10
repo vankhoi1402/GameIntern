@@ -91,17 +91,25 @@ public class IAPManager : Singleton<IAPManager>
             case "com.piti.gameintern.beginnerpack": // 2. Gói Tân Thủ
                 BoughtBeginnerPack = true;
                 SaveManager.BoughtBeginnerPack = true;
+                SaveManager.RemoveAds = true;
+
+                // CHỌC VÀO ĐÂY: Chuyển loại Ads về None để tắt toàn bộ quảng cáo luôn!
+                AdsManager.Ins.AdsType = AdsType.None;
+                AdsManager.Ins.HindBanner(); // Ẩn Banner Ads luôn
 
                 // Thưởng gói tân thủ: Ví dụ cộng 2000 Vàng và các Booster
                 // CurrencyManager.Ins.AddCoin(new Vector2(0, 100), 2000);
-                BoosterManager.Ins.AddBoosterAmount(BoosterType.Hint, 1);
-                BoosterManager.Ins.AddBoosterAmount(BoosterType.FrostTime, 1);
+                BoosterManager.Ins.AddBoosterAmount(BoosterType.Hint, 20);
+                BoosterManager.Ins.AddBoosterAmount(BoosterType.FrostTime, 20);
+                BoosterManager.Ins.AddBoosterAmount(BoosterType.Hammer, 20);
+                BoosterManager.Ins.AddBoosterAmount(BoosterType.Shuffle, 20);
                 //BoosterManager.Ins.AddBoosterAmount(BoosterType.Reveal, 1);
 
                 // Cập nhật lại UI để ẩn gói này đi (vì chỉ mua được 1 lần)
                 if (GameManager.Ins.GameState == GameState.Home)
                 {
                     UIManager.Ins.GetUI<HomeUI>().Configure();
+                    UIManager.Ins.GetUI<GamePlayUI>()?.RefreshBoosterUI();
                    // UIManager.Ins.GetUI<ShopUI>().Configure();
                    // UIManager.Ins.GetUI<ShopUI>().FixTopSize();
                 }
@@ -112,6 +120,8 @@ public class IAPManager : Singleton<IAPManager>
                 BoosterManager.Ins.AddBoosterAmount(BoosterType.Hint, 30);
                 BoosterManager.Ins.AddBoosterAmount(BoosterType.FrostTime, 30);
                 BoosterManager.Ins.AddBoosterAmount(BoosterType.Hammer, 30);
+                BoosterManager.Ins.AddBoosterAmount(BoosterType.Shuffle, 30);
+                UIManager.Ins.GetUI<GamePlayUI>()?.RefreshBoosterUI();
                 break;
         }
 
