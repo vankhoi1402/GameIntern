@@ -41,11 +41,14 @@ public class BlockManager : MonoBehaviour
     private bool m_IsDragging;
     public const int HoverMergeTargetSortingOrder = DragSortingOrder - 50; // 1050 — trên block đang kéo (1000)
     public const int MagnetFlySortingOrder = 1200;
+    public const int TutorialHighlightSortingOrder = 800;
 
     private int m_SavedHoverSortingOrder;
     private bool m_HasHoverSortingBoost;
     private int m_SavedMagnetFlySortingOrder;
     private bool m_HasMagnetFlySortingBoost;
+    private int m_SavedTutorialSortingOrder;
+    private bool m_HasTutorialSortingBoost;
 
     #endregion
 
@@ -308,6 +311,13 @@ public class BlockManager : MonoBehaviour
     {
         if (m_SortingGroup == null)
             return;
+
+        if (m_HasTutorialSortingBoost)
+        {
+            m_SortingGroup.sortingOrder = TutorialHighlightSortingOrder;
+            return;
+        }
+
         m_SortingGroup.sortingOrder = (MaxSortingOrder - row) * SortingOrderPerRow;
     }
 
@@ -386,6 +396,36 @@ public class BlockManager : MonoBehaviour
             ApplyGridSorting(CurrentSlot.Row);
         else
             m_SortingGroup.sortingOrder = m_SavedMagnetFlySortingOrder;
+    }
+
+    /// <summary>Tăng sorting order khi block được highlight trong tutorial.</summary>
+    public void SetTutorialHighlightSorting()
+    {
+        if (m_SortingGroup == null || m_IsDragging)
+            return;
+
+        if (!m_HasTutorialSortingBoost)
+        {
+            m_SavedTutorialSortingOrder = m_SortingGroup.sortingOrder;
+            m_HasTutorialSortingBoost = true;
+        }
+
+        m_SortingGroup.sortingOrder = TutorialHighlightSortingOrder;
+        transform.SetAsLastSibling();
+    }
+
+    /// <summary>Trả sorting order về theo hàng sau khi hết highlight tutorial.</summary>
+    public void ClearTutorialHighlightSorting()
+    {
+        if (m_SortingGroup == null || !m_HasTutorialSortingBoost)
+            return;
+
+        m_HasTutorialSortingBoost = false;
+
+        if (CurrentSlot != null)
+            ApplyGridSorting(CurrentSlot.Row);
+        else
+            m_SortingGroup.sortingOrder = m_SavedTutorialSortingOrder;
     }
     #endregion
 

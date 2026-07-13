@@ -166,6 +166,7 @@ public class PlayManager : Singleton<PlayManager>
     {
         OnSettlementCompleted -= HandleSettlementCompleted;
         m_VisualBooster?.KillActiveVisual(false);
+        ResetTutorialState();
     }
     private void Start()
     {
@@ -508,6 +509,7 @@ public class PlayManager : Singleton<PlayManager>
 
         ConfigureGameplayHUD();
         OnLevelLoaded?.Invoke(m_CurrentLevel);
+        TryStartTutorial();
     }
 
     #endregion
@@ -600,7 +602,7 @@ public class PlayManager : Singleton<PlayManager>
     private void UpdateTimeForHint()
     {
         // Không đếm khi đang kéo block
-        if (m_IsDragging)
+        if (m_IsDragging || IsTutorialActive)
             return;
         m_TimeForHint -= Time.deltaTime;
         if (m_TimeForHint <= 0f)
@@ -778,6 +780,9 @@ public class PlayManager : Singleton<PlayManager>
         if (IsInputBlocked() || block == null || m_IsDragging)
             return;
 
+        if (!IsTutorialAllowDrag(block))
+            return;
+
         m_SourceSlot = block.CurrentSlot;
         if (m_SourceSlot == null)
             return;
@@ -889,6 +894,7 @@ public class PlayManager : Singleton<PlayManager>
 
         BeginMergeVisual(sourceBlock, targetBlock);
         PlayMergeStackVisual(sourceBlock, targetBlock);
+        OnTutorialMergeCompleted(sourceBlock, targetBlock, result);
 
         if (!result.ShouldClear)
         {
@@ -1091,6 +1097,7 @@ public class PlayManager : Singleton<PlayManager>
         m_ClearStreakCount = 0;
         m_LastClearTime = 0f;
         ResetMagnetDeferredState();
+        ResetTutorialState();
     }
 
     /// <summary>Xóa bàn và spawn layout ban đầu từ level data.</summary>
@@ -1622,7 +1629,12 @@ public class PlayManager : Singleton<PlayManager>
         if (sourceSlot == null || targetSlot == null || sourceSlot.IsEmpty || !targetSlot.HasBlock)
             return false;
 
-        return CanMergeBlocks(sourceSlot.CurrentBlock, targetSlot.CurrentBlock);
+        BlockManager sourceBlock = sourceSlot.CurrentBlock;
+        BlockManager targetBlock = targetSlot.CurrentBlock;
+        if (!IsTutorialAllowMerge(sourceBlock, targetBlock))
+            return false;
+
+        return CanMergeBlocks(sourceBlock, targetBlock);
     }
 
     private void AcceptMove()
@@ -2047,6 +2059,9 @@ public class PlayManager : Singleton<PlayManager>
     //sử dụng hint booster
     public bool TryHintBooster()
     {
+        if (IsTutorialActive)
+            return false;
+
         if (m_BoardManager == null || !m_BoardManager.IsGridReady || IsInputBlocked())
         {
             Debug.Log($"[Hint] Bị chặn: board={m_BoardManager != null}, ready={m_BoardManager?.IsGridReady}, inputBlocked={IsInputBlocked()}");
@@ -3472,6 +3487,348 @@ public class PlayManager : Singleton<PlayManager>
         if (UIManager.Ins.IsOpened<GamePlayUI>())
             UIManager.Ins.GetUI<GamePlayUI>().RefreshBoosterUI();
     }
+    #region Tutorial
+
+    private enum TutorialStep
+    {
+        None = 0,
+        MergeOnePlusOne = 1,
+        MergeTwoPlusOne = 2,
+        Done = 3,
+    }
+
+    [Header("Tutorial")]
+    [SerializeField] private Tutorial m_TutorialHandController;
+    [SerializeField] private bool m_EnableTutorial = true;
+    [SerializeField] private int[] m_TutorialLevelIds = { 1 };
+    [SerializeField, Min(1)] private int m_TutorialStepCount = 2;
+    [SerializeField] private int m_TutorialRunCount = 2;
+
+    private TutorialStep m_TutorialStep;
+    private int m_TutorialCurrentRun;
+    private BlockManager m_TutBlockA;
+    private BlockManager m_TutBlockB;
+    private BlockManager m_TutBlockC;
+    private BlockManager m_TutPair;
+    private bool m_TutorialWaitingSettlement;
+
+    private bool IsTutorialActive =>
+        m_TutorialStep == TutorialStep.MergeOnePlusOne
+        || m_TutorialStep == TutorialStep.MergeTwoPlusOne;
+
+    private bool IsTutorialLevel()
+    {
+        if (!m_EnableTutorial || m_CurrentLevel == null || m_TutorialLevelIds == null)
+            return false;
+
+        int levelId = m_CurrentLevel.LevelId;
+        for (int i = 0; i < m_TutorialLevelIds.Length; i++)
+        {
+            if (m_TutorialLevelIds[i] == levelId)
+                return true;
+        }
+
+        return false;
+    }
+
+    private void ResetTutorialState()
+    {
+        if (m_TutorialWaitingSettlement)
+        {
+            OnSettlementCompleted -= HandleTutorialSettlementAfterStep1;
+            m_TutorialWaitingSettlement = false;
+        }
+
+        m_TutorialHandController?.HideHand();
+        ClearTutorialBlockSorting();
+        m_TutorialStep = TutorialStep.None;
+        m_TutorialCurrentRun = 0;
+        m_TutBlockA = null;
+        m_TutBlockB = null;
+        m_TutBlockC = null;
+        m_TutPair = null;
+    }
+
+    private void TryStartTutorial()
+    {
+        ResetTutorialState();
+
+        if (!IsTutorialLevel())
+            return;
+
+        if (!TryFindTutorialBlocks())
+        {
+            Debug.LogWarning("[Tutorial] Không tìm đủ 3 block stack-1 cùng loại để hướng dẫn.");
+            return;
+        }
+
+        m_TutorialCurrentRun = 1;
+        BeginTutorialStepOne();
+    }
+
+    private bool TryFindTutorialBlocks()
+    {
+        m_TutBlockA = null;
+        m_TutBlockB = null;
+        m_TutBlockC = null;
+        m_TutPair = null;
+
+        if (m_BoardManager == null || !m_BoardManager.IsGridReady)
+            return false;
+
+        var candidates = new List<BlockManager>(16);
+        CollectBoardStackOneBlocks(candidates);
+        if (candidates.Count < 3)
+            return false;
+
+        for (int i = 0; i < candidates.Count; i++)
+        {
+            BlockManager seed = candidates[i];
+            if (seed == null)
+                continue;
+
+            int typeId = seed.TypeId;
+            BlockManager a = seed;
+            BlockManager b = null;
+            BlockManager c = null;
+
+            for (int j = 0; j < candidates.Count; j++)
+            {
+                if (j == i)
+                    continue;
+
+                BlockManager other = candidates[j];
+                if (other == null || other.TypeId != typeId)
+                    continue;
+
+                if (b == null)
+                {
+                    b = other;
+                    continue;
+                }
+
+                c = other;
+                break;
+            }
+
+            if (a != null && b != null && c != null)
+            {
+                m_TutBlockA = a;
+                m_TutBlockB = b;
+                m_TutBlockC = c;
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private void CollectBoardStackOneBlocks(List<BlockManager> results)
+    {
+        results.Clear();
+        if (m_BoardManager == null)
+            return;
+
+        for (int row = 0; row < m_BoardManager.Rows; row++)
+        {
+            for (int col = 0; col < m_BoardManager.Columns; col++)
+            {
+                Slot slot = m_BoardManager.GetSlot(row, col);
+                if (slot == null || !slot.HasBlock)
+                    continue;
+
+                BlockManager block = slot.CurrentBlock;
+                if (block == null || block.IsPendingDestroy)
+                    continue;
+
+                if (block.StackCount == 1)
+                    results.Add(block);
+            }
+        }
+    }
+
+    private void BeginTutorialStepOne()
+    {
+        m_TutorialStep = TutorialStep.MergeOnePlusOne;
+        ApplyTutorialBlockSorting();
+        if (m_TutorialHandController != null && m_TutBlockA != null && m_TutBlockB != null)
+            m_TutorialHandController.ShowHand(m_TutBlockA.transform, m_TutBlockB.transform);
+    }
+
+    private void BeginTutorialStepTwo()
+    {
+        if (m_TutorialStepCount < 2)
+        {
+            EndTutorial();
+            return;
+        }
+
+        if (m_TutPair == null || m_TutBlockC == null || m_TutBlockC.IsPendingDestroy)
+        {
+            EndTutorial();
+            return;
+        }
+
+        m_TutorialStep = TutorialStep.MergeTwoPlusOne;
+        ApplyTutorialBlockSorting();
+        if (m_TutorialHandController != null)
+            m_TutorialHandController.ShowHand(m_TutPair.transform, m_TutBlockC.transform);
+    }
+
+    private void ApplyTutorialBlockSorting()
+    {
+        ClearTutorialBlockSorting();
+
+        if (m_TutorialStep == TutorialStep.MergeOnePlusOne)
+        {
+            m_TutBlockA?.SetTutorialHighlightSorting();
+            m_TutBlockB?.SetTutorialHighlightSorting();
+        }
+        else if (m_TutorialStep == TutorialStep.MergeTwoPlusOne)
+        {
+            m_TutPair?.SetTutorialHighlightSorting();
+            m_TutBlockC?.SetTutorialHighlightSorting();
+        }
+    }
+
+    private void ClearTutorialBlockSorting()
+    {
+        m_TutBlockA?.ClearTutorialHighlightSorting();
+        m_TutBlockB?.ClearTutorialHighlightSorting();
+        m_TutBlockC?.ClearTutorialHighlightSorting();
+        m_TutPair?.ClearTutorialHighlightSorting();
+    }
+
+    private bool IsTutorialAllowDrag(BlockManager block)
+    {
+        if (!IsTutorialActive || block == null)
+            return true;
+
+        if (m_TutorialStep == TutorialStep.MergeOnePlusOne)
+            return block == m_TutBlockA || block == m_TutBlockB;
+
+        if (m_TutorialStep == TutorialStep.MergeTwoPlusOne)
+            return block == m_TutPair || block == m_TutBlockC;
+
+        return true;
+    }
+
+    private bool IsTutorialAllowMerge(BlockManager source, BlockManager target)
+    {
+        if (!IsTutorialActive)
+            return true;
+
+        if (source == null || target == null)
+            return false;
+
+        if (m_TutorialStep == TutorialStep.MergeOnePlusOne)
+        {
+            return (source == m_TutBlockA && target == m_TutBlockB)
+                   || (source == m_TutBlockB && target == m_TutBlockA);
+        }
+
+        if (m_TutorialStep == TutorialStep.MergeTwoPlusOne)
+        {
+            return (source == m_TutPair && target == m_TutBlockC)
+                   || (source == m_TutBlockC && target == m_TutPair);
+        }
+
+        return true;
+    }
+
+    private void OnTutorialMergeCompleted(BlockManager source, BlockManager target, MergeResult result)
+    {
+        if (!IsTutorialActive || !result.IsValid)
+            return;
+
+        if (m_TutorialStep == TutorialStep.MergeOnePlusOne)
+        {
+            bool isGuidedPair =
+                (source == m_TutBlockA && target == m_TutBlockB)
+                || (source == m_TutBlockB && target == m_TutBlockA);
+
+            if (!isGuidedPair || result.ShouldClear || result.TargetStackCount != 2)
+                return;
+
+            m_TutPair = target;
+            m_TutBlockA = null;
+            m_TutBlockB = null;
+            m_TutPair?.SetTutorialHighlightSorting();
+            m_TutBlockC?.SetTutorialHighlightSorting();
+            m_TutorialHandController?.HideHand(keepBackground: true);
+
+            if (m_TutorialStepCount < 2)
+            {
+                CompleteCurrentTutorialRun();
+                return;
+            }
+
+            if (!m_TutorialWaitingSettlement)
+            {
+                m_TutorialWaitingSettlement = true;
+                OnSettlementCompleted += HandleTutorialSettlementAfterStep1;
+            }
+
+            return;
+        }
+
+        if (m_TutorialStep == TutorialStep.MergeTwoPlusOne)
+        {
+            bool isGuidedClear =
+                (source == m_TutPair && target == m_TutBlockC)
+                || (source == m_TutBlockC && target == m_TutPair);
+
+            if (!isGuidedClear || !result.ShouldClear)
+                return;
+
+            CompleteCurrentTutorialRun();
+        }
+    }
+
+    private void HandleTutorialSettlementAfterStep1(bool _)
+    {
+        OnSettlementCompleted -= HandleTutorialSettlementAfterStep1;
+        m_TutorialWaitingSettlement = false;
+
+        if (m_TutorialStep != TutorialStep.MergeOnePlusOne)
+            return;
+
+        BeginTutorialStepTwo();
+    }
+
+    private void CompleteCurrentTutorialRun()
+    {
+        m_TutorialHandController?.HideHand();
+        ClearTutorialBlockSorting();
+
+        if (m_TutorialCurrentRun < m_TutorialRunCount && TryFindTutorialBlocks())
+        {
+            m_TutorialCurrentRun++;
+            BeginTutorialStepOne();
+            return;
+        }
+
+        EndTutorial();
+    }
+
+    private void EndTutorial()
+    {
+        if (m_TutorialWaitingSettlement)
+        {
+            OnSettlementCompleted -= HandleTutorialSettlementAfterStep1;
+            m_TutorialWaitingSettlement = false;
+        }
+
+        m_TutorialHandController?.HideHand();
+        ClearTutorialBlockSorting();
+        m_TutorialStep = TutorialStep.Done;
+        m_TutBlockA = null;
+        m_TutBlockB = null;
+        m_TutBlockC = null;
+        m_TutPair = null;
+    }
+
+    #endregion
     #region Cheat
 
     public void CheatGoToLevel(int levelId)
